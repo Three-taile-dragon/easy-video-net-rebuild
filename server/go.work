@@ -1,0 +1,12 @@
+go 1.20
+
+use (
+	./evn_api
+	./evn_article
+	./evn_common
+	./evn_grpc
+	./evn_other
+	./evn_user
+	./evn_video
+	./evn_ws
+)

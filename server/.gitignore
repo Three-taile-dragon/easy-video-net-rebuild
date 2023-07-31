@@ -1,0 +1,12 @@
+!.gitignore
+!.gitsubmodules
+*.yaml
+*.log
+*.ini
+*.pem
+*.key
+assets
+logss
+.idea
+codealike.json
+evn_other/config/config.yaml

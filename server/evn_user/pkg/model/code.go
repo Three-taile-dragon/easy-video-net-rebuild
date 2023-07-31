@@ -1,0 +1,22 @@
+package model
+
+import "dragonsss.cn/evn_common/errs"
+
+// 自定义错误码
+var (
+	SystemError         = errs.NewError(00000, "系统内部错误")
+	RedisError          = errs.NewError(99900, "redis错误")
+	DBError             = errs.NewError(99901, "数据库错误")
+	CopyError           = errs.NewError(99902, "结构体复制错误")
+	NoLogin             = errs.NewError(99903, "用户未登陆")
+	NoLegalMobile       = errs.NewError(10102001, "手机号不合法") //不合法的手机号
+	CaptchaError        = errs.NewError(10102002, "验证码错误")
+	CaptchaNoExist      = errs.NewError(10102003, "验证码不存在或已过期")
+	EmailExist          = errs.NewError(10102004, "邮箱已存在")
+	AccountExist        = errs.NewError(10102005, "账号已存在")
+	NameExist           = errs.NewError(10102006, "用户名已存在")
+	MobileExist         = errs.NewError(10102007, "手机号已存在")
+	AccountNoExist      = errs.NewError(10102008, "账号不存在")
+	AccountAndPwdError  = errs.NewError(10102009, "账号密码不正确")
+	OrganizationNoExist = errs.NewError(10102010, "组织不存在")
+)

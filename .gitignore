@@ -1,0 +1,8 @@
+!.gitignore
+!.gitsubmodules
+*.yaml
+*.log
+*.ini
+assets
+logs
+server/evn_other/config/config.yaml
