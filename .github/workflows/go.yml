@@ -22,7 +22,7 @@ jobs:
         go-version: '1.20'
         
     - name: Download Packages
-      run: cd ./server &&  go work sync && go mod tidy
+      run: cd ./server &&  go work sync && cd ..
       
     - name: Build Api Server For Linux
       run: go build -v -o api ./server/evn_api/main.go
