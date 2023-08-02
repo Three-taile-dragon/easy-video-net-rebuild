@@ -1,8 +1,8 @@
 //grpc 登陆服务配置文件
 
 syntax = "proto3";
-package login.service.v1;
-option go_package = "evn_user/pkg/service/login.service.v1";
+package user.service.v1;
+option go_package = "evn_user/pkg/service/user.service.v1";
 
 
 message CaptchaRequest {
@@ -55,7 +55,7 @@ message RefreshTokenRequest {
   string refreshToken = 1;
 }
 
-service LoginService {
+service UserService {
   rpc GetCaptcha(CaptchaRequest) returns (CaptchaResponse) {}
   rpc Register(RegisterRequest) returns (RegisterResponse) {}
   rpc Login(LoginRequest) returns (LoginResponse) {}

@@ -1,4 +1,4 @@
-package login_service_v1
+package user_service_v1
 
 import (
 	"context"

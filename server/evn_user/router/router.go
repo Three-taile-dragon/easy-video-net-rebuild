@@ -5,7 +5,7 @@ import (
 	"dragonsss.cn/evn_common/logs"
 	"dragonsss.cn/evn_grpc/user/login"
 	"dragonsss.cn/evn_user/config"
-	loginServiceV1 "dragonsss.cn/evn_user/pkg/service/login.service.v1"
+	loginServiceV1 "dragonsss.cn/evn_user/pkg/service/user.service.v1"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
