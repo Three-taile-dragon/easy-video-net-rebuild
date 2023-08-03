@@ -6,51 +6,57 @@ import (
 	"dragonsss.cn/evn_common/encrypts"
 	"dragonsss.cn/evn_common/errs"
 	"dragonsss.cn/evn_common/jwts"
-	"dragonsss.cn/evn_grpc/user/login"
+	"dragonsss.cn/evn_common/model"
+	mCommon "dragonsss.cn/evn_common/model/common"
+	"dragonsss.cn/evn_common/model/user"
+	user2 "dragonsss.cn/evn_grpc/user"
 	"dragonsss.cn/evn_user/config"
 	"dragonsss.cn/evn_user/internal/dao"
 	"dragonsss.cn/evn_user/internal/dao/mysql"
-	"dragonsss.cn/evn_user/internal/data/user"
 	"dragonsss.cn/evn_user/internal/database"
 	"dragonsss.cn/evn_user/internal/database/tran"
 	"dragonsss.cn/evn_user/internal/repo"
-	"dragonsss.cn/evn_user/pkg/model"
+	response "dragonsss.cn/evn_user/pkg/model"
 	"dragonsss.cn/evn_user/util"
+	"encoding/json"
+	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/jinzhu/copier"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 	"strconv"
 	"strings"
 	"time"
 )
 
 // LoginService grpc 登陆服务实现
-type LoginService struct {
-	login.UnimplementedLoginServiceServer
+type UserService struct {
+	user2.UnimplementedUserServiceServer
 	cache       repo.Cache
 	userRepo    repo.UserRepo
 	transaction tran.Transaction
-	memberRepo  repo.MemberRepo
+	//memberRepo  repo.MemberRepo
 }
 
-func New() *LoginService {
-	return &LoginService{
+func New() *UserService {
+	return &UserService{
 		cache:       dao.Rc,
 		userRepo:    mysql.NewUserDao(),
 		transaction: dao.NewTransaction(),
-		memberRepo:  mysql.NewMemberDao(),
+		//memberRepo:  mysql.NewMemberDao(),
 	}
 }
 
-func (ls *LoginService) GetCaptcha(ctx context.Context, req *login.CaptchaRequest) (*login.CaptchaResponse, error) {
+func (ls *UserService) GetCaptcha(ctx context.Context, req *user2.CaptchaRequest) (*user2.CaptchaResponse, error) {
 	//1.获取参数
-	mobile := req.UserMobile
+	email := req.Email
 	//2.校验参数
-	if !common.VerifyMobile(mobile) {
-		return nil, errs.GrpcError(model.NoLegalMobile) //使用自定义错误码进行处理
+	if !common.VerifyEmailFormat(email) {
+		return nil, errs.GrpcError(model.NoLegalEmail) //使用自定义错误码进行处理
 	}
 	//3.生成验证码(随机四位1000-9999或者六位100000-999999)
 	code := util.CreateCaptcha(6) //生成随机六位数字验证码
+	fmt.Printf("%v验证码为：%v", email, code)
 	//4.调用短信平台(第三方 放入go func 协程 接口可以快速响应
 	go func() {
 		//time.Sleep(2 * time.Second)
@@ -64,28 +70,28 @@ func (ls *LoginService) GetCaptcha(ctx context.Context, req *login.CaptchaReques
 		//redis.Set"REGISTER_"+mobile, code)
 		c, cancel := context.WithTimeout(context.Background(), 2*time.Second) //编写上下文 最多允许两秒超时
 		defer cancel()
-		err := ls.cache.Put(c, "REGISTER_"+mobile, code, 15*time.Minute)
+		err := ls.cache.Put(c, "REGISTER_"+email, code, 15*time.Minute)
 		if err != nil {
-			zap.L().Error("验证码存入redis出错,cause by : " + err.Error() + "\n")
+			zap.L().Error("evn_user user_service GetCaptcha redis put err", zap.Error(err))
 
 		}
-		zap.L().Debug("将手机号和验证码存入redis成功：REGISTER_" + mobile + " : " + code + "\n")
+		//zap.L().Debug("将手机号和验证码存入redis成功：REGISTER_" + email + " : " + code + "\n")
 	}()
 	//注意code一般不发送
 	//这里是做了简化处理 由于短信平台目前对于个人不好使用
-	return &login.CaptchaResponse{Code: code}, nil
+	return &user2.CaptchaResponse{Data: "发送成功"}, nil
 }
 
-func (ls *LoginService) Register(ctx context.Context, req *login.RegisterRequest) (*login.RegisterResponse, error) {
+func (ls *UserService) Register(ctx context.Context, req *user2.RegisterRequest) (*user2.RegisterResponse, error) {
 	c := context.Background()
 	//可以校验参数
 	//校验验证码
-	redisCode, err := ls.cache.Get(c, model.RegisterRedisKey+req.Mobile)
+	redisCode, err := ls.cache.Get(c, model.RegisterRedisKey+req.Email)
 	if err == redis.Nil {
 		return nil, errs.GrpcError(model.CaptchaNoExist)
 	}
 	if err != nil {
-		zap.L().Error("Register 中 redis 读取错误", zap.Error(err))
+		zap.L().Error("evn_user user_service Register redis read err", zap.Error(err))
 		return nil, errs.GrpcError(model.RedisError)
 	}
 	if redisCode != req.Captcha {
@@ -94,140 +100,142 @@ func (ls *LoginService) Register(ctx context.Context, req *login.RegisterRequest
 	//校验业务逻辑
 	exist, err := ls.userRepo.GetUserByEmail(c, req.Email)
 	if err != nil {
-		zap.L().Error("数据库出错", zap.Error(err))
+		zap.L().Error("evn_user user_service Register GetUserByEmail DB_Error", zap.Error(err))
 		return nil, errs.GrpcError(model.DBError)
 	}
 	if exist {
 		return nil, errs.GrpcError(model.EmailExist)
 	}
 	//检验用户名
-	exist, err = ls.userRepo.GetUserByAccount(c, req.Name)
+	exist, err = ls.userRepo.GetUserByName(c, req.Name)
 	if err != nil {
-		zap.L().Error("数据库出错", zap.Error(err))
+		zap.L().Error("evn_user user_service Register GetUserByName DB_Error", zap.Error(err))
 		return nil, errs.GrpcError(model.DBError)
 	}
 	if exist {
 		return nil, errs.GrpcError(model.AccountExist)
 	}
-	//检验手机号
-	exist, err = ls.userRepo.GetUserByMobile(c, req.Mobile)
-	if err != nil {
-		zap.L().Error("数据库出错", zap.Error(err))
-		return nil, errs.GrpcError(model.DBError)
-	}
-	if exist {
-		return nil, errs.GrpcError(model.MobileExist)
-	}
+	////检验手机号
+	//exist, err = ls.userRepo.GetUserByMobile(c, req.Mobile)
+	//if err != nil {
+	//	zap.L().Error("数据库出错", zap.Error(err))
+	//	return nil, errs.GrpcError(model.DBError)
+	//}
+	//if exist {
+	//	return nil, errs.GrpcError(model.MobileExist)
+	//}
 	//执行业务逻辑
-	pwd := encrypts.Md5(req.Password) //加密部分
+	//pwd := encrypts.Md5(req.Password) //加密部分
 	//随机生成用户ID
 	//使用薄雾算法生成user id
-	mist := common.NewMist()
-	userIdSequence := mist.Generate()
+	//mist := common.NewMist()
+	//userIdSequence := mist.Generate()
+
+	//bcrypt 密码加密
+	pwHashBytes, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	//转换成字符串
+	pwHashStr := string(pwHashBytes)
+
+	photo, _ := json.Marshal(mCommon.Img{
+		Src: "",
+		Tp:  "local",
+	})
+
 	mem := &user.User{
-		Id:            userIdSequence,
-		Account:       req.Name,
-		Password:      pwd,
-		Name:          req.Name,
-		Mobile:        req.Mobile,
-		Email:         req.Email,
-		CreateTime:    time.Now().UnixMilli(),
-		LastLoginTime: 0,
+		Email:     req.Email,
+		Username:  req.Name,
+		Password:  pwHashStr,
+		Photo:     photo,
+		BirthDate: time.Now(),
 	}
 	//将存入部分使用事务包裹 使得可以回滚数据库操作
 	err = ls.transaction.Action(func(conn database.DbConn) error {
 		err = ls.userRepo.SaveUser(conn, c, mem)
 		if err != nil {
-			zap.L().Error("注册模块user数据库存入出错", zap.Error(err))
+			zap.L().Error("evn_user user_service Register SaveUser DB_Error", zap.Error(err))
 			return errs.GrpcError(model.DBError)
 		}
-		////存入组织
-		//org := &data.Organization{
-		//	Name:       mem.Name + "个人项目",
-		//	MemberId:   mem.Id,
-		//	CreateTime: time.Now().UnixMilli(),
-		//	Personal:   model.Personal,
-		//	Avatar:     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.dtstatic.com%2Fuploads%2Fblog%2F202103%2F31%2F20210331160001_9a852.thumb.1000_0.jpg&refer=http%3A%2F%2Fc-ssl.dtstatic.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1673017724&t=ced22fc74624e6940fd6a89a21d30cc5",
-		//}
-		//err = ls.organizationRepo.SaveOrganization(conn, c, org)
-		//if err != nil {
-		//	zap.L().Error("注册模块organization数据库存入失败", zap.Error(err))
-		//	return errs.GrpcError(model.DBError)
-		//}
 		return nil
 	})
 	//var conn database.DbConn
 	//err = ls.userRepo.SaveMember(conn, c, mem)
 	////err = ls.memberRepo.SaveMember(c, mem)
-	//if err != nil {
-	//	zap.L().Error("注册模块user数据库存入出错", zap.Error(err))
-	//	return &login.RegisterResponse{}, errs.GrpcError(model.DBError)
-	//}
-	return &login.RegisterResponse{}, nil
+	//使用jwt生成token
+	memIdStr := strconv.FormatInt(int64(mem.ID), 10)
+	token := jwts.CreateToken(memIdStr, config.C.JC.AccessExp, config.C.JC.AccessSecret, config.C.JC.RefreshSecret, config.C.JC.RefreshExp)
+	return &user2.RegisterResponse{
+		Id:        int64(mem.ID),
+		Username:  mem.Username,
+		Photo:     "",
+		Token:     token.AccessToken,
+		CreatedAt: mem.CreatedAt.String(),
+	}, nil
 }
 
-func (ls *LoginService) Login(ctx context.Context, req *login.LoginRequest) (*login.LoginResponse, error) {
+func (ls *UserService) Login(ctx context.Context, req *user2.LoginRequest) (*user2.LoginResponse, error) {
 	c := context.Background()
 	//获取传入参数
 	//校验参数
 	//校验用户名和邮箱
-	exist, err := ls.userRepo.GetUserByAccountAndEmail(c, req.Account)
+	exist, err := ls.userRepo.GetUserByName(c, req.Username)
 	if err != nil {
-		zap.L().Error("数据库出错", zap.Error(err))
+		zap.L().Error("evn_user user_service Login GetUserByNameAndEmail DB_Error", zap.Error(err))
 		return nil, errs.GrpcError(model.DBError)
 	}
 	if !exist {
 		return nil, errs.GrpcError(model.AccountNoExist)
 	}
 	//查询账号密码是否正确
-	pwd := encrypts.Md5(req.Password)
-	mem, err := ls.userRepo.FindUser(c, req.Account, pwd)
+
+	mem, err := ls.userRepo.CheckPassword(c, req.Username)
+	//若err不为空说明密码不匹配
+	err = bcrypt.CompareHashAndPassword([]byte(mem.Password), []byte(req.Password))
 	if err != nil {
-		zap.L().Error("登陆模块member数据库查询出错", zap.Error(err))
-		return nil, errs.GrpcError(model.DBError)
-	}
-	if mem == nil {
+		//zap.L().Error("登陆模块member数据库查询出错", zap.Error(err))
 		return nil, errs.GrpcError(model.AccountAndPwdError)
 	}
-	memMessage := &login.MemberMessage{}
-	err = copier.Copy(memMessage, mem)
-	memMessage.Code, _ = encrypts.EncryptInt64(mem.Id, config.C.AC.AesKey) //加密用户ID
-	if err != nil {
-		zap.L().Error("登陆模块mem赋值错误", zap.Error(err))
-		return nil, errs.GrpcError(model.CopyError)
-	}
+
 	//使用jwt生成token
-	memIdStr := strconv.FormatInt(mem.Id, 10)
+	memIdStr := strconv.FormatInt(int64(mem.ID), 10)
 	token := jwts.CreateToken(memIdStr, config.C.JC.AccessExp, config.C.JC.AccessSecret, config.C.JC.RefreshSecret, config.C.JC.RefreshExp)
-	tokenList := &login.TokenResponse{
-		AccessToken:    token.AccessToken,
-		RefreshToken:   token.RefreshToken,
-		TokenType:      "bearer",
-		AccessTokenExp: token.AccessExp,
-	}
+	//tokenList := &user2.TokenResponse{
+	//	AccessToken:    token.AccessToken,
+	//	RefreshToken:   token.RefreshToken,
+	//	TokenType:      "bearer",
+	//	AccessTokenExp: token.AccessExp,
+	//}
 	//将存入部分使用事务包裹 使得可以回滚数据库操作
-	//err = ls.transaction.Action(func(conn database.DbConn) error {
-	//	err = ls.userRepo.UpdateLoginTime(conn, c, mem.Id)
-	//	if err != nil {
-	//		zap.L().Error("登陆模块user数据库登陆时间存入出错", zap.Error(err))
-	//		return errs.GrpcError(model.DBError)
-	//	}
-	//	return nil
-	//})
-	//TODO 这里 未使用事务进行包裹 有问题待处理
-	err = ls.memberRepo.UpdateLoginTime(c, mem.Id)
-	if err != nil {
-		zap.L().Error("登陆模块user数据库登陆时间存入出错", zap.Error(err))
-		return &login.LoginResponse{}, errs.GrpcError(model.DBError)
-	}
-	return &login.LoginResponse{
-		Member:    memMessage,
-		TokenList: tokenList,
+	err = ls.transaction.Action(func(conn database.DbConn) error {
+		err = ls.userRepo.UpdateLoginTime(conn, c, mem.Username)
+		if err != nil {
+			zap.L().Error("evn_user user_service Login UpdateLoginTime DB_Error", zap.Error(err))
+			return errs.GrpcError(model.DBError)
+		}
+		return nil
+	})
+	//err = ls.memberRepo.UpdateLoginTime(c, int64(mem.ID))
+	//if err != nil {
+	//	zap.L().Error("登陆模块user数据库登陆时间存入出错", zap.Error(err))
+	//	return &user2.LoginResponse{}, errs.GrpcError(model.DBError)
+	//}
+	userInfo := response.UserInfoResponse(mem, token.AccessToken, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	//rsp := &user2.LoginResponse{}
+	//err = copier.Copy(&rsp, userInfo)
+	//if err != nil {
+	//	zap.L().Error("evn_user user_service Login copier.Copy Copy_Error", zap.Error(err))
+	//	return &user2.LoginResponse{}, errs.GrpcError(model.CopyError)
+	//}
+	return &user2.LoginResponse{
+		Id:        int64(userInfo.ID),
+		Username:  userInfo.UserName,
+		Photo:     userInfo.Photo,
+		Token:     userInfo.Token,
+		CreatedAt: userInfo.CreatedAt.String(),
 	}, nil
 }
 
 // TokenVerify token验证
-func (ls *LoginService) TokenVerify(ctx context.Context, msg *login.TokenRequest) (*login.LoginResponse, error) {
+func (ls *UserService) TokenVerify(ctx context.Context, msg *user2.TokenRequest) (*user2.LoginResponse, error) {
 	c := context.Background()
 	token := msg.Token
 	if strings.Contains(token, "bearer") {
@@ -237,7 +245,7 @@ func (ls *LoginService) TokenVerify(ctx context.Context, msg *login.TokenRequest
 	parseToken, err := jwts.ParseToken(token, msg.Secret)
 	if err != nil {
 		zap.L().Error("Token解析失败", zap.Error(err))
-		return nil, errs.GrpcError(model.NoLogin)
+		return nil, errs.GrpcError(model.NoLoginError)
 	}
 	//数据库查询 优化点 登陆之后应该把用户信息缓存起来
 	id, _ := strconv.ParseInt(parseToken, 10, 64)
@@ -246,22 +254,23 @@ func (ls *LoginService) TokenVerify(ctx context.Context, msg *login.TokenRequest
 		zap.L().Error("Token验证模块member数据库查询出错", zap.Error(err))
 		return nil, errs.GrpcError(model.DBError)
 	}
-	memMessage := &login.MemberMessage{}
+	memMessage := &user2.LoginResponse{}
 	err = copier.Copy(&memMessage, memberById)
 	if err != nil {
 		zap.L().Error("Token验证模块memMessage赋值错误", zap.Error(err))
 		return nil, errs.GrpcError(model.CopyError)
 	}
 	if msg.IsEncrypt {
-		memMessage.Code, _ = encrypts.EncryptInt64(memberById.Id, config.C.AC.AesKey) //加密用户ID
+		tmp, _ := encrypts.EncryptInt64(int64(memberById.ID), config.C.AC.AesKey)
+		memMessage.Id, _ = strconv.ParseInt(tmp, 10, 64) //加密用户ID
 	}
-	return &login.LoginResponse{Member: memMessage}, nil
+	return memMessage, nil
 }
 
-func (ls *LoginService) RefreshToken(ctx context.Context, req *login.RefreshTokenRequest) (*login.TokenResponse, error) {
+func (ls *UserService) RefreshToken(ctx context.Context, req *user2.RefreshTokenRequest) (*user2.TokenResponse, error) {
 	c := context.Background()
 	//接收参数
-	reqStruct := &login.TokenRequest{
+	reqStruct := &user2.TokenRequest{
 		Token:     req.RefreshToken,
 		Secret:    config.C.JC.RefreshSecret,
 		IsEncrypt: false, //不加密 返回的用户ID
@@ -272,11 +281,11 @@ func (ls *LoginService) RefreshToken(ctx context.Context, req *login.RefreshToke
 		return nil, err //失败则返回空
 	}
 	//正确则重新生成Token列表返回
-	memId := parseRsp.Member.Id
+	memId := parseRsp.Id
 	//使用jwt生成token
 	memIdStr := strconv.FormatInt(memId, 10)
 	token := jwts.CreateToken(memIdStr, config.C.JC.AccessExp, config.C.JC.AccessSecret, config.C.JC.RefreshSecret, config.C.JC.RefreshExp)
-	tokenList := &login.TokenResponse{
+	tokenList := &user2.TokenResponse{
 		AccessToken:    token.AccessToken,
 		RefreshToken:   token.RefreshToken,
 		TokenType:      "bearer",

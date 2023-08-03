@@ -4,7 +4,7 @@ import (
 	"dragonsss.cn/evn_api/config"
 	"dragonsss.cn/evn_common/discovery"
 	"dragonsss.cn/evn_common/logs"
-	"dragonsss.cn/evn_grpc/user/login"
+	"dragonsss.cn/evn_grpc/user"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -14,7 +14,7 @@ import (
 
 //建立rpc连接
 
-var LoginServiceClient login.LoginServiceClient
+var UserServiceClient user.UserServiceClient
 
 func InitRpcUserClient() {
 	// grpc连接 etcd
@@ -26,5 +26,5 @@ func InitRpcUserClient() {
 		zap.L().Error("grpc连接失败,err: " + err.Error())
 		log.Fatalf("grpc连接失败,err: %v \n", err)
 	}
-	LoginServiceClient = login.NewLoginServiceClient(conn)
+	UserServiceClient = user.NewUserServiceClient(conn)
 }

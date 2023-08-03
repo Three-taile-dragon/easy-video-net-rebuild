@@ -6,10 +6,10 @@ option go_package = "evn_user/pkg/service/user.service.v1";
 
 
 message CaptchaRequest {
-  string userMobile = 1;
+  string email = 1;
 }
 message CaptchaResponse{
-  string code = 1;
+  string data = 1;
 }
 message RegisterRequest {
   string email = 1;
@@ -19,24 +19,22 @@ message RegisterRequest {
   string captcha = 5;
 }
 message RegisterResponse {
-
+  int64 id = 1;
+  string username = 2;
+  string photo = 3;
+  string token = 4;
+  string created_at = 5;
 }
 message LoginRequest {
-  string account = 1;
+  string username = 1;
   string password = 2;
 }
 message LoginResponse{
-  MemberMessage member = 1;
-  TokenResponse tokenList = 3;
-}
-message MemberMessage {
   int64 id = 1;
-  string name = 2;
-  string mobile = 3;
-  string account = 4;
-  int64  lastLoginTime = 5;
-  string email = 6;
-  string code =7;
+  string username = 2;
+  string photo = 3;
+  string token = 4;
+  string created_at = 5;
 }
 message TokenResponse{
   string accessToken = 1;

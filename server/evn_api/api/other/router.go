@@ -1,7 +1,7 @@
 package project
 
 import (
-	"dragonsss.cn/evn_api/api/midd"
+	"dragonsss.cn/evn_api/api/cors"
 	"dragonsss.cn/evn_api/router"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -23,11 +23,11 @@ func (*RouterProject) Router(r *gin.Engine) {
 	InitRpcProjectClient()
 	h := New()
 	//路由组
-	//group := r.Group("/home/getHomeInfo")
+	group := r.Group("/api/home")
 	////使用token认证中间件
 	////group.Use(midd.TokenVerify())
 	//group.POST("", h.index)
-	r.Use(midd.Cors())
-	r.POST("/home/getHomeInfo", h.getHomeInfo)
+	group.Use(cors.Cors())
+	group.POST("/getHomeInfo", h.getHomeInfo)
 
 }

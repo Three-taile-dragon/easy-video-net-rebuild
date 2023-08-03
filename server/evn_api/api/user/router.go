@@ -1,6 +1,7 @@
 package user
 
 import (
+	"dragonsss.cn/evn_api/api/cors"
 	"dragonsss.cn/evn_api/router"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -22,8 +23,10 @@ func (*RouterUser) Router(r *gin.Engine) {
 	//使得可以调用逻辑函数
 	InitRpcUserClient()
 	h := New()
-	r.POST("/api/getCaptcha", h.getCaptcha)
-	r.POST("/api/login", h.login)
-	r.POST("/api/register", h.register)
-	r.POST("/api/refreshToken", h.refreshToken)
+	group := r.Group("/api/user")
+	group.Use(cors.Cors())
+	group.POST("/getCaptcha", h.getCaptcha)
+	group.POST("/login", h.login)
+	group.POST("/register", h.register)
+	group.POST("/refreshToken", h.refreshToken)
 }

@@ -2,20 +2,20 @@ package repo
 
 import (
 	"context"
-	"dragonsss.cn/evn_user/internal/data/user"
+	"dragonsss.cn/evn_common/model/user"
 	"dragonsss.cn/evn_user/internal/database"
 )
 
 type UserRepo interface {
 	SaveUser(conn database.DbConn, ctx context.Context, mem *user.User) error
 	GetUserByEmail(ctx context.Context, email string) (bool, error)
-	GetUserByAccount(ctx context.Context, account string) (bool, error)
-	GetUserByAccountAndEmail(ctx context.Context, account string) (bool, error)
+	GetUserByNameAndEmail(ctx context.Context, name string) (bool, error)
 	GetUserByName(ctx context.Context, name string) (bool, error)
 	GetUserByMobile(ctx context.Context, mobile string) (bool, error)
-	FindUser(ctx context.Context, account string, pwd string) (mem *user.User, err error)
+	CheckPassword(ctx context.Context, name string) (mem *user.User, err error)
 	FindUserById(ctx context.Context, id int64) (*user.User, error)
-	UpdateLoginTime(conn database.DbConn, ctx context.Context, id int64) error
+	FindUserByName(ctx context.Context, name string) (*user.User, error)
+	UpdateLoginTime(conn database.DbConn, ctx context.Context, name string) error
 }
 
 type MemberRepo interface {

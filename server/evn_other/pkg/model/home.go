@@ -2,8 +2,8 @@ package model
 
 import (
 	"dragonsss.cn/evn_common/conversion"
-	"dragonsss.cn/evn_other/internal/data/rotograph"
-	"dragonsss.cn/evn_other/internal/data/video"
+	"dragonsss.cn/evn_common/model/rotograph"
+	"dragonsss.cn/evn_common/model/video"
 	"time"
 )
 

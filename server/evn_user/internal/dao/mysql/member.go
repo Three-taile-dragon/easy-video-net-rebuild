@@ -2,10 +2,9 @@ package mysql
 
 import (
 	"context"
-	"dragonsss.cn/evn_user/internal/data/user"
+	"dragonsss.cn/evn_common/model/user"
 	"dragonsss.cn/evn_user/internal/database/gorms"
 	"gorm.io/gorm"
-	"time"
 )
 
 type MemberDao struct {
@@ -56,7 +55,6 @@ func (m *MemberDao) UpdateLoginTime(ctx context.Context, id int64) error {
 	if err != nil {
 		return err
 	}
-	mem.LastLoginTime = time.Now().UnixMilli()
 	err = m.conn.Session(ctx).Save(&mem).Error
 	//err = m.SaveMember(ctx, mem)
 	return err

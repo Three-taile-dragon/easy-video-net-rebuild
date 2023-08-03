@@ -1,7 +1,7 @@
 package assets
 
 import (
-	"dragonsss.cn/evn_api/api/midd"
+	"dragonsss.cn/evn_api/api/cors"
 	"dragonsss.cn/evn_api/router"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -21,7 +21,7 @@ func init() {
 }
 
 func (*RouterAssets) Router(r *gin.Engine) {
-	r.Use(midd.Cors())
+	r.Use(cors.Cors())
 	PrivateGroup := r.Group("")
 	PrivateGroup.Use()
 	{

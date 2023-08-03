@@ -1,5 +1,5 @@
 export interface loginReq  {
-    username :string,
+    name :string,
     password : string
 }
 
@@ -7,20 +7,21 @@ export interface userInfoRes {
     id : number
     photo : string
     token : string
-    username : string
+    name : string
     created_at : string
 }
 
 export interface registReq {
-    username :string
+    name :string
     password :string
-    verificationCode :string
+    password2: string
+    captcha :string
     email :string
 }
 
 export interface forgetReq {
     password :string
-    verificationCode :string
+    captcha :string
     email :string
 }
 

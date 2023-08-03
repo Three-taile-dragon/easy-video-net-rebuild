@@ -2,9 +2,9 @@ package repo
 
 import (
 	"context"
-	"dragonsss.cn/evn_other/internal/data/common"
-	"dragonsss.cn/evn_other/internal/data/rotograph"
-	"dragonsss.cn/evn_other/internal/data/video"
+	"dragonsss.cn/evn_common/model/common"
+	"dragonsss.cn/evn_common/model/rotograph"
+	"dragonsss.cn/evn_common/model/video"
 )
 
 type OtherRepo interface {

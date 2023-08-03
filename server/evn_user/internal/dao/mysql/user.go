@@ -2,7 +2,7 @@ package mysql
 
 import (
 	"context"
-	"dragonsss.cn/evn_user/internal/data/user"
+	"dragonsss.cn/evn_common/model/user"
 	"dragonsss.cn/evn_user/internal/database"
 	"dragonsss.cn/evn_user/internal/database/gorms"
 	"gorm.io/gorm"
@@ -30,21 +30,15 @@ func (u *UserDao) GetUserByEmail(ctx context.Context, email string) (bool, error
 	return count > 0, err
 }
 
-func (u *UserDao) GetUserByAccountAndEmail(ctx context.Context, account string) (bool, error) {
+func (u *UserDao) GetUserByNameAndEmail(ctx context.Context, name string) (bool, error) {
 	var count int64
-	err := u.conn.Session(ctx).Model(&user.User{}).Where("email=? or account=?", account, account).Count(&count).Error //数据库查询
-	return count > 0, err
-}
-
-func (u *UserDao) GetUserByAccount(ctx context.Context, account string) (bool, error) {
-	var count int64
-	err := u.conn.Session(ctx).Model(&user.User{}).Where("account=?", account).Count(&count).Error //数据库查询
+	err := u.conn.Session(ctx).Model(&user.User{}).Where("email=? or username=?", name, name).Count(&count).Error //数据库查询
 	return count > 0, err
 }
 
 func (u *UserDao) GetUserByName(ctx context.Context, name string) (bool, error) {
 	var count int64
-	err := u.conn.Session(ctx).Model(&user.User{}).Where("name=?", name).Count(&count).Error //数据库查询
+	err := u.conn.Session(ctx).Model(&user.User{}).Where("username=?", name).Count(&count).Error //数据库查询
 	return count > 0, err
 }
 
@@ -53,9 +47,19 @@ func (u *UserDao) GetUserByMobile(ctx context.Context, mobile string) (bool, err
 	err := u.conn.Session(ctx).Model(&user.User{}).Where("mobile=?", mobile).Count(&count).Error //数据库查询
 	return count > 0, err
 }
-func (u *UserDao) FindUser(ctx context.Context, account string, pwd string) (*user.User, error) {
+func (u *UserDao) CheckPassword(ctx context.Context, name string) (*user.User, error) {
 	var mem *user.User
-	err := u.conn.Session(ctx).Where("account=? and password=?", account, pwd).First(&mem).Error
+	err := u.conn.Session(ctx).Where("username=?", name).First(&mem).Error
+	if err == gorm.ErrRecordNotFound {
+		//未查询到对应的信息
+		return nil, nil
+	}
+	return mem, err
+}
+
+func (u *UserDao) FindUserByName(ctx context.Context, name string) (*user.User, error) {
+	var mem *user.User
+	err := u.conn.Session(ctx).Where("username=?", name).First(&mem).Error
 	if err == gorm.ErrRecordNotFound {
 		//未查询到对应的信息
 		return nil, nil
@@ -73,13 +77,14 @@ func (u *UserDao) FindUserById(ctx context.Context, id int64) (*user.User, error
 	return mem, err
 }
 
-func (u *UserDao) UpdateLoginTime(conn database.DbConn, ctx context.Context, id int64) error {
+func (u *UserDao) UpdateLoginTime(conn database.DbConn, ctx context.Context, name string) error {
 	u.conn = conn.(*gorms.GormConn) //使用事务操作
-	mem, err := u.FindUserById(ctx, id)
+	mem, err := u.FindUserByName(ctx, name)
 	if err != nil {
 		return err
 	}
-	mem.LastLoginTime = time.Now().UnixMilli()
-	err = u.SaveUser(conn, ctx, mem)
+	mem.UpdatedAt = time.Now()
+	// 使用 Updates 方法只更新指定字段，不会插入新的数据
+	err = u.conn.Session(ctx).Model(&user.User{}).Where("id = ?", mem.ID).Updates(mem).Error
 	return err
 }

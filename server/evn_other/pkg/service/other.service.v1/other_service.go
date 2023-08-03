@@ -3,13 +3,14 @@ package other_service_v1
 import (
 	"context"
 	"dragonsss.cn/evn_common/errs"
+	model2 "dragonsss.cn/evn_common/model"
+	"dragonsss.cn/evn_common/model/common"
+	"dragonsss.cn/evn_common/model/rotograph"
+	"dragonsss.cn/evn_common/model/video"
 	"dragonsss.cn/evn_grpc/other"
 	"dragonsss.cn/evn_other/config"
 	"dragonsss.cn/evn_other/internal/dao"
 	"dragonsss.cn/evn_other/internal/dao/mysql"
-	"dragonsss.cn/evn_other/internal/data/common"
-	"dragonsss.cn/evn_other/internal/data/rotograph"
-	"dragonsss.cn/evn_other/internal/data/video"
 	"dragonsss.cn/evn_other/internal/database/tran"
 	"dragonsss.cn/evn_other/internal/repo"
 	"dragonsss.cn/evn_other/pkg/model"
@@ -40,7 +41,7 @@ func (o *OtherService) GetHomeInfo(ctx context.Context, req *other.HomeRequest) 
 	rotographList, err := o.menuRepo.FindRotographInfo(c)
 	if err != nil {
 		zap.L().Error("evn_other GetHomeInfo error", zap.Error(err))
-		return nil, errs.GrpcError(model.DBError)
+		return nil, errs.GrpcError(model2.DBError)
 	}
 
 	//获取主页推荐视频
@@ -53,7 +54,7 @@ func (o *OtherService) GetHomeInfo(ctx context.Context, req *other.HomeRequest) 
 
 	if err != nil {
 		zap.L().Error("evn_other GetHomeInfo error", zap.Error(err))
-		return nil, errs.GrpcError(model.DBError)
+		return nil, errs.GrpcError(model2.DBError)
 	}
 	res := &model.GetHomeInfoResponse{}
 	res.Response(rotographList, videoList, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
@@ -61,12 +62,12 @@ func (o *OtherService) GetHomeInfo(ctx context.Context, req *other.HomeRequest) 
 	rotographJSON, err := json.Marshal(res.Rotograph)
 	if err != nil {
 		zap.L().Error("evn_other GetHomeInfo rotographJSON error", zap.Error(err))
-		return nil, errs.GrpcError(model.JsonError)
+		return nil, errs.GrpcError(model2.JsonError)
 	}
 	videoJSON, err := json.Marshal(res.VideoList)
 	if err != nil {
 		zap.L().Error("evn_other GetHomeInfo videoJSON error", zap.Error(err))
-		return nil, errs.GrpcError(model.JsonError)
+		return nil, errs.GrpcError(model2.JsonError)
 	}
 
 	response := &other.HomeResponse{

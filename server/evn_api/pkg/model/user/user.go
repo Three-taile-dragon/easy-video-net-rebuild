@@ -3,6 +3,7 @@ package user
 import (
 	common "dragonsss.cn/evn_common"
 	"errors"
+	"time"
 )
 
 // RegisterReq user 相关模型
@@ -12,8 +13,8 @@ type RegisterReq struct {
 	Name      string `json:"name" form:"name"`
 	Password  string `json:"password" form:"password"`
 	Password2 string `json:"password2" form:"password2"`
-	Mobile    string `json:"mobile" form:"mobile"`
-	Captcha   string `json:"captcha" form:"captcha"`
+	//Mobile    string `json:"mobile" form:"mobile"`
+	Captcha string `json:"captcha" form:"captcha"`
 }
 
 func (r RegisterReq) VerifyPassword() bool {
@@ -26,9 +27,9 @@ func (r RegisterReq) Verify() error {
 	if !common.VerifyEmailFormat(r.Email) {
 		return errors.New("邮箱格式不正确")
 	}
-	if !common.VerifyMobile(r.Mobile) {
-		return errors.New("手机号格式不正确")
-	}
+	//if !common.VerifyMobile(r.Mobile) {
+	//	return errors.New("手机号格式不正确")
+	//}
 	if !r.VerifyPassword() {
 		return errors.New("两次密输入不一致")
 	}
@@ -36,20 +37,19 @@ func (r RegisterReq) Verify() error {
 }
 
 type LoginReq struct {
-	Account  string `json:"account" form:"account"`
-	Password string `json:"password" form:"password"`
+	Username string `json:"name" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 type LoginRsp struct {
-	Member    Member    `json:"member"`
-	TokenList TokenList `json:"tokenList"`
+	ID        uint      `json:"id"`
+	UserName  string    `json:"username"`
+	Photo     string    `json:"photo"`
+	Token     string    `json:"token"`
+	CreatedAt time.Time `json:"created_at"`
 }
-type Member struct {
-	//Id     int64  `json:"id"`
-	Name   string `json:"name"`
-	Mobile string `json:"mobile"`
-	Status int    `json:"status"`
-	Code   string `json:"code"` //使用加密后的ID代替
+type EmailCaptcha struct {
+	Email string `json:"email" binding:"required,email"`
 }
 
 type TokenList struct {
@@ -60,7 +60,7 @@ type TokenList struct {
 }
 
 func (l *LoginReq) VerifyAccount() error {
-	if l.Account == "" {
+	if l.Username == "" {
 		return errors.New("用户名不能为空")
 	}
 	return nil

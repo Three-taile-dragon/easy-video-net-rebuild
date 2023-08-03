@@ -2,11 +2,11 @@ package user
 
 import (
 	"context"
-	"dragonsss.cn/evn_api/pkg/model/user"
+	"dragonsss.cn/evn_api/pkg/model"
+	modelUser "dragonsss.cn/evn_api/pkg/model/user"
 	common "dragonsss.cn/evn_common"
 	"dragonsss.cn/evn_common/errs"
-	"dragonsss.cn/evn_grpc/user/login"
-	"dragonsss.cn/evn_user/pkg/model"
+	"dragonsss.cn/evn_grpc/user"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 	"go.uber.org/zap"
@@ -25,26 +25,32 @@ func New() *HandleUser {
 
 func (*HandleUser) getCaptcha(ctx *gin.Context) {
 	result := &common.Result{}
-	//获取传入的手机号
-	mobile := ctx.PostForm("mobile")
+	//获取传入的邮箱
+	//绑定参数
+	var req modelUser.EmailCaptcha
+	err := ctx.ShouldBind(&req)
+	if err != nil {
+		ctx.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
 	//对grpc进行两秒超时处理
 	c, canel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer canel()
 	//通过grpc调用 验证码生成函数
-	rsp, err := LoginServiceClient.GetCaptcha(c, &login.CaptchaRequest{UserMobile: mobile})
+	rsp, err := UserServiceClient.GetCaptcha(c, &user.CaptchaRequest{Email: req.Email})
 	//结果返回
 	if err != nil {
 		code, msg := errs.ParseGrpcError(err) //解析grpc错误
 		ctx.JSON(http.StatusOK, result.Fail(code, msg))
 		return
 	}
-	ctx.JSON(http.StatusOK, result.Success(rsp.Code))
+	ctx.JSON(http.StatusOK, result.Success(rsp.Data))
 }
 
 func (h *HandleUser) login(c *gin.Context) {
 	result := common.Result{}
 	//绑定参数
-	var req user.LoginReq
+	var req modelUser.LoginReq
 	err := c.ShouldBind(&req)
 	if err != nil {
 		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
@@ -58,7 +64,7 @@ func (h *HandleUser) login(c *gin.Context) {
 	//对grpc 进行两秒超时处理
 	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer canel()
-	msg := &login.LoginRequest{}
+	msg := &user.LoginRequest{}
 	err = copier.Copy(msg, req)
 	if err != nil {
 		zap.L().Error("登陆模块结构体赋值出错")
@@ -66,26 +72,26 @@ func (h *HandleUser) login(c *gin.Context) {
 		return
 	}
 	//调用grpc
-	loginRsp, err := LoginServiceClient.Login(ctx, msg)
+	loginRsp, err := UserServiceClient.Login(ctx, msg)
 	if err != nil {
 		code, msg := errs.ParseGrpcError(err) //解析grpc错误信息
 		c.JSON(http.StatusOK, result.Fail(code, msg))
 		return
 	}
 	//返回结果
-	rsp := &user.LoginRsp{}
-	err = copier.Copy(rsp, loginRsp)
-	if err != nil {
-		zap.L().Error("登陆模块返回赋值错误", zap.Error(err))
-		c.JSON(http.StatusOK, result.Fail(errs.ParseGrpcError(errs.GrpcError(model.SystemError))))
-	}
-	c.JSON(http.StatusOK, result.Success(rsp))
+	//rsp := &modelUser.LoginRsp{}
+	//err = copier.Copy(rsp, loginRsp)
+	//if err != nil {
+	//	zap.L().Error("登陆模块返回赋值错误", zap.Error(err))
+	//	c.JSON(http.StatusOK, result.Fail(errs.ParseGrpcError(errs.GrpcError(model.SystemError))))
+	//}
+	c.JSON(http.StatusOK, result.Success(loginRsp))
 }
 
 func (h *HandleUser) register(c *gin.Context) {
 	result := common.Result{}
 	//绑定参数
-	var req user.RegisterReq
+	var req modelUser.RegisterReq
 	err := c.ShouldBind(&req)
 	if err != nil {
 		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
@@ -100,7 +106,7 @@ func (h *HandleUser) register(c *gin.Context) {
 	//对grpc进行两秒超时处理
 	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer canel()
-	msg := &login.RegisterRequest{}
+	msg := &user.RegisterRequest{}
 	err = copier.Copy(msg, req)
 	if err != nil {
 		zap.L().Error("注册模块结构体赋值出错")
@@ -108,14 +114,14 @@ func (h *HandleUser) register(c *gin.Context) {
 		return
 	}
 
-	_, err = LoginServiceClient.Register(ctx, msg)
+	rsp, err := UserServiceClient.Register(ctx, msg)
 	if err != nil {
 		code, msg := errs.ParseGrpcError(err) //解析grpc错误信息
 		c.JSON(http.StatusOK, result.Fail(code, msg))
 		return
 	}
 	//4.返回结果
-	c.JSON(http.StatusOK, result.Success(""))
+	c.JSON(http.StatusOK, result.Success(rsp))
 }
 
 func (h *HandleUser) refreshToken(c *gin.Context) {
@@ -126,7 +132,7 @@ func (h *HandleUser) refreshToken(c *gin.Context) {
 	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer canel()
 	//通过grpc调用 验证码生成函数
-	rrsp, err := LoginServiceClient.RefreshToken(ctx, &login.RefreshTokenRequest{RefreshToken: refreshToken})
+	rrsp, err := UserServiceClient.RefreshToken(ctx, &user.RefreshTokenRequest{RefreshToken: refreshToken})
 	//结果返回
 	if err != nil {
 		code, msg := errs.ParseGrpcError(err) //解析grpc错误
@@ -134,7 +140,7 @@ func (h *HandleUser) refreshToken(c *gin.Context) {
 		return
 	}
 	//返回结果
-	rsp := &user.TokenList{}
+	rsp := &modelUser.TokenList{}
 	err = copier.Copy(rsp, rrsp)
 	if err != nil {
 		zap.L().Error("Token刷新模块返回赋值错误", zap.Error(err))
