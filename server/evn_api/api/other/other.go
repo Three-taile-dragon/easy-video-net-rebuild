@@ -2,6 +2,7 @@ package project
 
 import (
 	"context"
+	"dragonsss.cn/evn_api/api/other/rpc"
 	other2 "dragonsss.cn/evn_api/pkg/model/other"
 	common "dragonsss.cn/evn_common"
 	"dragonsss.cn/evn_common/errs"
@@ -35,7 +36,7 @@ func (p *HandleProject) getHomeInfo(c *gin.Context) {
 	}
 	msg := &other.HomeRequest{Page: req.PageInfo.Page, Size: req.PageInfo.Size}
 	//msg := &other.HomeRequest{Page: 1, Size: 15}
-	rsp, err := OtherServiceClient.GetHomeInfo(ctx, msg)
+	rsp, err := rpc.OtherServiceClient.GetHomeInfo(ctx, msg)
 	if err != nil {
 		code, msg := errs.ParseGrpcError(err)
 		c.JSON(http.StatusOK, result.Fail(code, msg))

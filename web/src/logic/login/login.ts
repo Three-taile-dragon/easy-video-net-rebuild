@@ -49,6 +49,7 @@ export const useLoginProp = () => {
     const forgetForm = reactive<forgetReq>({
         email: "",
         password: "",
+        password2: "",
         captcha: "",
     })
 

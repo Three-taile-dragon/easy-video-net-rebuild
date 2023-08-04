@@ -1,4 +1,4 @@
-package user
+package rpc
 
 import (
 	"dragonsss.cn/evn_api/config"

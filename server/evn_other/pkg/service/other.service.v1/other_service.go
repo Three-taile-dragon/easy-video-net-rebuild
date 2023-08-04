@@ -40,7 +40,7 @@ func (o *OtherService) GetHomeInfo(ctx context.Context, req *other.HomeRequest) 
 	var rotographList *rotograph.List
 	rotographList, err := o.menuRepo.FindRotographInfo(c)
 	if err != nil {
-		zap.L().Error("evn_other GetHomeInfo error", zap.Error(err))
+		zap.L().Error("evn_other other_service GetHomeInfo error", zap.Error(err))
 		return nil, errs.GrpcError(model2.DBError)
 	}
 
@@ -53,7 +53,7 @@ func (o *OtherService) GetHomeInfo(ctx context.Context, req *other.HomeRequest) 
 	videoList, err = o.menuRepo.FindVideoList(c, tmp)
 
 	if err != nil {
-		zap.L().Error("evn_other GetHomeInfo error", zap.Error(err))
+		zap.L().Error("evn_other other_service GetHomeInfo error", zap.Error(err))
 		return nil, errs.GrpcError(model2.DBError)
 	}
 	res := &model.GetHomeInfoResponse{}
@@ -61,12 +61,12 @@ func (o *OtherService) GetHomeInfo(ctx context.Context, req *other.HomeRequest) 
 
 	rotographJSON, err := json.Marshal(res.Rotograph)
 	if err != nil {
-		zap.L().Error("evn_other GetHomeInfo rotographJSON error", zap.Error(err))
+		zap.L().Error("evn_other other_service GetHomeInfo rotographJSON error", zap.Error(err))
 		return nil, errs.GrpcError(model2.JsonError)
 	}
 	videoJSON, err := json.Marshal(res.VideoList)
 	if err != nil {
-		zap.L().Error("evn_other GetHomeInfo videoJSON error", zap.Error(err))
+		zap.L().Error("evn_other other_service GetHomeInfo videoJSON error", zap.Error(err))
 		return nil, errs.GrpcError(model2.JsonError)
 	}
 

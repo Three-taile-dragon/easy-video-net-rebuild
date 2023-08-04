@@ -2,6 +2,8 @@ package user
 
 import (
 	"dragonsss.cn/evn_api/api/cors"
+	"dragonsss.cn/evn_api/api/midd"
+	"dragonsss.cn/evn_api/api/user/rpc"
 	"dragonsss.cn/evn_api/router"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -21,7 +23,7 @@ func init() {
 func (*RouterUser) Router(r *gin.Engine) {
 	//初始化grpc客户端连接
 	//使得可以调用逻辑函数
-	InitRpcUserClient()
+	rpc.InitRpcUserClient()
 	h := New()
 	group := r.Group("/api/user")
 	group.Use(cors.Cors())
@@ -29,4 +31,14 @@ func (*RouterUser) Router(r *gin.Engine) {
 	group.POST("/login", h.login)
 	group.POST("/register", h.register)
 	group.POST("/refreshToken", h.refreshToken)
+	group.POST("/forget", h.forget)
+	group.POST("/space/getSpaceIndividual", h.getSpaceIndividual)
+	group.POST("/space/getReleaseInformation", h.getReleaseInformation)
+
+	//必须登入
+	spaceRouter := r.Group("/api/user/space").Use(midd.TokenVerify())
+	{
+		spaceRouter.POST("/getAttentionList", h.getAttentionList)
+		spaceRouter.POST("/getVermicelliList", h.getVermicelliList)
+	}
 }

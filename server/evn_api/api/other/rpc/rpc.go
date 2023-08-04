@@ -1,4 +1,4 @@
-package project
+package rpc
 
 import (
 	"dragonsss.cn/evn_api/config"

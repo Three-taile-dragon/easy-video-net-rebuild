@@ -2,6 +2,7 @@ package project
 
 import (
 	"dragonsss.cn/evn_api/api/cors"
+	"dragonsss.cn/evn_api/api/other/rpc"
 	"dragonsss.cn/evn_api/router"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -20,7 +21,7 @@ func init() {
 
 func (*RouterProject) Router(r *gin.Engine) {
 	//初始化grpc的客户端连接
-	InitRpcProjectClient()
+	rpc.InitRpcProjectClient()
 	h := New()
 	//路由组
 	group := r.Group("/api/home")

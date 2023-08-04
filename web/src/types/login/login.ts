@@ -21,6 +21,7 @@ export interface registReq {
 
 export interface forgetReq {
     password :string
+    password2: string
     captcha :string
     email :string
 }

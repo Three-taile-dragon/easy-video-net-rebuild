@@ -234,6 +234,67 @@ func (ls *UserService) Login(ctx context.Context, req *user2.LoginRequest) (*use
 	}, nil
 }
 
+func (ls *UserService) Forget(ctx context.Context, req *user2.ForgetRequest) (*user2.ForgetResponse, error) {
+	c := context.Background()
+	//可以校验参数
+	//校验验证码
+	redisCode, err := ls.cache.Get(c, model.RegisterRedisKey+req.Email)
+	if err == redis.Nil {
+		return nil, errs.GrpcError(model.CaptchaNoExist)
+	}
+	if err != nil {
+		zap.L().Error("evn_user user_service Forget redis read err", zap.Error(err))
+		return nil, errs.GrpcError(model.RedisError)
+	}
+	if redisCode != req.Captcha {
+		return nil, errs.GrpcError(model.CaptchaError)
+	}
+	//校验业务逻辑
+	exist, err := ls.userRepo.GetUserByEmail(c, req.Email)
+	if err != nil {
+		zap.L().Error("evn_user user_service Forget GetUserByEmail DB_Error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	if !exist {
+		return nil, errs.GrpcError(model.AccountNoExist)
+	}
+	////检验手机号
+	//exist, err = ls.userRepo.GetUserByMobile(c, req.Mobile)
+	//if err != nil {
+	//	zap.L().Error("数据库出错", zap.Error(err))
+	//	return nil, errs.GrpcError(model.DBError)
+	//}
+	//if exist {
+	//	return nil, errs.GrpcError(model.MobileExist)
+	//}
+	//执行业务逻辑
+	//pwd := encrypts.Md5(req.Password) //加密部分
+	//随机生成用户ID
+	//使用薄雾算法生成user id
+	//mist := common.NewMist()
+	//userIdSequence := mist.Generate()
+
+	//bcrypt 密码加密
+	pwHashBytes, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	//转换成字符串
+	pwHashStr := string(pwHashBytes)
+
+	mem := &user.User{
+		Email:    req.Email,
+		Password: pwHashStr,
+	}
+	//将存入部分使用事务包裹 使得可以回滚数据库操作
+	err = ls.transaction.Action(func(conn database.DbConn) error {
+		err = ls.userRepo.UpdateUser(conn, c, mem)
+		if err != nil {
+			zap.L().Error("evn_user user_service Forget UpdateUser DB_Error", zap.Error(err))
+			return errs.GrpcError(model.DBError)
+		}
+		return nil
+	})
+	return &user2.ForgetResponse{Data: "发送成功"}, nil
+}
+
 // TokenVerify token验证
 func (ls *UserService) TokenVerify(ctx context.Context, msg *user2.TokenRequest) (*user2.LoginResponse, error) {
 	c := context.Background()
@@ -292,4 +353,135 @@ func (ls *UserService) RefreshToken(ctx context.Context, req *user2.RefreshToken
 		AccessTokenExp: token.AccessExp,
 	}
 	return tokenList, nil
+}
+
+func (ls *UserService) GetSpaceIndividual(ctx context.Context, req *user2.SpaceIndividualRequest) (*user2.SpaceIndividualResponse, error) {
+	c := context.Background()
+	//var userInfo *user.User
+	userInfo, err := ls.userRepo.FindUserById(c, int64(req.ID))
+	if err != nil {
+		zap.L().Error("evn_user user_service GetSpaceIndividual FindUserById error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	isAttention := false
+	if req.Uid != 0 {
+		//获取是否关注
+		isAttention, err = ls.userRepo.IsAttention(c, req.Uid, req.ID)
+		if err != nil {
+			zap.L().Error("evn_user user_service GetSpaceIndividual IsAttention error", zap.Error(err))
+			return nil, errs.GrpcError(model.DBError)
+		}
+	}
+	//获取关注和粉丝
+	attentionNum, err := ls.userRepo.GetAttentionNum(c, req.ID)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetSpaceIndividual GetAttentionNum error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	vermicelliNum, err := ls.userRepo.GetVermicelliNum(c, req.ID)
+
+	rsp, err := response.GetSpaceIndividualResponse(userInfo, isAttention, attentionNum, vermicelliNum, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetSpaceIndividual GetSpaceIndividualResponse error", zap.Error(err))
+		return nil, errs.GrpcError(model.SystemError)
+	}
+	rspJSON, err := json.Marshal(rsp)
+	if err != nil {
+		zap.L().Error("evn_api user_service GetSpaceIndividual rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model.JsonError)
+	}
+	tmp := &user2.SpaceIndividualResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
+}
+
+func (ls *UserService) GetReleaseInformation(ctx context.Context, req *user2.ReleaseInformationRequest) (*user2.ReleaseInformationResponse, error) {
+	c := context.Background()
+	videoList, err := ls.userRepo.GetVideoListBySpace(c, req.ID)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetReleaseInformation GetVideoListBySpace error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	articleList, err := ls.userRepo.GetArticleBySpace(c, req.ID)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetReleaseInformation GetArticleBySpace error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	rsp, err := response.GetReleaseInformationResponse(videoList, articleList, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetReleaseInformation GetReleaseInformationResponse error", zap.Error(err))
+		return nil, errs.GrpcError(model.SystemError)
+	}
+	rspJSON, err := json.Marshal(rsp)
+	if err != nil {
+		zap.L().Error("evn_api user_service GetReleaseInformation rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model.JsonError)
+	}
+	tmp := &user2.ReleaseInformationResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
+}
+
+func (ls *UserService) GetAttentionList(ctx context.Context, req *user2.AttentionListRequest) (*user2.AttentionListResponse, error) {
+	c := context.Background()
+	//获取用户关注列表
+	attentionList, err := ls.userRepo.GetAttentionList(c, req.ID)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetAttentionList GetAttentionList error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	//获取自己关注的用户
+	arr, err := ls.userRepo.GetAttentionListByIdArr(c, req.ID)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetAttentionList GetAttentionListByIdArr error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+
+	rsp, err := response.GetAttentionListResponse(attentionList, arr, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetAttentionList GetAttentionListResponse error", zap.Error(err))
+		return nil, errs.GrpcError(model.SystemError)
+	}
+	rspJSON, err := json.Marshal(rsp)
+	if err != nil {
+		zap.L().Error("evn_api user_service GetAttentionList rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model.JsonError)
+	}
+	tmp := &user2.AttentionListResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
+}
+
+func (ls *UserService) GetVermicelliList(ctx context.Context, req *user2.VermicelliListRequest) (*user2.VermicelliListResponse, error) {
+	c := context.Background()
+	//获取用户粉丝列表
+	vermicelliList, err := ls.userRepo.GetVermicelliList(c, req.ID)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetVermicelliList GetVermicelliList error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	//获取自己关注的用户
+	arr, err := ls.userRepo.GetAttentionListByIdArr(c, req.ID)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetVermicelliList GetAttentionListByIdArr error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+
+	rsp, err := response.GetVermicelliListResponse(vermicelliList, arr, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetVermicelliList GetVermicelliListResponse error", zap.Error(err))
+		return nil, errs.GrpcError(model.SystemError)
+	}
+	rspJSON, err := json.Marshal(rsp)
+	if err != nil {
+		zap.L().Error("evn_api user_service GetVermicelliList rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model.JsonError)
+	}
+	tmp := &user2.VermicelliListResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
 }

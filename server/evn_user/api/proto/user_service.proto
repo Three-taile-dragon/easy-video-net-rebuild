@@ -36,6 +36,18 @@ message LoginResponse{
   string token = 4;
   string created_at = 5;
 }
+
+message ForgetRequest {
+  string email = 1;
+  string password =2;
+  string mobile = 3;
+  string captcha = 4;
+}
+
+message ForgetResponse{
+  string data = 1;
+}
+
 message TokenResponse{
   string accessToken = 1;
   string refreshToken = 2;
@@ -53,10 +65,48 @@ message RefreshTokenRequest {
   string refreshToken = 1;
 }
 
+message SpaceIndividualRequest {
+  uint32 ID = 1;
+  uint32 uid = 2;
+}
+
+message SpaceIndividualResponse {
+  string data = 1;
+}
+
+message ReleaseInformationRequest {
+  uint32 ID = 1;
+}
+
+message ReleaseInformationResponse {
+  string data = 1;
+}
+
+message  AttentionListRequest {
+  uint32 ID = 1;
+}
+
+message  AttentionListResponse {
+  string data = 1;
+}
+
+message VermicelliListRequest {
+  uint32  ID = 1;
+}
+
+message VermicelliListResponse {
+  string data = 1;
+}
+
 service UserService {
   rpc GetCaptcha(CaptchaRequest) returns (CaptchaResponse) {}
   rpc Register(RegisterRequest) returns (RegisterResponse) {}
   rpc Login(LoginRequest) returns (LoginResponse) {}
+  rpc Forget(ForgetRequest) returns (ForgetResponse) {}
   rpc TokenVerify(TokenRequest) returns (LoginResponse){}
   rpc RefreshToken(RefreshTokenRequest) returns (TokenResponse) {}
+  rpc GetSpaceIndividual(SpaceIndividualRequest) returns (SpaceIndividualResponse) {}
+  rpc GetReleaseInformation(ReleaseInformationRequest) returns (ReleaseInformationResponse) {}
+  rpc GetAttentionList(AttentionListRequest) returns (AttentionListResponse) {}
+  rpc GetVermicelliList(VermicelliListRequest) returns (VermicelliListResponse) {}
 }

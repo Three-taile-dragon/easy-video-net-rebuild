@@ -2,7 +2,10 @@ package mysql
 
 import (
 	"context"
+	"dragonsss.cn/evn_common/model/article"
 	"dragonsss.cn/evn_common/model/user"
+	"dragonsss.cn/evn_common/model/user/attention"
+	"dragonsss.cn/evn_common/model/video"
 	"dragonsss.cn/evn_user/internal/database"
 	"dragonsss.cn/evn_user/internal/database/gorms"
 	"gorm.io/gorm"
@@ -87,4 +90,141 @@ func (u *UserDao) UpdateLoginTime(conn database.DbConn, ctx context.Context, nam
 	// 使用 Updates 方法只更新指定字段，不会插入新的数据
 	err = u.conn.Session(ctx).Model(&user.User{}).Where("id = ?", mem.ID).Updates(mem).Error
 	return err
+}
+
+func (u *UserDao) FindUserByEmail(ctx context.Context, email string) (*user.User, error) {
+	var mem *user.User
+	err := u.conn.Session(ctx).Where("email=?", email).First(&mem).Error
+	if err == gorm.ErrRecordNotFound {
+		//未查询到对应的信息
+		return nil, nil
+	}
+	return mem, err
+}
+
+func (u *UserDao) UpdateUser(conn database.DbConn, ctx context.Context, mem *user.User) error {
+	u.conn = conn.(*gorms.GormConn) //使用事务操作
+	oriMem, err := u.FindUserByEmail(ctx, mem.Email)
+	if err != nil {
+		return err
+	}
+	oriMem.Password = mem.Password
+	// 使用 Updates 方法只更新指定字段，不会插入新的数据
+	err = u.conn.Session(ctx).Model(&user.User{}).Where("id = ?", oriMem.ID).Updates(mem).Error
+	return err
+}
+
+func (u *UserDao) IsAttention(ctx context.Context, uid uint32, id uint32) (bool, error) {
+	var at *attention.Attention
+	err := u.conn.Session(ctx).Where("uid =? and attention_id = ?", uid, id).First(&at).Error
+	if err != nil {
+		//未查询到对应的信息
+		return false, err
+	}
+	return true, nil
+}
+
+func (u *UserDao) GetAttentionNum(ctx context.Context, id uint32) (*int64, error) {
+	var at *attention.Attention
+	num := new(int64)
+	err := u.conn.Session(ctx).Model(at).Where("uid =? ", id).Count(num).Error
+	if err != nil {
+		//未查询到对应的信息
+		return nil, err
+	}
+	return num, nil
+}
+
+func (u *UserDao) GetVermicelliNum(ctx context.Context, id uint32) (*int64, error) {
+	var at *attention.Attention
+	num := new(int64)
+	err := u.conn.Session(ctx).Model(at).Where("attention_id =? ", id).Count(num).Error
+	if err != nil {
+		//未查询到对应的信息
+		return nil, err
+	}
+	return num, nil
+}
+
+func (u *UserDao) GetVideoListBySpace(ctx context.Context, id uint32) (*video.VideosContributionList, error) {
+	session := u.conn.Session(ctx)
+	var vvc *video.VideosContributionList
+	err := session.
+		Preload("Likes").
+		Preload("Comments").
+		Preload("Barrage").
+		Where("uid = ?", id).
+		Order("created_at desc").
+		Find(&vvc).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return vvc, nil
+}
+
+func (u *UserDao) GetArticleBySpace(ctx context.Context, id uint32) (*article.ArticlesContributionList, error) {
+	session := u.conn.Session(ctx)
+	var acl *article.ArticlesContributionList
+	err := session.
+		Preload("Likes").
+		Preload("Classification").
+		Preload("Comments").
+		Where("uid = ?", id).
+		Order("created_at desc").
+		Find(&acl).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return acl, nil
+}
+
+// GetAttentionList 获取关注列表
+func (u *UserDao) GetAttentionList(ctx context.Context, id uint32) (*attention.AttentionsList, error) {
+	session := u.conn.Session(ctx)
+	var att *attention.AttentionsList
+	err := session.
+		Preload("AttentionUserInfo").
+		Where("uid = ?", id).
+		Find(&att).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return att, nil
+}
+
+// GetAttentionListByIdArr 获取关注列表 id数组
+func (u *UserDao) GetAttentionListByIdArr(ctx context.Context, id uint32) (arr []uint, err error) {
+	arr = make([]uint, 0)
+	session := u.conn.Session(ctx)
+	var att *attention.AttentionsList
+	err = session.
+		Where("uid = ?", id).
+		Find(&att).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	//自需要数组
+	for _, v := range *att {
+		arr = append(arr, v.AttentionID)
+	}
+	return arr, nil
+}
+
+// GetVermicelliList 获取粉丝列表
+func (u *UserDao) GetVermicelliList(ctx context.Context, id uint32) (*attention.AttentionsList, error) {
+	session := u.conn.Session(ctx)
+	var att *attention.AttentionsList
+	err := session.
+		Preload("UserInfo").
+		Where("attention_id = ?", id).
+		Find(&att).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return att, nil
 }

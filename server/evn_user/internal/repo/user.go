@@ -2,7 +2,10 @@ package repo
 
 import (
 	"context"
+	"dragonsss.cn/evn_common/model/article"
 	"dragonsss.cn/evn_common/model/user"
+	"dragonsss.cn/evn_common/model/user/attention"
+	"dragonsss.cn/evn_common/model/video"
 	"dragonsss.cn/evn_user/internal/database"
 )
 
@@ -15,7 +18,17 @@ type UserRepo interface {
 	CheckPassword(ctx context.Context, name string) (mem *user.User, err error)
 	FindUserById(ctx context.Context, id int64) (*user.User, error)
 	FindUserByName(ctx context.Context, name string) (*user.User, error)
+	FindUserByEmail(ctx context.Context, email string) (*user.User, error)
 	UpdateLoginTime(conn database.DbConn, ctx context.Context, name string) error
+	UpdateUser(conn database.DbConn, ctx context.Context, mem *user.User) error
+	IsAttention(ctx context.Context, uid uint32, id uint32) (bool, error)
+	GetAttentionNum(ctx context.Context, id uint32) (*int64, error)
+	GetVermicelliNum(ctx context.Context, id uint32) (*int64, error)
+	GetVideoListBySpace(ctx context.Context, id uint32) (*video.VideosContributionList, error)
+	GetArticleBySpace(ctx context.Context, id uint32) (*article.ArticlesContributionList, error)
+	GetAttentionList(ctx context.Context, id uint32) (*attention.AttentionsList, error)
+	GetAttentionListByIdArr(ctx context.Context, id uint32) (arr []uint, err error)
+	GetVermicelliList(ctx context.Context, id uint32) (*attention.AttentionsList, error)
 }
 
 type MemberRepo interface {

@@ -13,10 +13,10 @@ export const sendEmailVerificationCode = (params: sendEmailReq) => {
 }
 
 export const sendEmailVerificationCodeByForget = (params: sendEmailReq) => {
-    return httpRequest.post('/login/sendEmailVerificationCodeByForget', params);
+    return httpRequest.post('/api/user/getCaptcha', params);
 }
 
 export const forgetRequist = (params: forgetReq) => {
-    return httpRequest.post('/login/forget', params);
+    return httpRequest.post('/api/user/forget', params);
 }
 
