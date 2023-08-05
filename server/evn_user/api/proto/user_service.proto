@@ -8,9 +8,18 @@ option go_package = "evn_user/pkg/service/user.service.v1";
 message CaptchaRequest {
   string email = 1;
 }
-message CaptchaResponse{
+message CommonDataResponse{
   string data = 1;
 }
+
+message CommonIDRequest {
+  uint32 ID = 1;
+}
+
+message CommonBoolResponse {
+  bool data = 1;
+}
+
 message RegisterRequest {
   string email = 1;
   string name = 2;
@@ -18,23 +27,22 @@ message RegisterRequest {
   string mobile = 4;
   string captcha = 5;
 }
-message RegisterResponse {
+message UserInfoResponse {
   int64 id = 1;
   string username = 2;
   string photo = 3;
   string token = 4;
   string created_at = 5;
 }
+
+message TokenVerifyResponse {
+  int64 id = 1;
+  string username = 2;
+}
+
 message LoginRequest {
   string username = 1;
   string password = 2;
-}
-message LoginResponse{
-  int64 id = 1;
-  string username = 2;
-  string photo = 3;
-  string token = 4;
-  string created_at = 5;
 }
 
 message ForgetRequest {
@@ -44,9 +52,6 @@ message ForgetRequest {
   string captcha = 4;
 }
 
-message ForgetResponse{
-  string data = 1;
-}
 
 message TokenResponse{
   string accessToken = 1;
@@ -70,43 +75,32 @@ message SpaceIndividualRequest {
   uint32 uid = 2;
 }
 
-message SpaceIndividualResponse {
-  string data = 1;
+message UserInfoRequest {
+  string Username = 1;
+  int64  Gender = 2;
+  string Birth_Date = 3;
+  bool Is_Visible = 4;
+  string Signature = 5;
+  int64 ID = 6;
 }
 
-message ReleaseInformationRequest {
-  uint32 ID = 1;
-}
-
-message ReleaseInformationResponse {
-  string data = 1;
-}
-
-message  AttentionListRequest {
-  uint32 ID = 1;
-}
-
-message  AttentionListResponse {
-  string data = 1;
-}
-
-message VermicelliListRequest {
-  uint32  ID = 1;
-}
-
-message VermicelliListResponse {
-  string data = 1;
+message DetermineNameExistsRequest {
+  string Username = 1;
+  int64 ID = 2;
 }
 
 service UserService {
-  rpc GetCaptcha(CaptchaRequest) returns (CaptchaResponse) {}
-  rpc Register(RegisterRequest) returns (RegisterResponse) {}
-  rpc Login(LoginRequest) returns (LoginResponse) {}
-  rpc Forget(ForgetRequest) returns (ForgetResponse) {}
-  rpc TokenVerify(TokenRequest) returns (LoginResponse){}
+  rpc GetCaptcha(CaptchaRequest) returns (CommonDataResponse) {}
+  rpc Register(RegisterRequest) returns (UserInfoResponse) {}
+  rpc Login(LoginRequest) returns (UserInfoResponse) {}
+  rpc Forget(ForgetRequest) returns (CommonDataResponse) {}
+  rpc TokenVerify(TokenRequest) returns (TokenVerifyResponse){}
   rpc RefreshToken(RefreshTokenRequest) returns (TokenResponse) {}
-  rpc GetSpaceIndividual(SpaceIndividualRequest) returns (SpaceIndividualResponse) {}
-  rpc GetReleaseInformation(ReleaseInformationRequest) returns (ReleaseInformationResponse) {}
-  rpc GetAttentionList(AttentionListRequest) returns (AttentionListResponse) {}
-  rpc GetVermicelliList(VermicelliListRequest) returns (VermicelliListResponse) {}
+  rpc GetSpaceIndividual(SpaceIndividualRequest) returns (CommonDataResponse) {}
+  rpc GetReleaseInformation(CommonIDRequest) returns (CommonDataResponse) {}
+  rpc GetAttentionList(CommonIDRequest) returns (CommonDataResponse) {}
+  rpc GetVermicelliList(CommonIDRequest) returns (CommonDataResponse) {}
+  rpc GetUserInfo(CommonIDRequest) returns (CommonDataResponse) {}
+  rpc SetUserInfo(UserInfoRequest) returns (CommonBoolResponse) {}
+  rpc DetermineNameExists(DetermineNameExistsRequest) returns (CommonBoolResponse) {}
 }

@@ -10,7 +10,7 @@ import { AttentionReq, DetermineNameExistsReq, DetermineNameExistsRes, SetUserIn
 import httpRequest from "@/utils/requst";
 //获取用户信息
 export const getUserInfoRequist = () => {
-    return httpRequest.post<UserInfoRes>('/user/getUserInfo');
+    return httpRequest.post<UserInfoRes>('/api/user/getUserInfo');
 }
 //判断用户名是否存在
 export const determineNameExistsRequist = (params: DetermineNameExistsReq) => {
@@ -18,7 +18,7 @@ export const determineNameExistsRequist = (params: DetermineNameExistsReq) => {
 }
 //设置用户信息
 export const setUserInfoRequist = (params: UserInfoRes) => {
-    return httpRequest.post<SetUserInfoRes>('/user/setUserInfo', params);
+    return httpRequest.post<SetUserInfoRes>('/api/user/setUserInfo', params);
 }
 //更新用户头像
 export const updateAvatarRequist = (params: UpdateAvatarReq) => {

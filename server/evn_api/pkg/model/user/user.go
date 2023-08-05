@@ -177,3 +177,25 @@ type GetVermicelliListInfo struct {
 }
 
 type GetVermicelliListInfoList []GetVermicelliListInfo
+
+type UserSetInfoResponseStruct struct {
+	ID        uint      `json:"id"`
+	UserName  string    `json:"username"`
+	Gender    int8      `json:"gender"`
+	BirthDate time.Time `json:"birth_date"`
+	IsVisible bool      `json:"is_visible"`
+	Signature string    `json:"signature"`
+}
+
+// SetUserInfoReceiveStruct 设置用户信息
+type SetUserInfoReceiveStruct struct {
+	Username  string `json:"username" binding:"required"`
+	Gender    *int   `json:"gender" binding:"required"`
+	BirthDate string `json:"birth_Date" binding:"required"`
+	IsVisible *bool  `json:"is_Visible" binding:"required"`
+	Signature string `json:"signature" binding:"required"`
+}
+
+type DetermineNameExistsStruct struct {
+	Username string `json:"username" binding:"required"`
+}

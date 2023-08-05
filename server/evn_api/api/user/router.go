@@ -34,11 +34,17 @@ func (*RouterUser) Router(r *gin.Engine) {
 	group.POST("/forget", h.forget)
 	group.POST("/space/getSpaceIndividual", h.getSpaceIndividual)
 	group.POST("/space/getReleaseInformation", h.getReleaseInformation)
-
 	//必须登入
 	spaceRouter := r.Group("/api/user/space").Use(midd.TokenVerify())
 	{
 		spaceRouter.POST("/getAttentionList", h.getAttentionList)
 		spaceRouter.POST("/getVermicelliList", h.getVermicelliList)
+	}
+	userRouter := r.Group("/api/user").Use(midd.TokenVerify())
+	{
+		u := NewUserControllers()
+		userRouter.POST("/getUserInfo", u.getUserInfo)
+		userRouter.POST("/setUserInfo", u.setUserInfo)
+		userRouter.POST("/determineNameExists", u.determineNameExists)
 	}
 }

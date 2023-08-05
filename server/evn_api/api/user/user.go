@@ -111,7 +111,7 @@ func (h *HandleUser) register(c *gin.Context) {
 	msg := &user.RegisterRequest{}
 	err = copier.Copy(msg, req)
 	if err != nil {
-		zap.L().Error("evn_api api user register copy RegisterRequest error")
+		zap.L().Error("evn_api api user register copy RegisterRequest error", zap.Error(err))
 		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "系统内部错误"))
 		return
 	}
@@ -242,7 +242,7 @@ func (h *HandleUser) getReleaseInformation(c *gin.Context) {
 	//对grpc进行两秒超时处理
 	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer canel()
-	msg := &user.ReleaseInformationRequest{}
+	msg := &user.CommonIDRequest{}
 	err = copier.Copy(msg, req)
 	if err != nil {
 		zap.L().Error("evn_api api user getReleaseInformation copy ReleaseInformationResponse error")
@@ -281,7 +281,7 @@ func (h *HandleUser) getAttentionList(c *gin.Context) {
 	//对grpc进行两秒超时处理
 	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer canel()
-	msg := &user.AttentionListRequest{}
+	msg := &user.CommonIDRequest{}
 	err = copier.Copy(msg, req)
 	if err != nil {
 		zap.L().Error("evn_api api user getAttentionList copy AttentionListRequest error")
@@ -321,7 +321,7 @@ func (h *HandleUser) getVermicelliList(c *gin.Context) {
 	//对grpc进行两秒超时处理
 	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer canel()
-	msg := &user.VermicelliListRequest{}
+	msg := &user.CommonIDRequest{}
 	err = copier.Copy(msg, req)
 	if err != nil {
 		zap.L().Error("evn_api api user getVermicelliList copy VermicelliListRequest error")

@@ -12,15 +12,15 @@ import (
 	"time"
 )
 
-func TokenVerify() func(ctx *gin.Context) {
+func TokenVerify() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//1.从Header中获取token
 		result := &common.Result{}
-		token := c.GetHeader("token")
+		token := c.Request.Header.Get("token")
 		//2.调用user服务进行token认证
 		ctxo, canel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer canel()
-		response, err := rpc.UserServiceClient.TokenVerify(ctxo, &user2.TokenRequest{Token: token, Secret: config.C.JC.AccessSecret, IsEncrypt: true})
+		response, err := rpc.UserServiceClient.TokenVerify(ctxo, &user2.TokenRequest{Token: token, Secret: config.C.JC.AccessSecret, IsEncrypt: false})
 		//3.处理结果 认证通过，将信息放入gin上下文 失败就返回未登录
 		if err != nil {
 			code, msg := errs.ParseGrpcError(err)

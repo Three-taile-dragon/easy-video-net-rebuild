@@ -3,6 +3,7 @@ package user_service_v1
 import (
 	"context"
 	common "dragonsss.cn/evn_common"
+	"dragonsss.cn/evn_common/conversion"
 	"dragonsss.cn/evn_common/encrypts"
 	"dragonsss.cn/evn_common/errs"
 	"dragonsss.cn/evn_common/jwts"
@@ -21,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis/v8"
-	"github.com/jinzhu/copier"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"strconv"
@@ -47,7 +47,7 @@ func New() *UserService {
 	}
 }
 
-func (ls *UserService) GetCaptcha(ctx context.Context, req *user2.CaptchaRequest) (*user2.CaptchaResponse, error) {
+func (ls *UserService) GetCaptcha(ctx context.Context, req *user2.CaptchaRequest) (*user2.CommonDataResponse, error) {
 	//1.获取参数
 	email := req.Email
 	//2.校验参数
@@ -79,10 +79,10 @@ func (ls *UserService) GetCaptcha(ctx context.Context, req *user2.CaptchaRequest
 	}()
 	//注意code一般不发送
 	//这里是做了简化处理 由于短信平台目前对于个人不好使用
-	return &user2.CaptchaResponse{Data: "发送成功"}, nil
+	return &user2.CommonDataResponse{Data: "发送成功"}, nil
 }
 
-func (ls *UserService) Register(ctx context.Context, req *user2.RegisterRequest) (*user2.RegisterResponse, error) {
+func (ls *UserService) Register(ctx context.Context, req *user2.RegisterRequest) (*user2.UserInfoResponse, error) {
 	c := context.Background()
 	//可以校验参数
 	//校验验证码
@@ -98,7 +98,7 @@ func (ls *UserService) Register(ctx context.Context, req *user2.RegisterRequest)
 		return nil, errs.GrpcError(model.CaptchaError)
 	}
 	//校验业务逻辑
-	exist, err := ls.userRepo.GetUserByEmail(c, req.Email)
+	exist, err := ls.userRepo.IsExistByEmail(c, req.Email)
 	if err != nil {
 		zap.L().Error("evn_user user_service Register GetUserByEmail DB_Error", zap.Error(err))
 		return nil, errs.GrpcError(model.DBError)
@@ -107,7 +107,7 @@ func (ls *UserService) Register(ctx context.Context, req *user2.RegisterRequest)
 		return nil, errs.GrpcError(model.EmailExist)
 	}
 	//检验用户名
-	exist, err = ls.userRepo.GetUserByName(c, req.Name)
+	exist, err = ls.userRepo.IsExistByName(c, req.Name)
 	if err != nil {
 		zap.L().Error("evn_user user_service Register GetUserByName DB_Error", zap.Error(err))
 		return nil, errs.GrpcError(model.DBError)
@@ -163,7 +163,7 @@ func (ls *UserService) Register(ctx context.Context, req *user2.RegisterRequest)
 	//使用jwt生成token
 	memIdStr := strconv.FormatInt(int64(mem.ID), 10)
 	token := jwts.CreateToken(memIdStr, config.C.JC.AccessExp, config.C.JC.AccessSecret, config.C.JC.RefreshSecret, config.C.JC.RefreshExp)
-	return &user2.RegisterResponse{
+	return &user2.UserInfoResponse{
 		Id:        int64(mem.ID),
 		Username:  mem.Username,
 		Photo:     "",
@@ -172,12 +172,12 @@ func (ls *UserService) Register(ctx context.Context, req *user2.RegisterRequest)
 	}, nil
 }
 
-func (ls *UserService) Login(ctx context.Context, req *user2.LoginRequest) (*user2.LoginResponse, error) {
+func (ls *UserService) Login(ctx context.Context, req *user2.LoginRequest) (*user2.UserInfoResponse, error) {
 	c := context.Background()
 	//获取传入参数
 	//校验参数
 	//校验用户名和邮箱
-	exist, err := ls.userRepo.GetUserByName(c, req.Username)
+	exist, err := ls.userRepo.IsExistByName(c, req.Username)
 	if err != nil {
 		zap.L().Error("evn_user user_service Login GetUserByNameAndEmail DB_Error", zap.Error(err))
 		return nil, errs.GrpcError(model.DBError)
@@ -225,7 +225,7 @@ func (ls *UserService) Login(ctx context.Context, req *user2.LoginRequest) (*use
 	//	zap.L().Error("evn_user user_service Login copier.Copy Copy_Error", zap.Error(err))
 	//	return &user2.LoginResponse{}, errs.GrpcError(model.CopyError)
 	//}
-	return &user2.LoginResponse{
+	return &user2.UserInfoResponse{
 		Id:        int64(userInfo.ID),
 		Username:  userInfo.UserName,
 		Photo:     userInfo.Photo,
@@ -234,7 +234,7 @@ func (ls *UserService) Login(ctx context.Context, req *user2.LoginRequest) (*use
 	}, nil
 }
 
-func (ls *UserService) Forget(ctx context.Context, req *user2.ForgetRequest) (*user2.ForgetResponse, error) {
+func (ls *UserService) Forget(ctx context.Context, req *user2.ForgetRequest) (*user2.CommonDataResponse, error) {
 	c := context.Background()
 	//可以校验参数
 	//校验验证码
@@ -250,7 +250,7 @@ func (ls *UserService) Forget(ctx context.Context, req *user2.ForgetRequest) (*u
 		return nil, errs.GrpcError(model.CaptchaError)
 	}
 	//校验业务逻辑
-	exist, err := ls.userRepo.GetUserByEmail(c, req.Email)
+	exist, err := ls.userRepo.IsExistByName(c, req.Email)
 	if err != nil {
 		zap.L().Error("evn_user user_service Forget GetUserByEmail DB_Error", zap.Error(err))
 		return nil, errs.GrpcError(model.DBError)
@@ -292,11 +292,11 @@ func (ls *UserService) Forget(ctx context.Context, req *user2.ForgetRequest) (*u
 		}
 		return nil
 	})
-	return &user2.ForgetResponse{Data: "发送成功"}, nil
+	return &user2.CommonDataResponse{Data: "发送成功"}, nil
 }
 
 // TokenVerify token验证
-func (ls *UserService) TokenVerify(ctx context.Context, msg *user2.TokenRequest) (*user2.LoginResponse, error) {
+func (ls *UserService) TokenVerify(ctx context.Context, msg *user2.TokenRequest) (*user2.TokenVerifyResponse, error) {
 	c := context.Background()
 	token := msg.Token
 	if strings.Contains(token, "bearer") {
@@ -305,21 +305,19 @@ func (ls *UserService) TokenVerify(ctx context.Context, msg *user2.TokenRequest)
 	//此处为了方便复用，增加一个参数用于接收解析jwt的密钥
 	parseToken, err := jwts.ParseToken(token, msg.Secret)
 	if err != nil {
-		zap.L().Error("Token解析失败", zap.Error(err))
+		zap.L().Error("evn_user user_service TokenVerify ParseToken error", zap.Error(err))
 		return nil, errs.GrpcError(model.NoLoginError)
 	}
 	//数据库查询 优化点 登陆之后应该把用户信息缓存起来
 	id, _ := strconv.ParseInt(parseToken, 10, 64)
 	memberById, err := ls.userRepo.FindUserById(c, id)
 	if err != nil {
-		zap.L().Error("Token验证模块member数据库查询出错", zap.Error(err))
+		zap.L().Error("evn_user user_service TokenVerify FindUserById DBError", zap.Error(err))
 		return nil, errs.GrpcError(model.DBError)
 	}
-	memMessage := &user2.LoginResponse{}
-	err = copier.Copy(&memMessage, memberById)
-	if err != nil {
-		zap.L().Error("Token验证模块memMessage赋值错误", zap.Error(err))
-		return nil, errs.GrpcError(model.CopyError)
+	memMessage := &user2.TokenVerifyResponse{
+		Id:       int64(memberById.ID),
+		Username: memberById.Username,
 	}
 	if msg.IsEncrypt {
 		tmp, _ := encrypts.EncryptInt64(int64(memberById.ID), config.C.AC.AesKey)
@@ -355,7 +353,7 @@ func (ls *UserService) RefreshToken(ctx context.Context, req *user2.RefreshToken
 	return tokenList, nil
 }
 
-func (ls *UserService) GetSpaceIndividual(ctx context.Context, req *user2.SpaceIndividualRequest) (*user2.SpaceIndividualResponse, error) {
+func (ls *UserService) GetSpaceIndividual(ctx context.Context, req *user2.SpaceIndividualRequest) (*user2.CommonDataResponse, error) {
 	c := context.Background()
 	//var userInfo *user.User
 	userInfo, err := ls.userRepo.FindUserById(c, int64(req.ID))
@@ -387,16 +385,16 @@ func (ls *UserService) GetSpaceIndividual(ctx context.Context, req *user2.SpaceI
 	}
 	rspJSON, err := json.Marshal(rsp)
 	if err != nil {
-		zap.L().Error("evn_api user_service GetSpaceIndividual rspJSON error", zap.Error(err))
+		zap.L().Error("evn_user user_service GetSpaceIndividual rspJSON error", zap.Error(err))
 		return nil, errs.GrpcError(model.JsonError)
 	}
-	tmp := &user2.SpaceIndividualResponse{
+	tmp := &user2.CommonDataResponse{
 		Data: string(rspJSON),
 	}
 	return tmp, nil
 }
 
-func (ls *UserService) GetReleaseInformation(ctx context.Context, req *user2.ReleaseInformationRequest) (*user2.ReleaseInformationResponse, error) {
+func (ls *UserService) GetReleaseInformation(ctx context.Context, req *user2.CommonIDRequest) (*user2.CommonDataResponse, error) {
 	c := context.Background()
 	videoList, err := ls.userRepo.GetVideoListBySpace(c, req.ID)
 	if err != nil {
@@ -415,16 +413,16 @@ func (ls *UserService) GetReleaseInformation(ctx context.Context, req *user2.Rel
 	}
 	rspJSON, err := json.Marshal(rsp)
 	if err != nil {
-		zap.L().Error("evn_api user_service GetReleaseInformation rspJSON error", zap.Error(err))
+		zap.L().Error("evn_user user_service GetReleaseInformation rspJSON error", zap.Error(err))
 		return nil, errs.GrpcError(model.JsonError)
 	}
-	tmp := &user2.ReleaseInformationResponse{
+	tmp := &user2.CommonDataResponse{
 		Data: string(rspJSON),
 	}
 	return tmp, nil
 }
 
-func (ls *UserService) GetAttentionList(ctx context.Context, req *user2.AttentionListRequest) (*user2.AttentionListResponse, error) {
+func (ls *UserService) GetAttentionList(ctx context.Context, req *user2.CommonIDRequest) (*user2.CommonDataResponse, error) {
 	c := context.Background()
 	//获取用户关注列表
 	attentionList, err := ls.userRepo.GetAttentionList(c, req.ID)
@@ -446,16 +444,16 @@ func (ls *UserService) GetAttentionList(ctx context.Context, req *user2.Attentio
 	}
 	rspJSON, err := json.Marshal(rsp)
 	if err != nil {
-		zap.L().Error("evn_api user_service GetAttentionList rspJSON error", zap.Error(err))
+		zap.L().Error("evn_user user_service GetAttentionList rspJSON error", zap.Error(err))
 		return nil, errs.GrpcError(model.JsonError)
 	}
-	tmp := &user2.AttentionListResponse{
+	tmp := &user2.CommonDataResponse{
 		Data: string(rspJSON),
 	}
 	return tmp, nil
 }
 
-func (ls *UserService) GetVermicelliList(ctx context.Context, req *user2.VermicelliListRequest) (*user2.VermicelliListResponse, error) {
+func (ls *UserService) GetVermicelliList(ctx context.Context, req *user2.CommonIDRequest) (*user2.CommonDataResponse, error) {
 	c := context.Background()
 	//获取用户粉丝列表
 	vermicelliList, err := ls.userRepo.GetVermicelliList(c, req.ID)
@@ -477,11 +475,80 @@ func (ls *UserService) GetVermicelliList(ctx context.Context, req *user2.Vermice
 	}
 	rspJSON, err := json.Marshal(rsp)
 	if err != nil {
-		zap.L().Error("evn_api user_service GetVermicelliList rspJSON error", zap.Error(err))
+		zap.L().Error("evn_user user_service GetVermicelliList rspJSON error", zap.Error(err))
 		return nil, errs.GrpcError(model.JsonError)
 	}
-	tmp := &user2.VermicelliListResponse{
+	tmp := &user2.CommonDataResponse{
 		Data: string(rspJSON),
 	}
 	return tmp, nil
+}
+
+func (ls *UserService) GetUserInfo(ctx context.Context, req *user2.CommonIDRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+	//获取用户粉丝列表
+	tmpUser, err := ls.userRepo.FindUserById(c, int64(req.ID))
+	if err != nil {
+		zap.L().Error("evn_user user_service GetUserInfo GetUserByID error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+
+	rsp := response.UserSetInfoResponse(tmpUser)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetUserInfo UserSetInfoResponse error", zap.Error(err))
+		return nil, errs.GrpcError(model.SystemError)
+	}
+	rspJSON, err := json.Marshal(rsp)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetUserInfo rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model.JsonError)
+	}
+	tmp := &user2.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
+}
+
+func (ls *UserService) SetUserInfo(ctx context.Context, req *user2.UserInfoRequest) (*user2.CommonBoolResponse, error) {
+	c := context.Background()
+	update := map[string]interface{}{
+		"Username":  req.Username,
+		"Gender":    0,
+		"BirthDate": req.Birth_Date,
+		"IsVisible": conversion.BoolTurnInt8(req.Is_Visible),
+		"Signature": req.Signature,
+	}
+	tmpRsp, err := ls.userRepo.UpdatePureZero(c, int64(req.ID), update)
+	if err != nil {
+		zap.L().Error("evn_user user_service SetUserInfo UpdatePureZero error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	if !tmpRsp {
+		return nil, errs.GrpcError(model.DBError)
+	}
+	return &user2.CommonBoolResponse{Data: true}, nil
+}
+
+func (ls *UserService) DetermineNameExists(ctx context.Context, req *user2.DetermineNameExistsRequest) (*user2.CommonBoolResponse, error) {
+	c := context.Background()
+	is, err := ls.userRepo.IsExistByName(c, req.Username)
+	if err != nil {
+		zap.L().Error("evn_user user_service DetermineNameExists IsExistByName error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	if is {
+		tmpUser, err := ls.userRepo.FindUserByName(c, req.Username)
+		if err != nil {
+			zap.L().Error("evn_user user_service DetermineNameExists FindUserByName error", zap.Error(err))
+			return nil, errs.GrpcError(model.DBError)
+		}
+		//判断是否未更改
+		if tmpUser.ID == uint(req.ID) {
+			return &user2.CommonBoolResponse{Data: false}, nil
+		}
+		return &user2.CommonBoolResponse{Data: true}, nil
+	} else {
+		return &user2.CommonBoolResponse{Data: false}, nil
+	}
+
 }

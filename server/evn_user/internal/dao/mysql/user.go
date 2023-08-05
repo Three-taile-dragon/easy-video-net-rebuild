@@ -27,28 +27,44 @@ func (u *UserDao) SaveUser(conn database.DbConn, ctx context.Context, mem *user.
 	return u.conn.Tx(ctx).Create(mem).Error
 }
 
-func (u *UserDao) GetUserByEmail(ctx context.Context, email string) (bool, error) {
+func (u *UserDao) IsExistByEmail(ctx context.Context, email string) (bool, error) {
 	var count int64
 	err := u.conn.Session(ctx).Model(&user.User{}).Where("email=?", email).Count(&count).Error //数据库查询
-	return count > 0, err
+	if err == gorm.ErrRecordNotFound {
+		//未查询到对应的信息
+		return false, nil
+	}
+	return count > 0, nil
 }
 
-func (u *UserDao) GetUserByNameAndEmail(ctx context.Context, name string) (bool, error) {
+func (u *UserDao) IsExistByNameAndEmail(ctx context.Context, name string) (bool, error) {
 	var count int64
 	err := u.conn.Session(ctx).Model(&user.User{}).Where("email=? or username=?", name, name).Count(&count).Error //数据库查询
-	return count > 0, err
+	if err == gorm.ErrRecordNotFound {
+		//未查询到对应的信息
+		return false, nil
+	}
+	return count > 0, nil
 }
 
-func (u *UserDao) GetUserByName(ctx context.Context, name string) (bool, error) {
+func (u *UserDao) IsExistByName(ctx context.Context, name string) (bool, error) {
 	var count int64
 	err := u.conn.Session(ctx).Model(&user.User{}).Where("username=?", name).Count(&count).Error //数据库查询
-	return count > 0, err
+	if err == gorm.ErrRecordNotFound {
+		//未查询到对应的信息
+		return false, nil
+	}
+	return count > 0, nil
 }
 
-func (u *UserDao) GetUserByMobile(ctx context.Context, mobile string) (bool, error) {
+func (u *UserDao) IsExistByMobile(ctx context.Context, mobile string) (bool, error) {
 	var count int64
 	err := u.conn.Session(ctx).Model(&user.User{}).Where("mobile=?", mobile).Count(&count).Error //数据库查询
-	return count > 0, err
+	if err == gorm.ErrRecordNotFound {
+		//未查询到对应的信息
+		return false, nil
+	}
+	return count > 0, nil
 }
 func (u *UserDao) CheckPassword(ctx context.Context, name string) (*user.User, error) {
 	var mem *user.User
@@ -75,7 +91,7 @@ func (u *UserDao) FindUserById(ctx context.Context, id int64) (*user.User, error
 	err := u.conn.Session(ctx).Where("id=?", id).First(&mem).Error
 	if err == gorm.ErrRecordNotFound {
 		//未查询到对应的信息
-		return nil, nil
+		return &user.User{}, nil
 	}
 	return mem, err
 }
@@ -117,9 +133,9 @@ func (u *UserDao) UpdateUser(conn database.DbConn, ctx context.Context, mem *use
 func (u *UserDao) IsAttention(ctx context.Context, uid uint32, id uint32) (bool, error) {
 	var at *attention.Attention
 	err := u.conn.Session(ctx).Where("uid =? and attention_id = ?", uid, id).First(&at).Error
-	if err != nil {
+	if err == gorm.ErrRecordNotFound {
 		//未查询到对应的信息
-		return false, err
+		return false, nil
 	}
 	return true, nil
 }
@@ -227,4 +243,23 @@ func (u *UserDao) GetVermicelliList(ctx context.Context, id uint32) (*attention.
 		return nil, err
 	}
 	return att, nil
+}
+
+func (u *UserDao) IsExistByID(ctx context.Context, id uint32) (bool, error) {
+	var count int64
+	err := u.conn.Session(ctx).Model(&user.User{}).Where("id=?", id).Count(&count).Error //数据库查询
+	if err == gorm.ErrRecordNotFound {
+		//未查询到对应的信息
+		return false, nil
+	}
+	return count > 0, nil
+}
+
+// UpdatePureZero 更新数据存在0值
+func (u *UserDao) UpdatePureZero(ctx context.Context, id int64, update map[string]interface{}) (bool, error) {
+	err := u.conn.Session(ctx).Model(&user.User{}).Where("id = ?", id).Updates(update).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
