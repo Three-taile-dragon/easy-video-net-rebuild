@@ -49,5 +49,8 @@ func (*RouterUser) Router(r *gin.Engine) {
 		userRouter.POST("/updateAvatar", u.updateAvatar)
 		userRouter.POST("/getLiveData", u.getLiveData)
 		userRouter.POST("/saveLiveData", u.saveLiveData)
+		userRouter.POST("/sendEmailVerificationCodeByChangePassword", u.sendEmailVerificationCodeByChangePassword)
+		userRouter.POST("/changePassword", u.changePassword)
+		userRouter.POST("/attention", u.attention)
 	}
 }

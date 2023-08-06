@@ -37,6 +37,7 @@ type UserRepo interface {
 	FindUserLiveInfo(ctx context.Context, id int64) (*liveInfo.LiveInfo, error)
 	SaveUserLiveInfo(ctx context.Context, liveinfo *liveInfo.LiveInfo) (bool, error)
 	UpdateUserLiveInfo(ctx context.Context, liveinfo *liveInfo.LiveInfo) (bool, error)
+	Attention(ctx context.Context, aid uint32, uid uint32) (*attention.Attention, error)
 }
 
 type MemberRepo interface {

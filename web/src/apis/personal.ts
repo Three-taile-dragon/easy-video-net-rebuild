@@ -30,16 +30,16 @@ export const getLiveDataRequist = () => {
 }
 //设置直播信息
 export const saveLiveDataRequist = (params: SaveLiveDataReq) => {
-    return httpRequest.post('/user/saveLiveData', params);
+    return httpRequest.post('/api/user/saveLiveData', params);
 }
 
 //修改密码
 export const changePassword = (params: changePasswordReq) => {
-    return httpRequest.post('/user/changePassword', params);
+    return httpRequest.post('/api/user/changePassword', params);
 }
 //修改密码发送验证码
 export const sendEmailVerificationCodeByChangePassword = () => {
-    return httpRequest.post('/user/sendEmailVerificationCodeByChangePassword');
+    return httpRequest.post('/api/user/sendEmailVerificationCodeByChangePassword');
 }
 //关注
 export const attention = (params: AttentionReq) => {

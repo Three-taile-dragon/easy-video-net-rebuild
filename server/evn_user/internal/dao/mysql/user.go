@@ -332,3 +332,29 @@ func (u *UserDao) UpdateUserLiveInfo(ctx context.Context, liveinfo *liveInfo.Liv
 		return false, err
 	}
 }
+
+func (u *UserDao) Attention(ctx context.Context, aid uint32, uid uint32) (*attention.Attention, error) {
+	session := u.conn.Session(ctx)
+	var att *attention.Attention
+	err := session.
+		Where("uid = ? && attention_id = ?", uid, aid).
+		Find(&att).
+		Error
+	//已关注
+	if att.ID > 0 {
+		//删除已关注的记录
+		err = session.
+			Where("id = ?", att.ID).
+			Delete(&att).
+			Error
+	} else {
+		//未关注
+		err = session.
+			Create(&attention.Attention{Uid: uint(uid), AttentionID: uint(aid)}).
+			Error
+	}
+	if err == nil {
+		return att, nil
+	}
+	return nil, err
+}

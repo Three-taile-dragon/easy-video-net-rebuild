@@ -16,6 +16,11 @@ message CommonIDRequest {
   uint32 ID = 1;
 }
 
+message CommonIDAndUIDRequest {
+  uint32 UID = 1;
+  uint32 ID = 2;
+}
+
 message CommonBoolResponse {
   bool data = 1;
 }
@@ -107,6 +112,12 @@ message SaveLiveDataRequest {
   int64 ID = 4;
 }
 
+message ChangePasswordRequest{
+  string Captcha = 1;
+  string Password = 2;
+  string ConfirmPassword = 3;
+  int64 ID = 4;
+}
 
 service UserService {
   rpc GetCaptcha(CaptchaRequest) returns (CommonDataResponse) {}
@@ -125,4 +136,7 @@ service UserService {
   rpc UpdateAvatar(UpdateAvatarRequest) returns (CommonDataResponse){}
   rpc GetLiveData(CommonIDRequest) returns (LiveDataResponse) {}
   rpc SaveLiveData(SaveLiveDataRequest) returns (CommonDataResponse) {}
+  rpc SendEmailVerificationCodeByChangePassword(CommonIDRequest) returns (CommonDataResponse) {}
+  rpc ChangePassword(ChangePasswordRequest) returns (CommonDataResponse) {}
+  rpc Attention(CommonIDAndUIDRequest) returns (CommonDataResponse) {}
 }

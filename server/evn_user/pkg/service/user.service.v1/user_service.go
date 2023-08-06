@@ -61,6 +61,7 @@ func (ls *UserService) GetCaptcha(ctx context.Context, req *user2.CaptchaRequest
 	code := util.CreateCaptcha(6) //生成随机六位数字验证码
 	fmt.Printf("%v验证码为：%v", email, code)
 	//4.调用短信平台(第三方 放入go func 协程 接口可以快速响应
+	//TODO 完善邮件发送服务
 	go func() {
 		//time.Sleep(2 * time.Second)
 		//zap.L().Info("短信平台调用成功，发送短信")
@@ -73,7 +74,7 @@ func (ls *UserService) GetCaptcha(ctx context.Context, req *user2.CaptchaRequest
 		//redis.Set"REGISTER_"+mobile, code)
 		c, cancel := context.WithTimeout(context.Background(), 2*time.Second) //编写上下文 最多允许两秒超时
 		defer cancel()
-		err := ls.cache.Put(c, "REGISTER_"+email, code, 15*time.Minute)
+		err := ls.cache.Put(c, model.RegisterRedisKey+email, code, 15*time.Minute)
 		if err != nil {
 			zap.L().Error("evn_user user_service GetCaptcha redis put err", zap.Error(err))
 
@@ -261,15 +262,6 @@ func (ls *UserService) Forget(ctx context.Context, req *user2.ForgetRequest) (*u
 	if !exist {
 		return nil, errs.GrpcError(model.AccountNoExist)
 	}
-	////检验手机号
-	//exist, err = ls.userRepo.GetUserByMobile(c, req.Mobile)
-	//if err != nil {
-	//	zap.L().Error("数据库出错", zap.Error(err))
-	//	return nil, errs.GrpcError(model.DBError)
-	//}
-	//if exist {
-	//	return nil, errs.GrpcError(model.MobileExist)
-	//}
 	//执行业务逻辑
 	//pwd := encrypts.Md5(req.Password) //加密部分
 	//随机生成用户ID
@@ -647,4 +639,93 @@ func (ls *UserService) SaveLiveData(ctx context.Context, req *user2.SaveLiveData
 		}
 	}
 	return &user2.CommonDataResponse{}, errs.GrpcError(model.SystemError)
+}
+
+func (ls *UserService) SendEmailVerificationCodeByChangePassword(ctx context.Context, req *user2.CommonIDRequest) (*user2.CommonDataResponse, error) {
+	//1.获取参数
+	c, cancel := context.WithTimeout(context.Background(), 2*time.Second) //编写上下文 最多允许两秒超时
+	defer cancel()
+	tmpUser, err := ls.userRepo.FindUserById(c, int64(req.ID))
+	if err != nil {
+		zap.L().Error("evn_user user_service SendEmailVerificationCodeByChangePassword FindUserById error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+
+	//3.生成验证码(随机四位1000-9999或者六位100000-999999)
+	code := util.CreateCaptcha(6) //生成随机六位数字验证码
+	fmt.Printf("%v验证码为：%v", tmpUser.Email, code)
+	//4.调用短信平台(第三方 放入go func 协程 接口可以快速响应
+	//TODO 完善邮件发送服务
+	go func() {
+		c2, cancel := context.WithTimeout(context.Background(), 2*time.Second) //编写上下文 最多允许两秒超时
+		defer cancel()
+		err := ls.cache.Put(c2, model.ChangeRedisKey+tmpUser.Email, code, 15*time.Minute)
+		if err != nil {
+			zap.L().Error("evn_user user_service SendEmailVerificationCodeByChangePassword redis put err", zap.Error(err))
+
+		}
+		//zap.L().Debug("将手机号和验证码存入redis成功：REGISTER_" + email + " : " + code + "\n")
+	}()
+	//注意code一般不发送
+	//这里是做了简化处理 由于短信平台目前对于个人不好使用
+	return &user2.CommonDataResponse{Data: "发送成功"}, nil
+}
+
+func (ls *UserService) ChangePassword(ctx context.Context, req *user2.ChangePasswordRequest) (*user2.CommonDataResponse, error) {
+	//可以校验参数
+	//校验验证码
+	//1.获取参数
+	c, cancel := context.WithTimeout(context.Background(), 2*time.Second) //编写上下文 最多允许两秒超时
+	defer cancel()
+	tmpUser, err := ls.userRepo.FindUserById(c, int64(req.ID))
+	if err != nil {
+		zap.L().Error("evn_user user_service ChangePassword FindUserById error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	redisCode, err := ls.cache.Get(c, model.ChangeRedisKey+tmpUser.Email)
+	if err == redis.Nil {
+		return nil, errs.GrpcError(model.CaptchaNoExist)
+	}
+	if err != nil {
+		zap.L().Error("evn_user user_service ChangePassword redis read err", zap.Error(err))
+		return nil, errs.GrpcError(model.RedisError)
+	}
+	if redisCode != req.Captcha {
+		return nil, errs.GrpcError(model.CaptchaError)
+	}
+
+	//bcrypt 密码加密
+	pwHashBytes, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	//转换成字符串
+	pwHashStr := string(pwHashBytes)
+
+	mem := &user.User{
+		Email:    tmpUser.Email,
+		Password: pwHashStr,
+	}
+	//将存入部分使用事务包裹 使得可以回滚数据库操作
+	err = ls.transaction.Action(func(conn database.DbConn) error {
+		err = ls.userRepo.UpdateUser(conn, c, mem)
+		if err != nil {
+			zap.L().Error("evn_user user_service ChangePassword UpdateUser DB_Error", zap.Error(err))
+			return errs.GrpcError(model.DBError)
+		}
+		return nil
+	})
+	return &user2.CommonDataResponse{Data: "修改成功"}, nil
+}
+
+func (ls *UserService) Attention(ctx context.Context, req *user2.CommonIDAndUIDRequest) (*user2.CommonDataResponse, error) {
+	c, cancel := context.WithTimeout(context.Background(), 2*time.Second) //编写上下文 最多允许两秒超时
+	defer cancel()
+	att, err := ls.userRepo.Attention(c, req.ID, req.UID)
+	if err != nil {
+		zap.L().Error("evn_user user_service Attention Attention error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	if att.Uid == uint(req.UID) {
+		return &user2.CommonDataResponse{Data: "操作失败"}, nil
+	} else {
+		return &user2.CommonDataResponse{Data: "操作成功"}, nil
+	}
 }

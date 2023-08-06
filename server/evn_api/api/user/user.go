@@ -207,7 +207,7 @@ func (h *HandleUser) getSpaceIndividual(c *gin.Context) {
 		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "系统内部错误"))
 		return
 	}
-	uid := c.GetUint("uid")
+	uid := c.GetUint("currentUid")
 	msg.Uid = uint32(uid)
 	rsp, err := rpc.UserServiceClient.GetSpaceIndividual(ctx, msg)
 	if err != nil {

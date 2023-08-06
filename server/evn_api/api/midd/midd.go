@@ -29,7 +29,7 @@ func TokenVerify() gin.HandlerFunc {
 			return
 		}
 		//成功
-		c.Set("uid", response.Id)
+		c.Set("currentUid", response.Id)
 		c.Set("currentUserName", response.Username)
 		c.Next()
 	}

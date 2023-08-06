@@ -1,5 +1,5 @@
 export interface changePasswordReq {
-    verificationCode : string
+    captcha : string
     password : string
     confirm_password : string
 }

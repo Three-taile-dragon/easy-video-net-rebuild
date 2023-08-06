@@ -212,3 +212,14 @@ type SaveLiveDataReceiveStruct struct {
 	ImgUrl string `json:"imgUrl" binding:"required"`
 	Title  string `json:"title" binding:"required"`
 }
+
+// ChangePasswordReceiveStruct 修改密码
+type ChangePasswordReceiveStruct struct {
+	Captcha         string `json:"captcha" binding:"required"`
+	Password        string `json:"password" binding:"required"`
+	ConfirmPassword string `json:"confirm_password" binding:"required"`
+}
+
+type AttentionReceiveStruct struct {
+	Uid uint `json:"uid"  binding:"required" binding:"required"`
+}

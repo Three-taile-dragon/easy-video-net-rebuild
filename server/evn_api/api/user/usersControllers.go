@@ -24,7 +24,7 @@ func NewUserControllers() *HandleUserControllers {
 
 func (u *HandleUserControllers) getUserInfo(c *gin.Context) {
 	result := common.Result{}
-	uid := c.GetInt64("uid")
+	uid := c.GetInt64("currentUid")
 	//调用grpc
 	//对grpc进行两秒超时处理
 	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -61,7 +61,7 @@ func (u *HandleUserControllers) setUserInfo(c *gin.Context) {
 		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
 		return
 	}
-	uid := c.GetInt64("uid")
+	uid := c.GetInt64("currentUid")
 	//调用grpc
 	//对grpc进行两秒超时处理
 	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -105,7 +105,7 @@ func (u *HandleUserControllers) determineNameExists(c *gin.Context) {
 		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "系统内部错误"))
 		return
 	}
-	uid := c.GetInt64("uid")
+	uid := c.GetInt64("currentUid")
 	msg.ID = uid
 	//通过grpc调用 验证码生成函数
 	rsp, err := rpc.UserServiceClient.DetermineNameExists(ctx, msg)
@@ -131,7 +131,7 @@ func (u *HandleUserControllers) updateAvatar(c *gin.Context) {
 	//对grpc进行两秒超时处理
 	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer canel()
-	uid := c.GetInt64("uid")
+	uid := c.GetInt64("currentUid")
 	msg := &user.UpdateAvatarRequest{
 		ImgUrl: req.ImgUrl,
 		TP:     req.Tp,
@@ -150,7 +150,7 @@ func (u *HandleUserControllers) updateAvatar(c *gin.Context) {
 
 func (u *HandleUserControllers) getLiveData(c *gin.Context) {
 	result := common.Result{}
-	uid := c.GetInt64("uid")
+	uid := c.GetInt64("currentUid")
 	//调用grpc
 	//对grpc进行两秒超时处理
 	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -184,7 +184,7 @@ func (u *HandleUserControllers) saveLiveData(c *gin.Context) {
 	//对grpc进行两秒超时处理
 	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer canel()
-	uid := c.GetInt64("uid")
+	uid := c.GetInt64("currentUid")
 	msg := &user.SaveLiveDataRequest{
 		Img:   req.ImgUrl,
 		TP:    req.Tp,
@@ -193,6 +193,86 @@ func (u *HandleUserControllers) saveLiveData(c *gin.Context) {
 	}
 	//通过grpc调用 验证码生成函数
 	rsp, err := rpc.UserServiceClient.SaveLiveData(ctx, msg)
+	//结果返回
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	c.JSON(http.StatusOK, result.Success(rsp.Data))
+}
+
+func (u *HandleUserControllers) sendEmailVerificationCodeByChangePassword(c *gin.Context) {
+	result := &common.Result{}
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+	uid := c.GetInt64("currentUid")
+	msg := &user.CommonIDRequest{
+		ID: uint32(uid),
+	}
+	//通过grpc调用 验证码生成函数
+	rsp, err := rpc.UserServiceClient.SendEmailVerificationCodeByChangePassword(ctx, msg)
+	//结果返回
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	c.JSON(http.StatusOK, result.Success(rsp.Data))
+}
+
+func (u *HandleUserControllers) changePassword(c *gin.Context) {
+	result := &common.Result{}
+	//获取传入的邮箱
+	//绑定参数
+	var req modelUser.ChangePasswordReceiveStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+	uid := c.GetInt64("currentUid")
+	msg := &user.ChangePasswordRequest{}
+	err = copier.Copy(msg, req)
+	if err != nil {
+		zap.L().Error("evn_api user userControllers changePassword Copy err", zap.Error(err))
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "系统错误"))
+		return
+	}
+	msg.ID = uid
+	//通过grpc调用
+	rsp, err := rpc.UserServiceClient.ChangePassword(ctx, msg)
+	//结果返回
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	c.JSON(http.StatusOK, result.Success(rsp.Data))
+}
+
+func (u *HandleUserControllers) attention(c *gin.Context) {
+	result := &common.Result{}
+	var req modelUser.AttentionReceiveStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+	curUid := c.GetInt64("currentUid")
+	msg := &user.CommonIDAndUIDRequest{
+		ID:  uint32(req.Uid), //关注的人的ID
+		UID: uint32(curUid),  //用户ID
+	}
+	//通过grpc调用 验证码生成函数
+	rsp, err := rpc.UserServiceClient.Attention(ctx, msg)
 	//结果返回
 	if err != nil {
 		code, msg := errs.ParseGrpcError(err) //解析grpc错误
