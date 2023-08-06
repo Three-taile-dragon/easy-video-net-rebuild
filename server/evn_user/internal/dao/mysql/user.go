@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"dragonsss.cn/evn_common/model/article"
+	"dragonsss.cn/evn_common/model/liveInfo"
 	"dragonsss.cn/evn_common/model/user"
 	"dragonsss.cn/evn_common/model/user/attention"
 	"dragonsss.cn/evn_common/model/video"
@@ -262,4 +263,72 @@ func (u *UserDao) UpdatePureZero(ctx context.Context, id int64, update map[strin
 		return false, err
 	}
 	return true, nil
+}
+
+// UpdateUserAvatar 更新用户头像
+func (u *UserDao) UpdateUserAvatar(ctx context.Context, tmpUser *user.User) (bool, error) {
+	err := u.conn.Session(ctx).Model(&user.User{}).Where("id = ?", tmpUser.ID).Updates(tmpUser).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// FindUserLiveInfo 根据ID查找某人的直播信息
+func (u *UserDao) FindUserLiveInfo(ctx context.Context, id int64) (*liveInfo.LiveInfo, error) {
+	session := u.conn.Session(ctx)
+	var lf *liveInfo.LiveInfo
+	err := session.
+		Where("uid = ?", id).
+		Find(&lf).
+		Error
+	if err == gorm.ErrRecordNotFound {
+		//未查询到对应的信息
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+	return lf, nil
+}
+
+func (u *UserDao) IsExistUserLiveInfo(ctx context.Context, liveinfo *liveInfo.LiveInfo) (bool, error) {
+	var lf *liveInfo.LiveInfo
+	num := new(int64)
+	err := u.conn.Session(ctx).Model(lf).Where("uid =? ", liveinfo.Uid).Count(num).Error
+	if err == gorm.ErrRecordNotFound {
+		//未查询到对应的信息
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	if *num >= 1 {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+func (u *UserDao) SaveUserLiveInfo(ctx context.Context, liveinfo *liveInfo.LiveInfo) (bool, error) {
+	session := u.conn.Session(ctx)
+	err := session.
+		Create(&liveinfo).
+		Error
+	if err == nil {
+		return true, nil
+	} else {
+		return false, err
+	}
+}
+
+func (u *UserDao) UpdateUserLiveInfo(ctx context.Context, liveinfo *liveInfo.LiveInfo) (bool, error) {
+	session := u.conn.Session(ctx)
+	err := session.
+		Where("uid = ?", liveinfo.Uid).
+		Updates(&liveinfo).
+		Error
+	if err == nil {
+		return true, nil
+	} else {
+		return false, err
+	}
 }

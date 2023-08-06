@@ -46,5 +46,8 @@ func (*RouterUser) Router(r *gin.Engine) {
 		userRouter.POST("/getUserInfo", u.getUserInfo)
 		userRouter.POST("/setUserInfo", u.setUserInfo)
 		userRouter.POST("/determineNameExists", u.determineNameExists)
+		userRouter.POST("/updateAvatar", u.updateAvatar)
+		userRouter.POST("/getLiveData", u.getLiveData)
+		userRouter.POST("/saveLiveData", u.saveLiveData)
 	}
 }

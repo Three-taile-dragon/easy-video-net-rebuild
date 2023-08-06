@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"dragonsss.cn/evn_common/model/article"
+	"dragonsss.cn/evn_common/model/liveInfo"
 	"dragonsss.cn/evn_common/model/user"
 	"dragonsss.cn/evn_common/model/user/attention"
 	"dragonsss.cn/evn_common/model/video"
@@ -17,6 +18,7 @@ type UserRepo interface {
 	IsExistByMobile(ctx context.Context, mobile string) (bool, error)
 	IsExistByID(ctx context.Context, id uint32) (bool, error)
 	IsAttention(ctx context.Context, uid uint32, id uint32) (bool, error)
+	IsExistUserLiveInfo(ctx context.Context, liveinfo *liveInfo.LiveInfo) (bool, error)
 	CheckPassword(ctx context.Context, name string) (mem *user.User, err error)
 	FindUserById(ctx context.Context, id int64) (*user.User, error)
 	FindUserByName(ctx context.Context, name string) (*user.User, error)
@@ -31,6 +33,10 @@ type UserRepo interface {
 	UpdatePureZero(ctx context.Context, id int64, update map[string]interface{}) (bool, error)
 	UpdateLoginTime(conn database.DbConn, ctx context.Context, name string) error
 	UpdateUser(conn database.DbConn, ctx context.Context, mem *user.User) error
+	UpdateUserAvatar(ctx context.Context, tmpUser *user.User) (bool, error)
+	FindUserLiveInfo(ctx context.Context, id int64) (*liveInfo.LiveInfo, error)
+	SaveUserLiveInfo(ctx context.Context, liveinfo *liveInfo.LiveInfo) (bool, error)
+	UpdateUserLiveInfo(ctx context.Context, liveinfo *liveInfo.LiveInfo) (bool, error)
 }
 
 type MemberRepo interface {

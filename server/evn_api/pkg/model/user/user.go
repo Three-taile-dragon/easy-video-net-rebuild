@@ -199,3 +199,16 @@ type SetUserInfoReceiveStruct struct {
 type DetermineNameExistsStruct struct {
 	Username string `json:"username" binding:"required"`
 }
+
+// UpdateAvatarStruct 更新头像
+type UpdateAvatarStruct struct {
+	ImgUrl string `json:"imgUrl" binding:"required"`
+	Tp     string `json:"type" binding:"required"`
+}
+
+// SaveLiveDataReceiveStruct 设置直播信息
+type SaveLiveDataReceiveStruct struct {
+	Tp     string `json:"type" binding:"required"`
+	ImgUrl string `json:"imgUrl" binding:"required"`
+	Title  string `json:"title" binding:"required"`
+}

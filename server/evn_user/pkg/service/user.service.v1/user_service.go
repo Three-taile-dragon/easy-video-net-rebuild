@@ -8,7 +8,9 @@ import (
 	"dragonsss.cn/evn_common/errs"
 	"dragonsss.cn/evn_common/jwts"
 	"dragonsss.cn/evn_common/model"
+	common2 "dragonsss.cn/evn_common/model/common"
 	mCommon "dragonsss.cn/evn_common/model/common"
+	"dragonsss.cn/evn_common/model/liveInfo"
 	"dragonsss.cn/evn_common/model/user"
 	user2 "dragonsss.cn/evn_grpc/user"
 	"dragonsss.cn/evn_user/config"
@@ -24,6 +26,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/datatypes"
 	"strconv"
 	"strings"
 	"time"
@@ -551,4 +554,97 @@ func (ls *UserService) DetermineNameExists(ctx context.Context, req *user2.Deter
 		return &user2.CommonBoolResponse{Data: false}, nil
 	}
 
+}
+
+func (ls *UserService) UpdateAvatar(ctx context.Context, req *user2.UpdateAvatarRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+	photo, _ := json.Marshal(common2.Img{
+		Src: req.ImgUrl,
+		Tp:  req.TP,
+	})
+	user := &user.User{PublicModel: common2.PublicModel{ID: uint(req.ID)}, Photo: photo}
+	is, err := ls.userRepo.UpdateUserAvatar(c, user)
+	if err != nil {
+		zap.L().Error("evn_user user_service UpdateAvatar UpdateUserAvatar error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	if is {
+		url, err := conversion.SwitchIngStorageFun(req.TP, req.ImgUrl, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+		if err != nil {
+			zap.L().Error("evn_user user_service UpdateAvatar SwitchIngStorageFun error", zap.Error(err))
+			return nil, errs.GrpcError(model.SystemError)
+		}
+		return &user2.CommonDataResponse{Data: url}, nil
+	} else {
+		return &user2.CommonDataResponse{Data: "更新失败"}, nil
+	}
+}
+
+func (ls *UserService) GetLiveData(ctx context.Context, req *user2.CommonIDRequest) (*user2.LiveDataResponse, error) {
+	c := context.Background()
+	is, err := ls.userRepo.IsExistByID(c, req.ID)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetLiveData IsExistByID error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	if is {
+		tmpLiveInfo, err := ls.userRepo.FindUserLiveInfo(c, int64(req.ID))
+		if err != nil {
+			zap.L().Error("evn_user user_service GetLiveData FindUserLiveInfo error", zap.Error(err))
+			return nil, errs.GrpcError(model.DBError)
+		}
+		if tmpLiveInfo == nil {
+			return &user2.LiveDataResponse{}, nil
+		}
+		rsp, err := response.GetLiveDataResponse(tmpLiveInfo, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+		if err != nil {
+			zap.L().Error("evn_user user_service GetLiveData GetLiveDataResponse error", zap.Error(err))
+			return &user2.LiveDataResponse{}, errs.GrpcError(model.SystemError)
+		}
+		return &user2.LiveDataResponse{
+			Title: rsp.Title,
+			Img:   rsp.Img,
+		}, nil
+	}
+	return &user2.LiveDataResponse{}, nil
+}
+
+func (ls *UserService) SaveLiveData(ctx context.Context, req *user2.SaveLiveDataRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+	img, _ := json.Marshal(common2.Img{
+		Src: req.Img,
+		Tp:  req.TP,
+	})
+	tmpLiveinfo := &liveInfo.LiveInfo{
+		Uid:   uint(req.ID),
+		Title: req.Title,
+		Img:   datatypes.JSON(img),
+	}
+
+	is, err := ls.userRepo.IsExistUserLiveInfo(c, tmpLiveinfo)
+	if err != nil {
+		zap.L().Error("evn_user user_service SaveLiveData UpdateUserLiveInfo error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	if is {
+		ok, err := ls.userRepo.UpdateUserLiveInfo(ctx, tmpLiveinfo)
+		if err != nil {
+			zap.L().Error("evn_user user_service SaveLiveData UpdateUserLiveInfo error", zap.Error(err))
+			return nil, errs.GrpcError(model.DBError)
+		}
+		if ok {
+			return &user2.CommonDataResponse{Data: "修改成功"}, nil
+		}
+
+	} else {
+		ok, err := ls.userRepo.SaveUserLiveInfo(ctx, tmpLiveinfo)
+		if err != nil {
+			zap.L().Error("evn_user user_service SaveLiveData SaveUserLiveInfo error", zap.Error(err))
+			return nil, errs.GrpcError(model.DBError)
+		}
+		if ok {
+			return &user2.CommonDataResponse{Data: "修改成功"}, nil
+		}
+	}
+	return &user2.CommonDataResponse{}, errs.GrpcError(model.SystemError)
 }

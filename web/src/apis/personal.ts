@@ -14,7 +14,7 @@ export const getUserInfoRequist = () => {
 }
 //判断用户名是否存在
 export const determineNameExistsRequist = (params: DetermineNameExistsReq) => {
-    return httpRequest.post<DetermineNameExistsRes>('/user/determineNameExists', params);
+    return httpRequest.post<DetermineNameExistsRes>('/api/user/determineNameExists', params);
 }
 //设置用户信息
 export const setUserInfoRequist = (params: UserInfoRes) => {
@@ -22,11 +22,11 @@ export const setUserInfoRequist = (params: UserInfoRes) => {
 }
 //更新用户头像
 export const updateAvatarRequist = (params: UpdateAvatarReq) => {
-    return httpRequest.post('/user/updateAvatar', params);
+    return httpRequest.post('/api/user/updateAvatar', params);
 }
 //获取用户直播信息
 export const getLiveDataRequist = () => {
-    return httpRequest.post<GetLiveDataRes>('/user/getLiveData');
+    return httpRequest.post<GetLiveDataRes>('/api/user/getLiveData');
 }
 //设置直播信息
 export const saveLiveDataRequist = (params: SaveLiveDataReq) => {

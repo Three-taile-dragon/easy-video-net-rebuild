@@ -117,3 +117,87 @@ func (u *HandleUserControllers) determineNameExists(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, result.Success(rsp.Data))
 }
+
+func (u *HandleUserControllers) updateAvatar(c *gin.Context) {
+	result := &common.Result{}
+	//获取传入的邮箱
+	//绑定参数
+	var req modelUser.UpdateAvatarStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+	uid := c.GetInt64("uid")
+	msg := &user.UpdateAvatarRequest{
+		ImgUrl: req.ImgUrl,
+		TP:     req.Tp,
+		ID:     uid,
+	}
+	//通过grpc调用 验证码生成函数
+	rsp, err := rpc.UserServiceClient.UpdateAvatar(ctx, msg)
+	//结果返回
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	c.JSON(http.StatusOK, result.Success(rsp.Data))
+}
+
+func (u *HandleUserControllers) getLiveData(c *gin.Context) {
+	result := common.Result{}
+	uid := c.GetInt64("uid")
+	//调用grpc
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+	msg := &user.CommonIDRequest{
+		ID: uint32(uid),
+	}
+	rsp, err := rpc.UserServiceClient.GetLiveData(ctx, msg)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误信息
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	//4.返回结果
+	c.JSON(http.StatusOK, result.Success(gin.H{
+		"title": rsp.Title,
+		"img":   rsp.Img,
+	}))
+}
+
+func (u *HandleUserControllers) saveLiveData(c *gin.Context) {
+	result := &common.Result{}
+	//获取传入的邮箱
+	//绑定参数
+	var req modelUser.SaveLiveDataReceiveStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+	uid := c.GetInt64("uid")
+	msg := &user.SaveLiveDataRequest{
+		Img:   req.ImgUrl,
+		TP:    req.Tp,
+		Title: req.Title,
+		ID:    uid,
+	}
+	//通过grpc调用 验证码生成函数
+	rsp, err := rpc.UserServiceClient.SaveLiveData(ctx, msg)
+	//结果返回
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	c.JSON(http.StatusOK, result.Success(rsp.Data))
+}

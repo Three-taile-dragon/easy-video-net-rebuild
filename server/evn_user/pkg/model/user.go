@@ -68,12 +68,12 @@ type GetLiveDataResponseStruct struct {
 }
 
 // GetLiveDataResponse 响应设置信息
-func GetLiveDataResponse(li *liveInfo.LiveInfo, localhost string, tencentOssHost string) (data any, err error) {
+func GetLiveDataResponse(li *liveInfo.LiveInfo, localhost string, tencentOssHost string) (data *GetLiveDataResponseStruct, err error) {
 	src, errs := conversion.FormattingJsonSrc(li.Img, localhost, tencentOssHost)
 	if errs != nil {
 		return nil, fmt.Errorf("json format error")
 	}
-	return GetLiveDataResponseStruct{
+	return &GetLiveDataResponseStruct{
 		Img:   src,
 		Title: li.Title,
 	}, nil
