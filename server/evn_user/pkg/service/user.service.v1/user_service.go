@@ -12,6 +12,8 @@ import (
 	mCommon "dragonsss.cn/evn_common/model/common"
 	"dragonsss.cn/evn_common/model/liveInfo"
 	"dragonsss.cn/evn_common/model/user"
+	"dragonsss.cn/evn_common/model/user/collect"
+	"dragonsss.cn/evn_common/model/user/favorites"
 	user2 "dragonsss.cn/evn_grpc/user"
 	"dragonsss.cn/evn_user/config"
 	"dragonsss.cn/evn_user/internal/dao"
@@ -619,7 +621,7 @@ func (ls *UserService) SaveLiveData(ctx context.Context, req *user2.SaveLiveData
 		return nil, errs.GrpcError(model.DBError)
 	}
 	if is {
-		ok, err := ls.userRepo.UpdateUserLiveInfo(ctx, tmpLiveinfo)
+		ok, err := ls.userRepo.UpdateUserLiveInfo(c, tmpLiveinfo)
 		if err != nil {
 			zap.L().Error("evn_user user_service SaveLiveData UpdateUserLiveInfo error", zap.Error(err))
 			return nil, errs.GrpcError(model.DBError)
@@ -629,7 +631,7 @@ func (ls *UserService) SaveLiveData(ctx context.Context, req *user2.SaveLiveData
 		}
 
 	} else {
-		ok, err := ls.userRepo.SaveUserLiveInfo(ctx, tmpLiveinfo)
+		ok, err := ls.userRepo.SaveUserLiveInfo(c, tmpLiveinfo)
 		if err != nil {
 			zap.L().Error("evn_user user_service SaveLiveData SaveUserLiveInfo error", zap.Error(err))
 			return nil, errs.GrpcError(model.DBError)
@@ -728,4 +730,209 @@ func (ls *UserService) Attention(ctx context.Context, req *user2.CommonIDAndUIDR
 	} else {
 		return &user2.CommonDataResponse{Data: "操作成功"}, nil
 	}
+}
+
+func (ls *UserService) CreateFavorites(ctx context.Context, req *user2.FavoritesRequest) (*user2.CommonDataResponse, error) {
+	c, cancel := context.WithTimeout(context.Background(), 2*time.Second) //编写上下文 最多允许两秒超时
+	defer cancel()
+	if req.ID == 0 {
+		//插入
+		if len(req.Title) == 0 {
+			return &user2.CommonDataResponse{Data: "标题为空"}, nil
+		}
+		//判断是否只有标题
+		if req.ID <= 0 && len(req.Tp) == 0 && len(req.Content) == 0 && len(req.Cover) == 0 {
+			//单标题创建
+			fs := &favorites.Favorites{Uid: uint(req.Uid), Title: req.Title, Max: 1000}
+			is, err := ls.userRepo.SaveFavorites(c, fs)
+			if !is {
+				zap.L().Error("evn_user user_service CreateFavorites SaveFavorites error", zap.Error(err))
+				return &user2.CommonDataResponse{Data: "创建失败"}, errs.GrpcError(model.DBError)
+			} else {
+				return &user2.CommonDataResponse{Data: "创建成功"}, nil
+			}
+		} else {
+			//资料齐全
+			cover, _ := json.Marshal(common2.Img{
+				Src: req.Cover,
+				Tp:  req.Tp,
+			})
+			fs := &favorites.Favorites{
+				Uid:     uint(req.Uid),
+				Title:   req.Title,
+				Content: req.Content,
+				Cover:   cover,
+				Max:     1000,
+			}
+			is, err := ls.userRepo.SaveFavorites(c, fs)
+			if !is {
+				zap.L().Error("evn_user user_service CreateFavorites SaveFavorites error", zap.Error(err))
+				return &user2.CommonDataResponse{Data: "创建失败"}, errs.GrpcError(model.DBError)
+			} else {
+				return &user2.CommonDataResponse{Data: "创建成功"}, nil
+			}
+		}
+	} else {
+		//更新
+		fs, err := ls.userRepo.FindFavoritesByID(c, req.ID)
+		if err != nil {
+			zap.L().Error("evn_user user_service CreateFavorites FindFavoritesByID error", zap.Error(err))
+			return &user2.CommonDataResponse{Data: "查询失败"}, errs.GrpcError(model.DBError)
+		}
+		if fs.Uid != uint(req.Uid) {
+			return &user2.CommonDataResponse{Data: "查询非法操作"}, errs.GrpcError(model.DBError)
+		}
+		cover, _ := json.Marshal(common2.Img{
+			Src: req.Cover,
+			Tp:  req.Tp,
+		})
+		fs.Title = req.Title
+		fs.Content = req.Content
+		fs.Cover = cover
+		if is, err := ls.userRepo.UpdateFavorities(c, fs); !is {
+			zap.L().Error("evn_user user_service CreateFavorites UpdateFavorities error", zap.Error(err))
+			return &user2.CommonDataResponse{Data: "更新失败"}, errs.GrpcError(model.DBError)
+		}
+		return &user2.CommonDataResponse{Data: "更新成功"}, errs.GrpcError(model.DBError)
+	}
+
+}
+
+func (ls *UserService) GetFavoritesList(ctx context.Context, req *user2.CommonIDRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+	//获取收藏夹列表
+	fl, err := ls.userRepo.GetFavoritesList(c, req.ID)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetFavoritesList GetFavoritesList error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	rsp, err := response.GetFavoritesListResponse(fl, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetFavoritesList GetFavoritesListResponse error", zap.Error(err))
+		return nil, errs.GrpcError(model.SystemError)
+	}
+	rspJSON, err := json.Marshal(rsp)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetFavoritesList rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model.JsonError)
+	}
+	tmp := &user2.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
+}
+
+func (ls *UserService) DeleteFavorites(ctx context.Context, req *user2.CommonIDAndUIDRequest) (*user2.CommonDataResponse, error) {
+	c, cancel := context.WithTimeout(context.Background(), 2*time.Second) //编写上下文 最多允许两秒超时
+	defer cancel()
+	fs, err := ls.userRepo.FindFavoritesByID(c, req.ID)
+	if err != nil {
+		zap.L().Error("evn_user user_service DeleteFavorites FindFavoritesByID error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	if fs.ID <= 0 {
+		return &user2.CommonDataResponse{Data: "收藏夹不存在"}, nil
+	}
+	if is, err := ls.userRepo.DeleteFavorites(c, fs); is && err == nil {
+		if fs.Uid != uint(req.UID) {
+			return &user2.CommonDataResponse{Data: "非创建者不可删除"}, nil
+		}
+	} else {
+		zap.L().Error("evn_user user_service DeleteFavorites DeleteFavorites error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "删除失败"}, errs.GrpcError(model.DBError)
+	}
+	//删除收藏记录
+	if is, err := ls.userRepo.DetectCollectByFavoritesID(c, req.ID); is && err == nil {
+		return &user2.CommonDataResponse{Data: "删除成功"}, nil
+	} else {
+		zap.L().Error("evn_user user_service DeleteFavorites DetectCollectByFavoritesID error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "删除失败"}, errs.GrpcError(model.DBError)
+	}
+}
+
+func (ls *UserService) FavoriteVideo(ctx context.Context, req *user2.FavoriteVideoRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+	//获取收藏夹
+	for _, v := range req.IDs {
+		fl, err := ls.userRepo.FindFavoritesByID(c, v)
+		if err != nil {
+			zap.L().Error("evn_user user_service FavoriteVideo FindFavoritesByID error", zap.Error(err))
+			return nil, errs.GrpcError(model.DBError)
+		}
+		if fl.Uid != uint(req.UID) {
+			return &user2.CommonDataResponse{Data: "非法操作"}, nil
+		}
+		if len(fl.CollectList) > fl.Max {
+			return &user2.CommonDataResponse{Data: "收藏夹已满"}, nil
+		}
+		cl := &collect.Collect{
+			Uid:         uint(req.UID),
+			FavoritesID: uint(v),
+			VideoID:     uint(req.Video_ID),
+		}
+		if is, err := ls.userRepo.SaveCollect(c, cl); !is {
+			zap.L().Error("evn_user user_service FavoriteVideo SaveCollect error", zap.Error(err))
+			return &user2.CommonDataResponse{Data: "收藏失败"}, errs.GrpcError(model.DBError)
+		}
+	}
+
+	return &user2.CommonDataResponse{Data: "操作成功"}, nil
+}
+
+func (ls *UserService) GetFavoritesListByFavoriteVideo(ctx context.Context, req *user2.FavoritesListRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+	//获取收藏夹列表
+	fl, err := ls.userRepo.GetFavoritesList(c, req.UID)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetFavoritesListByFavoriteVideo GetFavoritesList error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	//查询该视频在那些收藏夹内已收藏
+	cl, err := ls.userRepo.FindVideoExistWhere(c, req.Video_ID)
+	if cl == nil || err != nil {
+		zap.L().Error("evn_user user_service GetFavoritesListByFavoriteVideo FindVideoExistWhere error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	ids := make([]uint, 0)
+	for _, v := range *cl {
+		ids = append(ids, v.FavoritesID)
+	}
+	rsp, err := response.GetFavoritesListByFavoriteVideoResponse(fl, ids, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetFavoritesListByFavoriteVideo GetFavoritesListByFavoriteVideoResponse error", zap.Error(err))
+		return nil, errs.GrpcError(model.SystemError)
+	}
+	rspJSON, err := json.Marshal(rsp)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetFavoritesListByFavoriteVideo rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model.JsonError)
+	}
+	tmp := &user2.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
+}
+
+func (ls *UserService) GetFavoriteVideoList(ctx context.Context, req *user2.FavoriteVideoListRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+	//获取收藏夹内视频列表
+	cl, err := ls.userRepo.GetVideoInfoByFavoriteID(c, req.Favorite_ID)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetFavoriteVideoList GetVideoInfoByFavoriteID error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	rsp, err := response.GetFavoriteVideoListResponse(cl, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetFavoriteVideoList GetFavoriteVideoListResponse error", zap.Error(err))
+		return nil, errs.GrpcError(model.SystemError)
+	}
+	rspJSON, err := json.Marshal(rsp)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetFavoriteVideoList rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model.JsonError)
+	}
+	tmp := &user2.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
 }

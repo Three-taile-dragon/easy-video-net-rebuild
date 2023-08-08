@@ -6,6 +6,8 @@ import (
 	"dragonsss.cn/evn_common/model/liveInfo"
 	"dragonsss.cn/evn_common/model/user"
 	"dragonsss.cn/evn_common/model/user/attention"
+	"dragonsss.cn/evn_common/model/user/collect"
+	"dragonsss.cn/evn_common/model/user/favorites"
 	"dragonsss.cn/evn_common/model/video"
 	"dragonsss.cn/evn_user/internal/database"
 )
@@ -23,6 +25,7 @@ type UserRepo interface {
 	FindUserById(ctx context.Context, id int64) (*user.User, error)
 	FindUserByName(ctx context.Context, name string) (*user.User, error)
 	FindUserByEmail(ctx context.Context, email string) (*user.User, error)
+	FindVideoExistWhere(ctx context.Context, videoId uint32) (*collect.CollectsList, error)
 	GetAttentionNum(ctx context.Context, id uint32) (*int64, error)
 	GetVermicelliNum(ctx context.Context, id uint32) (*int64, error)
 	GetVideoListBySpace(ctx context.Context, id uint32) (*video.VideosContributionList, error)
@@ -38,6 +41,14 @@ type UserRepo interface {
 	SaveUserLiveInfo(ctx context.Context, liveinfo *liveInfo.LiveInfo) (bool, error)
 	UpdateUserLiveInfo(ctx context.Context, liveinfo *liveInfo.LiveInfo) (bool, error)
 	Attention(ctx context.Context, aid uint32, uid uint32) (*attention.Attention, error)
+	SaveFavorites(ctx context.Context, fs *favorites.Favorites) (bool, error)
+	FindFavoritesByID(ctx context.Context, id uint32) (*favorites.Favorites, error)
+	UpdateFavorities(ctx context.Context, fs *favorites.Favorites) (bool, error)
+	GetFavoritesList(ctx context.Context, id uint32) (*favorites.FavoriteList, error)
+	DeleteFavorites(ctx context.Context, fs *favorites.Favorites) (bool, error)
+	DetectCollectByFavoritesID(ctx context.Context, id uint32) (bool, error)
+	SaveCollect(ctx context.Context, cl *collect.Collect) (bool, error)
+	GetVideoInfoByFavoriteID(ctx context.Context, favoriteID uint32) (*collect.CollectsList, error)
 }
 
 type MemberRepo interface {

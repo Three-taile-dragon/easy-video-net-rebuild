@@ -4,7 +4,7 @@
         <div class="form-box personal-layout animate__animated animate__slideInRight ">
             <el-form :model="form" :rules="changePasswor" label-width="120px">
                 <el-form-item label="邮箱验证码" prop="username">
-                    <el-input class="input-name" v-model="form.verificationCode" clearable> <template #append>
+                    <el-input class="input-name" v-model="form.captcha" clearable> <template #append>
                             <el-button type="primary" size="small" round @click="sendVerificationCode(sendVerificationCodeInfo)">{{ sendVerificationCodeInfo.btnText }}</el-button>
                         </template>
                     </el-input>

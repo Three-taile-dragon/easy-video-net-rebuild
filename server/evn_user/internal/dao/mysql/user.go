@@ -6,6 +6,8 @@ import (
 	"dragonsss.cn/evn_common/model/liveInfo"
 	"dragonsss.cn/evn_common/model/user"
 	"dragonsss.cn/evn_common/model/user/attention"
+	"dragonsss.cn/evn_common/model/user/collect"
+	"dragonsss.cn/evn_common/model/user/favorites"
 	"dragonsss.cn/evn_common/model/video"
 	"dragonsss.cn/evn_user/internal/database"
 	"dragonsss.cn/evn_user/internal/database/gorms"
@@ -357,4 +359,110 @@ func (u *UserDao) Attention(ctx context.Context, aid uint32, uid uint32) (*atten
 		return att, nil
 	}
 	return nil, err
+}
+
+func (u *UserDao) SaveFavorites(ctx context.Context, fs *favorites.Favorites) (bool, error) {
+	session := u.conn.Session(ctx)
+	err := session.
+		Create(&fs).
+		Error
+	if err == nil {
+		return true, nil
+	} else {
+		return false, err
+	}
+}
+
+func (u *UserDao) FindFavoritesByID(ctx context.Context, id uint32) (*favorites.Favorites, error) {
+	session := u.conn.Session(ctx)
+	var fs *favorites.Favorites
+	err := session.
+		Preload("CollectList").
+		Where("id = ?", id).
+		Order("created_at desc").
+		Find(&fs).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return fs, nil
+}
+
+func (u *UserDao) UpdateFavorities(ctx context.Context, fs *favorites.Favorites) (bool, error) {
+	err := u.conn.Session(ctx).Model(&favorites.Favorites{}).Where("id = ?", fs.ID).Updates(fs).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (u *UserDao) GetFavoritesList(ctx context.Context, id uint32) (*favorites.FavoriteList, error) {
+	session := u.conn.Session(ctx)
+	var fl *favorites.FavoriteList
+	err := session.
+		Preload("UserInfo").
+		Preload("CollectList").
+		Where("uid = ?", id).
+		Order("created_at desc").
+		Find(&fl).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return fl, nil
+}
+
+func (u *UserDao) DeleteFavorites(ctx context.Context, fs *favorites.Favorites) (bool, error) {
+	err := u.conn.Session(ctx).Model(&favorites.Favorites{}).Where("id = ?", fs.ID).Delete(fs).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (u *UserDao) DetectCollectByFavoritesID(ctx context.Context, id uint32) (bool, error) {
+	err := u.conn.Session(ctx).Model(&collect.Collect{}).Where("favorites_id = ?", id).Delete(&collect.Collect{}).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (u *UserDao) SaveCollect(ctx context.Context, cl *collect.Collect) (bool, error) {
+	session := u.conn.Session(ctx)
+	err := session.
+		Create(&cl).
+		Error
+	if err == nil {
+		return true, nil
+	} else {
+		return false, err
+	}
+}
+
+func (u *UserDao) FindVideoExistWhere(ctx context.Context, videoId uint32) (*collect.CollectsList, error) {
+	session := u.conn.Session(ctx)
+	var cl *collect.CollectsList
+	err := session.
+		Where("video_id = ?", videoId).
+		Find(&cl).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return cl, nil
+}
+
+func (u *UserDao) GetVideoInfoByFavoriteID(ctx context.Context, favoriteID uint32) (*collect.CollectsList, error) {
+	session := u.conn.Session(ctx)
+	var cl *collect.CollectsList
+	err := session.
+		Preload("VideoInfo").
+		Where("favorites_id = ?", favoriteID).
+		Find(&cl).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return cl, nil
 }

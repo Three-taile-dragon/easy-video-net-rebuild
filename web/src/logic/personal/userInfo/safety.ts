@@ -12,7 +12,7 @@ const loading = useGlobalStore().globalData.loading
 
 export const useSafetyProp = () => {
     const form = reactive<changePasswordReq>({
-        verificationCode: "",
+        captcha: "",
         password: "",
         confirm_password: "",
     });
@@ -77,7 +77,7 @@ export const useSafetyMethod = (form: changePasswordReq) => {
                 confirmButtonColor: globalScss.colorButtonTheme,
             })
             form.confirm_password = ""
-            form.verificationCode = ""
+            form.captcha = ""
             form.password = ""
             loading.loading = false
         } catch (err: any) {

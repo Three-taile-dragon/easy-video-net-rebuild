@@ -223,3 +223,76 @@ type ChangePasswordReceiveStruct struct {
 type AttentionReceiveStruct struct {
 	Uid uint `json:"uid"  binding:"required" binding:"required"`
 }
+
+type CreateFavoritesReceiveStruct struct {
+	ID      uint   `json:"id"`
+	Title   string `json:"title" binding:"required"`
+	Content string `json:"content"`
+	Cover   string `json:"cover"`
+	Tp      string `json:"type"`
+}
+
+type GetFavoritesInfo struct {
+	ID       uint   `json:"id"`
+	Title    string `json:"title"`
+	Content  string `json:"content"`
+	Cover    string `json:"cover"`
+	Tp       string `json:"type"`
+	Src      string `json:"src"`
+	Max      int    `json:"max"`
+	UsesInfo struct {
+		Username string `json:"username"`
+	} `json:"userInfo"`
+}
+
+type GetFavoritesInfoList []GetFavoritesInfo
+
+type DeleteFavoritesReceiveStruct struct {
+	ID uint `json:"id" binding:"required"`
+}
+
+type FavoriteVideoReceiveStruct struct {
+	IDs     []uint32 `json:"ids" binding:"required"`
+	VideoID uint     `json:"video_id" binding:"required"`
+}
+
+type GetFavoritesListByFavoriteVideoReceiveStruct struct {
+	VideoID uint `json:"video_id" binding:"required"`
+}
+
+type GetFavoritesListByFavoriteVideoInfo struct {
+	ID       uint   `json:"id"`
+	Title    string `json:"title"`
+	Content  string `json:"content"`
+	Cover    string `json:"cover"`
+	Tp       string `json:"type"`
+	Src      string `json:"src"`
+	Max      int    `json:"max"`
+	Selected bool   `json:"selected"`
+	Present  int    `json:"present"`
+	UsesInfo struct {
+		Username string `json:"username"`
+	} `json:"userInfo"`
+}
+
+type GetFavoritesListByFavoriteVideoInfoList []GetFavoritesListByFavoriteVideoInfo
+
+type GetFavoriteVideoListReceiveStruct struct {
+	FavoriteID uint `json:"favorite_id" binding:"required"`
+}
+
+type GetFavoriteVideoListItem struct {
+	ID            uint      `json:"id"`
+	Uid           uint      `json:"uid"`
+	Title         string    `json:"title"`
+	Video         string    `json:"video"`
+	Cover         string    `json:"cover"`
+	VideoDuration int64     `json:"video_duration"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+type GetFavoriteVideoList []GetFavoriteVideoListItem
+
+type GetFavoriteVideoListResponseStruct struct {
+	VideoList GetFavoriteVideoList `json:"videoList"`
+}
