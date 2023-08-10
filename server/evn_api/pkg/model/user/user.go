@@ -2,6 +2,7 @@ package user
 
 import (
 	common "dragonsss.cn/evn_common"
+	common2 "dragonsss.cn/evn_common/model/common"
 	"errors"
 	"time"
 )
@@ -295,4 +296,82 @@ type GetFavoriteVideoList []GetFavoriteVideoListItem
 
 type GetFavoriteVideoListResponseStruct struct {
 	VideoList GetFavoriteVideoList `json:"videoList"`
+}
+
+type GetRecordListReceiveStruct struct {
+	PageInfo common2.PageInfo `json:"page_info" binding:"required"`
+}
+
+type GetRecordListItem struct {
+	ID        uint      `json:"id"`
+	ToID      uint      `json:"to_id"`
+	Title     string    `json:"title"`
+	Cover     string    `json:"cover"`
+	Username  string    `json:"username"`
+	Photo     string    `json:"photo"`
+	Type      string    `json:"type"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type GetRecordListItemList []GetRecordListItem
+
+type DeleteRecordByIDReceiveStruct struct {
+	ID uint `json:"id"`
+}
+
+type GetNoticeListReceiveStruct struct {
+	Type     string           `json:"type"`
+	PageInfo common2.PageInfo `json:"page_info" binding:"required"`
+}
+
+type GetNoticeListItem struct {
+	ID        uint      `json:"id"`
+	Username  string    `json:"username"`
+	Type      string    `json:"type"`
+	ToID      uint      `json:"to_id"`
+	Photo     string    `json:"photo"`
+	Comment   string    `json:"comment"`
+	Cover     string    `json:"cover"`
+	Title     string    `json:"title"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type GetNoticeListStruct []GetNoticeListItem
+
+type ChatMessageInfo struct {
+	ID        uint      `json:"id"`
+	Uid       uint      `json:"uid"`
+	Username  string    `json:"username"`
+	Photo     string    `json:"photo"`
+	Tid       uint      `json:"tid"`
+	Message   string    `json:"message"`
+	Type      string    `json:"type"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type GetChatListItem struct {
+	ToID            uint              `json:"to_id"`
+	Username        string            `json:"username"`
+	Photo           string            `json:"photo"`
+	Unread          int               `json:"unread" gorm:"unread"`
+	LastMessage     string            `json:"last_message"`
+	LastMessagePage int               `json:"last_message_page"`
+	MessageList     []ChatMessageInfo `json:"message_list"`
+	LastAt          time.Time         `json:"last_at"`
+	UpdatedAt       time.Time         `json:"updated_at"`
+}
+
+type GetChatListResponseStruct []GetChatListItem
+
+type GetChatHistoryMsgStruct struct {
+	Tid      uint      `json:"tid"`
+	LastTime time.Time `json:"last_time"`
+}
+
+type PersonalLetterReceiveStruct struct {
+	ID uint `json:"id" binding:"required"`
+}
+
+type DeleteChatItemReceiveStruct struct {
+	ID uint `json:"id" binding:"required"`
 }

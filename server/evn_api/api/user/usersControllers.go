@@ -452,3 +452,231 @@ func (u *HandleUserControllers) getFavoriteVideoList(c *gin.Context) {
 	//4.返回结果
 	c.JSON(http.StatusOK, result.Success(flrs))
 }
+
+func (u *HandleUserControllers) getRecordList(c *gin.Context) {
+	result := &common.Result{}
+	var req modelUser.GetRecordListReceiveStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+	curUid := c.GetInt64("currentUid")
+	msg := &user.GetRecordListRequest{
+		Page: int64(req.PageInfo.Page),
+		Size: int64(req.PageInfo.Size),
+		Uid:  uint32(curUid),
+	}
+	//通过grpc调用 生成函数
+	rsp, err := rpc.UserServiceClient.GetRecordList(ctx, msg)
+	// 创建新的 GetRecordListItemList  实例
+	var rl modelUser.GetRecordListItemList
+	// 将 JSON 字符串解码到 list
+	err = json.Unmarshal([]byte(rsp.Data), &rl)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err)
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+	}
+
+	//4.返回结果
+	c.JSON(http.StatusOK, result.Success(rl))
+}
+
+func (u *HandleUserControllers) clearRecord(c *gin.Context) {
+	result := common.Result{}
+	uid := c.GetInt64("currentUid")
+	//调用grpc
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+	msg := &user.CommonIDRequest{
+		ID: uint32(uid),
+	}
+	rsp, err := rpc.UserServiceClient.ClearRecord(ctx, msg)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误信息
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	//4.返回结果
+	c.JSON(http.StatusOK, result.Success(rsp.Data))
+}
+
+func (u *HandleUserControllers) deleteRecordByID(c *gin.Context) {
+	result := &common.Result{}
+	var req modelUser.DeleteRecordByIDReceiveStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+	curUid := c.GetInt64("currentUid")
+	msg := &user.CommonIDAndUIDRequest{
+		ID:  uint32(req.ID), //指定历史记录的ID
+		UID: uint32(curUid), //用户ID
+	}
+	//通过grpc调用 验证码生成函数
+	rsp, err := rpc.UserServiceClient.DeleteRecordByID(ctx, msg)
+	//结果返回
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	c.JSON(http.StatusOK, result.Success(rsp.Data))
+}
+
+func (u *HandleUserControllers) getNoticeList(c *gin.Context) {
+	result := &common.Result{}
+	var req modelUser.GetNoticeListReceiveStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+	curUid := c.GetInt64("currentUid")
+	msg := &user.GetNoticeListRequest{
+		Tp:   req.Type,
+		Page: int64(req.PageInfo.Page),
+		Size: int64(req.PageInfo.Size),
+		Uid:  uint32(curUid),
+	}
+	//通过grpc调用 验证码生成函数
+	rsp, err := rpc.UserServiceClient.GetNoticeList(ctx, msg)
+	// 创建新的 GetNoticeListStruct  实例
+	var nls modelUser.GetNoticeListStruct
+	// 将 JSON 字符串解码到 list
+	err = json.Unmarshal([]byte(rsp.Data), &nls)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err)
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+	}
+
+	//4.返回结果
+	c.JSON(http.StatusOK, result.Success(nls))
+}
+
+func (u *HandleUserControllers) getChatList(c *gin.Context) {
+	result := common.Result{}
+	uid := c.GetInt64("currentUid")
+	//调用grpc
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+	msg := &user.CommonIDRequest{
+		ID: uint32(uid),
+	}
+	rsp, err := rpc.UserServiceClient.GetChatList(ctx, msg)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误信息
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+
+	// 创建新的 chatListJson  实例
+	var chatListJson modelUser.GetChatListResponseStruct
+	// 将 JSON 字符串解码到 GetChatListResponseStruct
+	err = json.Unmarshal([]byte(rsp.Data), &chatListJson)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err)
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+	}
+
+	//4.返回结果
+	c.JSON(http.StatusOK, result.Success(chatListJson))
+}
+
+func (u *HandleUserControllers) getChatHistoryMsg(c *gin.Context) {
+	result := &common.Result{}
+	var req modelUser.GetChatHistoryMsgStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+	curUid := c.GetInt64("currentUid")
+	msg := &user.GetChatHistoryMsgRequest{
+		Tid:      uint32(req.Tid),
+		LastTime: req.LastTime.String(),
+		Uid:      uint32(curUid),
+	}
+	//通过grpc调用 生成函数
+	rsp, err := rpc.UserServiceClient.GetChatHistoryMsg(ctx, msg)
+	// 创建新的 []ChatMessageInfo  实例
+	var cmi []modelUser.ChatMessageInfo
+	// 将 JSON 字符串解码到 list
+	err = json.Unmarshal([]byte(rsp.Data), &cmi)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err)
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+	}
+
+	//4.返回结果
+	c.JSON(http.StatusOK, result.Success(cmi))
+}
+
+func (u *HandleUserControllers) personalLetter(c *gin.Context) {
+	result := &common.Result{}
+	var req modelUser.PersonalLetterReceiveStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+	curUid := c.GetInt64("currentUid")
+	msg := &user.CommonIDAndUIDRequest{
+		ID:  uint32(req.ID),
+		UID: uint32(curUid), //用户ID
+	}
+	//通过grpc调用 函数
+	rsp, err := rpc.UserServiceClient.PersonalLetter(ctx, msg)
+	//结果返回
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	c.JSON(http.StatusOK, result.Success(rsp.Data))
+}
+
+func (u *HandleUserControllers) deleteChatItem(c *gin.Context) {
+	result := &common.Result{}
+	var req modelUser.DeleteChatItemReceiveStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+	curUid := c.GetInt64("currentUid")
+	msg := &user.CommonIDAndUIDRequest{
+		ID:  uint32(req.ID),
+		UID: uint32(curUid), //用户ID
+	}
+	//通过grpc调用 函数
+	rsp, err := rpc.UserServiceClient.DeleteChatItem(ctx, msg)
+	//结果返回
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	c.JSON(http.StatusOK, result.Success(rsp.Data))
+}

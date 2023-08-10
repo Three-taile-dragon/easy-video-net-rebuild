@@ -6,9 +6,14 @@ import (
 	"dragonsss.cn/evn_common/model/liveInfo"
 	"dragonsss.cn/evn_common/model/user"
 	"dragonsss.cn/evn_common/model/user/attention"
+	"dragonsss.cn/evn_common/model/user/chat/chatList"
+	"dragonsss.cn/evn_common/model/user/chat/chatMsg"
 	"dragonsss.cn/evn_common/model/user/collect"
 	"dragonsss.cn/evn_common/model/user/favorites"
+	"dragonsss.cn/evn_common/model/user/notice"
+	"dragonsss.cn/evn_common/model/user/record"
 	"dragonsss.cn/evn_common/model/video"
+	user2 "dragonsss.cn/evn_grpc/user"
 	"dragonsss.cn/evn_user/internal/database"
 )
 
@@ -33,6 +38,7 @@ type UserRepo interface {
 	GetAttentionList(ctx context.Context, id uint32) (*attention.AttentionsList, error)
 	GetAttentionListByIdArr(ctx context.Context, id uint32) (arr []uint, err error)
 	GetVermicelliList(ctx context.Context, id uint32) (*attention.AttentionsList, error)
+	GetFavoritesList(ctx context.Context, id uint32) (*favorites.FavoriteList, error)
 	UpdatePureZero(ctx context.Context, id int64, update map[string]interface{}) (bool, error)
 	UpdateLoginTime(conn database.DbConn, ctx context.Context, name string) error
 	UpdateUser(conn database.DbConn, ctx context.Context, mem *user.User) error
@@ -44,11 +50,21 @@ type UserRepo interface {
 	SaveFavorites(ctx context.Context, fs *favorites.Favorites) (bool, error)
 	FindFavoritesByID(ctx context.Context, id uint32) (*favorites.Favorites, error)
 	UpdateFavorities(ctx context.Context, fs *favorites.Favorites) (bool, error)
-	GetFavoritesList(ctx context.Context, id uint32) (*favorites.FavoriteList, error)
 	DeleteFavorites(ctx context.Context, fs *favorites.Favorites) (bool, error)
 	DetectCollectByFavoritesID(ctx context.Context, id uint32) (bool, error)
 	SaveCollect(ctx context.Context, cl *collect.Collect) (bool, error)
 	GetVideoInfoByFavoriteID(ctx context.Context, favoriteID uint32) (*collect.CollectsList, error)
+	GetRecordListByUid(ctx context.Context, req *user2.GetRecordListRequest) (*record.RecordsList, error)
+	ClearRecord(ctx context.Context, id uint32) (bool, error)
+	DeleteRecordByID(ctx context.Context, req *user2.CommonIDAndUIDRequest) (bool, error)
+	GetNoticeList(ctx context.Context, req *user2.GetNoticeListRequest, messageType []string) (*notice.NoticesList, error)
+	ReadAllNoticeList(ctx context.Context, req *user2.GetNoticeListRequest) (bool, error)
+	GetChatListByIO(ctx context.Context, req *user2.CommonIDRequest) (*chatList.ChatList, error)
+	FindMsgList(ctx context.Context, req *user2.CommonIDRequest, v uint) (*chatMsg.MsgList, error)
+	FindHistoryMsg(ctx context.Context, req *user2.GetChatHistoryMsgRequest) (*chatMsg.MsgList, error)
+	GetLastMessage(ctx context.Context, req *user2.CommonIDAndUIDRequest) (*chatMsg.Msg, error)
+	AddChat(ctx context.Context, ci *chatList.ChatsListInfo) (bool, error)
+	DeleteChat(ctx context.Context, req *user2.CommonIDAndUIDRequest) (bool, error)
 }
 
 type MemberRepo interface {

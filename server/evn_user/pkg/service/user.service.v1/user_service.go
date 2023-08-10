@@ -12,8 +12,11 @@ import (
 	mCommon "dragonsss.cn/evn_common/model/common"
 	"dragonsss.cn/evn_common/model/liveInfo"
 	"dragonsss.cn/evn_common/model/user"
+	"dragonsss.cn/evn_common/model/user/chat/chatList"
+	"dragonsss.cn/evn_common/model/user/chat/chatMsg"
 	"dragonsss.cn/evn_common/model/user/collect"
 	"dragonsss.cn/evn_common/model/user/favorites"
+	"dragonsss.cn/evn_common/model/user/notice"
 	user2 "dragonsss.cn/evn_grpc/user"
 	"dragonsss.cn/evn_user/config"
 	"dragonsss.cn/evn_user/internal/dao"
@@ -935,4 +938,182 @@ func (ls *UserService) GetFavoriteVideoList(ctx context.Context, req *user2.Favo
 		Data: string(rspJSON),
 	}
 	return tmp, nil
+}
+
+func (ls *UserService) GetRecordList(ctx context.Context, req *user2.GetRecordListRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+	//获取历史记录列表
+	rl, err := ls.userRepo.GetRecordListByUid(c, req)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetRecordList GetRecordListByUid error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "查询失败"}, errs.GrpcError(model.DBError)
+	}
+
+	rsp, err := response.GetRecordListResponse(rl, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetRecordList GetRecordListResponse error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "响应失败"}, errs.GrpcError(model.SystemError)
+	}
+	rspJSON, err := json.Marshal(rsp)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetRecordList rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model.JsonError)
+	}
+	tmp := &user2.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
+}
+
+func (ls *UserService) ClearRecord(ctx context.Context, req *user2.CommonIDRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+	if is, err := ls.userRepo.ClearRecord(c, req.ID); !is || err != nil {
+		zap.L().Error("evn_user user_service ClearRecord ClearRecord error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "清空失败"}, errs.GrpcError(model.DBError)
+	}
+	return &user2.CommonDataResponse{Data: "清空完成"}, nil
+}
+
+func (ls *UserService) DeleteRecordByID(ctx context.Context, req *user2.CommonIDAndUIDRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+	if is, err := ls.userRepo.DeleteRecordByID(c, req); !is || err != nil {
+		zap.L().Error("evn_user user_service DeleteRecordByID DeleteRecordByID error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "删除失败"}, errs.GrpcError(model.DBError)
+	}
+	return &user2.CommonDataResponse{Data: "删除成功"}, nil
+}
+
+func (ls *UserService) GetNoticeList(ctx context.Context, req *user2.GetNoticeListRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+	//获取用户通知
+	messageType := make([]string, 0)
+	switch req.Tp {
+	case "comment":
+		messageType = append(messageType, notice.VideoComment, notice.ArticleComment)
+		break
+	case "like":
+		messageType = append(messageType, notice.VideoLike, notice.ArticleLike)
+	}
+
+	//获取历史记录列表
+	nl, err := ls.userRepo.GetNoticeList(c, req, messageType)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetNoticeList GetNoticeList error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "查询失败"}, errs.GrpcError(model.DBError)
+	}
+
+	if is, err := ls.userRepo.ReadAllNoticeList(c, req); !is || err != nil {
+		zap.L().Error("evn_user user_service GetNoticeList ReadAllNoticeList error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "已读消息失败"}, errs.GrpcError(model.DBError)
+	}
+	rsp, err := response.GetNoticeListResponse(nl, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetNoticeList GetNoticeListResponse error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "响应失败"}, errs.GrpcError(model.SystemError)
+	}
+	rspJSON, err := json.Marshal(rsp)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetNoticeList rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model.JsonError)
+	}
+	tmp := &user2.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
+}
+
+func (ls *UserService) GetChatList(ctx context.Context, req *user2.CommonIDRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+	//获取聊天记录列表
+	cl, err := ls.userRepo.GetChatListByIO(c, req)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetChatList GetChatListByIO error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "查询失败"}, errs.GrpcError(model.DBError)
+	}
+	ids := make([]uint, 0)
+	for _, v := range *cl {
+		ids = append(ids, v.Tid)
+	}
+	msgList := make(map[uint]*chatMsg.MsgList, 0)
+	for _, v := range ids {
+		ml, err := ls.userRepo.FindMsgList(c, req, v)
+		if err != nil {
+			break
+		}
+		msgList[v] = ml
+	}
+	rsp, err := response.GetChatListResponse(cl, msgList, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetChatList GetChatListResponse error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "响应失败"}, errs.GrpcError(model.SystemError)
+	}
+	rspJSON, err := json.Marshal(rsp)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetChatList rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model.JsonError)
+	}
+	tmp := &user2.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
+}
+
+func (ls *UserService) GetChatHistoryMsg(ctx context.Context, req *user2.GetChatHistoryMsgRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+	//获取聊天记录列表
+	cm, err := ls.userRepo.FindHistoryMsg(c, req)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetChatHistoryMsg FindHistoryMsg error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "查询失败"}, errs.GrpcError(model.DBError)
+	}
+	rsp, err := response.GetChatHistoryMsgResponse(cm, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetChatHistoryMsg GetChatHistoryMsgResponse error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "响应失败"}, errs.GrpcError(model.SystemError)
+	}
+	rspJSON, err := json.Marshal(rsp)
+	if err != nil {
+		zap.L().Error("evn_user user_service GetChatHistoryMsg rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model.JsonError)
+	}
+	tmp := &user2.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
+}
+
+func (ls *UserService) PersonalLetter(ctx context.Context, req *user2.CommonIDAndUIDRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+	cm, err := ls.userRepo.GetLastMessage(c, req)
+	if err != nil {
+		zap.L().Error("evn_user user_service PersonalLetter GetLastMessage error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "操作失败"}, errs.GrpcError(model.DBError)
+	}
+	var lastTime time.Time
+	if cm.ID > 0 {
+		lastTime = cm.CreatedAt
+	} else {
+		lastTime = time.Now()
+	}
+	ci := &chatList.ChatsListInfo{
+		Uid:         uint(req.UID),
+		Tid:         uint(req.ID),
+		LastMessage: cm.Message,
+		LastAt:      lastTime,
+	}
+	if is, err := ls.userRepo.AddChat(c, ci); !is || err != nil {
+		zap.L().Error("evn_user user_service PersonalLetter AddChat error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "操作失败"}, errs.GrpcError(model.DBError)
+	}
+	return &user2.CommonDataResponse{Data: "操作成功"}, nil
+}
+
+func (ls *UserService) DeleteChatItem(ctx context.Context, req *user2.CommonIDAndUIDRequest) (*user2.CommonDataResponse, error) {
+	c := context.Background()
+
+	if is, err := ls.userRepo.DeleteChat(c, req); !is || err != nil {
+		zap.L().Error("evn_user user_service DeleteChatItem DeleteChat error", zap.Error(err))
+		return &user2.CommonDataResponse{Data: "删除失败"}, errs.GrpcError(model.DBError)
+	}
+	return &user2.CommonDataResponse{Data: "删除成功"}, nil
 }

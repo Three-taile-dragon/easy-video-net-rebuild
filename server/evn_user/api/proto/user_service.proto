@@ -143,6 +143,25 @@ message FavoriteVideoListRequest {
   uint32 Favorite_ID = 1;
 }
 
+message GetRecordListRequest {
+  int64 Page = 1;
+  int64 Size = 2;
+  uint32 Uid = 3;
+}
+
+message GetNoticeListRequest {
+  int64 Page = 1;
+  int64 Size = 2;
+  uint32 Uid = 3;
+  string Tp = 4;
+}
+
+message GetChatHistoryMsgRequest {
+  uint32 Tid = 1;
+  string Last_time = 2;
+  uint32 Uid = 3;
+}
+
 service UserService {
   rpc GetCaptcha(CaptchaRequest) returns (CommonDataResponse) {}
   rpc Register(RegisterRequest) returns (UserInfoResponse) {}
@@ -169,4 +188,12 @@ service UserService {
   rpc FavoriteVideo(FavoriteVideoRequest) returns (CommonDataResponse) {}
   rpc GetFavoritesListByFavoriteVideo(FavoritesListRequest) returns (CommonDataResponse) {}
   rpc GetFavoriteVideoList(FavoriteVideoListRequest) returns (CommonDataResponse) {}
+  rpc GetRecordList(GetRecordListRequest) returns (CommonDataResponse) {}
+  rpc ClearRecord(CommonIDRequest) returns (CommonDataResponse) {}
+  rpc DeleteRecordByID(CommonIDAndUIDRequest) returns (CommonDataResponse) {}
+  rpc GetNoticeList(GetNoticeListRequest) returns (CommonDataResponse) {}
+  rpc GetChatList(CommonIDRequest) returns (CommonDataResponse) {}
+  rpc GetChatHistoryMsg(GetChatHistoryMsgRequest) returns (CommonDataResponse) {}
+  rpc PersonalLetter(CommonIDAndUIDRequest) returns (CommonDataResponse) {}
+  rpc DeleteChatItem(CommonIDAndUIDRequest) returns (CommonDataResponse) {}
 }

@@ -6,9 +6,14 @@ import (
 	"dragonsss.cn/evn_common/model/liveInfo"
 	"dragonsss.cn/evn_common/model/user"
 	"dragonsss.cn/evn_common/model/user/attention"
+	"dragonsss.cn/evn_common/model/user/chat/chatList"
+	"dragonsss.cn/evn_common/model/user/chat/chatMsg"
 	"dragonsss.cn/evn_common/model/user/collect"
 	"dragonsss.cn/evn_common/model/user/favorites"
+	"dragonsss.cn/evn_common/model/user/notice"
+	"dragonsss.cn/evn_common/model/user/record"
 	"dragonsss.cn/evn_common/model/video"
+	user2 "dragonsss.cn/evn_grpc/user"
 	"dragonsss.cn/evn_user/internal/database"
 	"dragonsss.cn/evn_user/internal/database/gorms"
 	"gorm.io/gorm"
@@ -465,4 +470,193 @@ func (u *UserDao) GetVideoInfoByFavoriteID(ctx context.Context, favoriteID uint3
 		return nil, err
 	}
 	return cl, nil
+}
+
+func (u *UserDao) GetRecordListByUid(ctx context.Context, req *user2.GetRecordListRequest) (*record.RecordsList, error) {
+	session := u.conn.Session(ctx)
+	var rl *record.RecordsList
+	err := session.
+		Preload("VideoInfo.UserInfo").
+		Preload("ArticleInfo.UserInfo").
+		Preload("Userinfo.LiveInfo").
+		Where("uid = ?", req.Uid).
+		Limit(int(req.Size)).
+		Offset(int((req.Page - 1) * req.Size)).
+		Order("created_at desc").
+		Find(&rl).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return rl, nil
+}
+
+func (u *UserDao) ClearRecord(ctx context.Context, id uint32) (bool, error) {
+	err := u.conn.Session(ctx).Model(&record.Record{}).Where("uid = ?", id).Delete(&record.Record{}).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (u *UserDao) DeleteRecordByID(ctx context.Context, req *user2.CommonIDAndUIDRequest) (bool, error) {
+	err := u.conn.Session(ctx).Model(&record.Record{}).Where("id = ? and uid = ?", req.ID, req.UID).Delete(&record.Record{}).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (u *UserDao) GetNoticeList(ctx context.Context, req *user2.GetNoticeListRequest, messageType []string) (*notice.NoticesList, error) {
+	session := u.conn.Session(ctx)
+	var nl *notice.NoticesList
+	if len(messageType) > 0 {
+		err := session.
+			Preload("VideoInfo").
+			Preload("ArticleInfo").
+			Preload("UserInfo").
+			Where("uid", req.Uid).
+			Where("type", messageType).
+			Limit(int(req.Size)).
+			Offset(int((req.Page - 1) * req.Size)).
+			Order("created_at desc").
+			Find(&nl).
+			Error
+		if err != nil {
+			return nil, err
+		}
+		return nl, nil
+	} else {
+		err := session.
+			Preload("VideoInfo").
+			Preload("ArticleInfo").
+			Preload("UserInfo").
+			Where("uid = ?", req.Uid).
+			Limit(int(req.Size)).
+			Offset(int((req.Page - 1) * req.Size)).
+			Order("created_at desc").
+			Find(&nl).
+			Error
+		if err != nil {
+			return nil, err
+		}
+		return nl, nil
+	}
+}
+
+func (u *UserDao) ReadAllNoticeList(ctx context.Context, req *user2.GetNoticeListRequest) (bool, error) {
+	err := u.conn.Session(ctx).Model(&notice.Notice{}).Where(notice.Notice{Uid: uint(req.Uid), ISRead: 0}).Updates(&notice.Notice{ISRead: 1}).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (u *UserDao) GetChatListByIO(ctx context.Context, req *user2.CommonIDRequest) (*chatList.ChatList, error) {
+	session := u.conn.Session(ctx)
+	var cl *chatList.ChatList
+	err := session.
+		Preload("ToUserInfo").
+		Where("uid = ?", req.ID).
+		Order("updated_at desc").
+		Find(&cl).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return cl, nil
+}
+
+func (u *UserDao) FindMsgList(ctx context.Context, req *user2.CommonIDRequest, v uint) (*chatMsg.MsgList, error) {
+	ids := make([]uint, 0)
+	ids = append(ids, uint(req.ID), v)
+	session := u.conn.Session(ctx)
+	var ml *chatMsg.MsgList
+	err := session.
+		Preload("UInfo").
+		Where("uid", ids).
+		Order("created_at desc").
+		Limit(30).
+		Find(&ml).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return ml, nil
+}
+
+func (u *UserDao) FindHistoryMsg(ctx context.Context, req *user2.GetChatHistoryMsgRequest) (*chatMsg.MsgList, error) {
+	ids := make([]uint, 0)
+	ids = append(ids, uint(req.Uid), uint(req.Tid))
+	session := u.conn.Session(ctx)
+	var ml *chatMsg.MsgList
+	err := session.
+		Preload("UInfo").
+		Preload("TInfo").
+		Where("uid", ids).
+		Where("tid", ids).
+		Where("created_at < ?", req.LastTime).
+		Order("created_at desc").
+		Limit(30).
+		Find(&ml).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return ml, nil
+}
+
+func (u *UserDao) GetLastMessage(ctx context.Context, req *user2.CommonIDAndUIDRequest) (*chatMsg.Msg, error) {
+	session := u.conn.Session(ctx)
+	var ms *chatMsg.Msg
+	err := session.
+		Where("uid = ? or  tid  = ? and tid = ? or tid = ? ", req.UID, req.UID, req.ID, req.ID).
+		Order("created_at desc").
+		Find(&ms).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return ms, nil
+}
+
+func (u *UserDao) AddChat(ctx context.Context, ci *chatList.ChatsListInfo) (bool, error) {
+	//判断是否存在
+	session := u.conn.Session(ctx)
+	is := &chatList.ChatsListInfo{}
+	err := session.
+		Where("uid = ? And tid = ?", ci.Uid, ci.Tid).
+		Find(&is).
+		Error
+	if err != nil {
+		return false, err
+	}
+	if is.ID != 0 {
+		//更新
+		err := session.
+			Model(is).
+			Updates(map[string]interface{}{"last_at": is.LastAt, "last_message": is.LastMessage}).
+			Error
+		if err != nil {
+			return false, err
+		}
+	} else {
+		err := session.
+			Create(&ci).
+			Error
+		if err == nil {
+			return true, nil
+		} else {
+			return false, err
+		}
+	}
+	return false, nil
+}
+
+func (u *UserDao) DeleteChat(ctx context.Context, req *user2.CommonIDAndUIDRequest) (bool, error) {
+	err := u.conn.Session(ctx).Model(&chatMsg.MsgList{}).Where("uid = ? and tid = ?", req.UID, req.ID).Delete(&chatMsg.MsgList{}).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
