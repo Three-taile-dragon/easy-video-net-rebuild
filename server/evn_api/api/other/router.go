@@ -2,6 +2,7 @@ package project
 
 import (
 	"dragonsss.cn/evn_api/api/cors"
+	"dragonsss.cn/evn_api/api/midd"
 	"dragonsss.cn/evn_api/api/other/rpc"
 	"dragonsss.cn/evn_api/router"
 	"github.com/gin-gonic/gin"
@@ -30,5 +31,13 @@ func (*RouterProject) Router(r *gin.Engine) {
 	//group.POST("", h.index)
 	group.Use(cors.Cors())
 	group.POST("/getHomeInfo", h.getHomeInfo)
-
+	liveRouter := r.Group("/api/live")
+	liveRouter.Use(cors.Cors())
+	liveRouter.Use(midd.TokenVerify())
+	{
+		l := NewLive()
+		liveRouter.POST("/getLiveRoom", l.getLiveRoom)
+		liveRouter.POST("/getLiveRoomInfo", l.getLiveRoomInfo)
+		liveRouter.POST("/getBeLiveList", l.getBeLiveList)
+	}
 }

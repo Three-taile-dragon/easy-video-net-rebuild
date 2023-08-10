@@ -6,15 +6,15 @@ import { GetBeLiveListRes } from "@/types/home/live";
 
 
 export const getLiveRoom = () => {
-    return httpRequest.post<GetLiveRoomRes>('/live/getLiveRoom');
+    return httpRequest.post<GetLiveRoomRes>('/api/live/getLiveRoom');
 }
 
 //获取直播信息
 export const getLiveRoomInfo = (params: GetLiveRoomInfoReq) => {
-    return httpRequest.post<GetLiveRoomInfoRes>('/live/getLiveRoomInfo', params);
+    return httpRequest.post<GetLiveRoomInfoRes>('/api/live/getLiveRoomInfo', params);
 }
 
 //获取正在直播的列表
 export const getBeLiveList = () => {
-    return httpRequest.post<GetBeLiveListRes>('/live/getBeLiveList');
+    return httpRequest.post<GetBeLiveListRes>('/api/live/getBeLiveList');
 }

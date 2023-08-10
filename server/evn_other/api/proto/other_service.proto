@@ -4,43 +4,38 @@ syntax = "proto3";
 package other.service.v1;
 option go_package = "evn_other/pkg/service/other.service.v1";
 
-
-
 message HomeRequest{
   int64 page = 1;
   int64 size = 2;
 }
 
-//message rotograph {
-//  string title = 1;
-//  string cover = 2;
-//  string color = 3;
-//  string type = 4;
-//  int64 to_id = 5;
-//}
-//
-//message videoList {
-//  uint32 id = 1;
-//  uint32 uid = 2;
-//  string title = 3;
-//  string video = 4;
-//  string cover = 5;
-//  int64 video_duration = 6;
-//  repeated string label = 7;
-//  string introduce = 8;
-//  int32 heat = 9;
-//  int32 barrageNumber = 10;
-//  string username = 11;
-//  string create_at = 12;
-//}
-
 message HomeResponse{
-//     repeated rotograph rotograph = 1;
-//     repeated videoList = 2;
     string rotograph = 1;
     string videoList = 2;
 }
 
+message CommonDataResponse{
+  string data = 1;
+}
+
+message CommonIDRequest {
+  uint32 ID = 1;
+}
+
+message CommonIDAndUIDRequest {
+  uint32 ID = 1;
+  uint32 UID = 2;
+
+}
+
+message GetLiveRoomResponse {
+  string Address = 1;
+  string Key = 2;
+}
+
 service OtherService {
   rpc GetHomeInfo(HomeRequest) returns (HomeResponse) {}
+  rpc GetLiveRoom(CommonIDRequest) returns (GetLiveRoomResponse) {}
+  rpc GetLiveRoomInfo(CommonIDAndUIDRequest) returns (CommonDataResponse) {}
+  rpc GetBeLiveList(CommonIDRequest) returns (CommonDataResponse) {}
 }

@@ -35,7 +35,24 @@ type VideoInfo struct {
 
 type VideoInfoList []VideoInfo
 
-//type GetHomeInfoResponse struct {
-//	Rotograph rotographInfoList `json:"rotograph"`
-//	VideoList videoInfoList     `json:"videoList"`
-//}
+type GetLiveRoomInfoReceiveStruct struct {
+	RoomID uint `json:"room_id"`
+}
+
+type GetLiveRoomInfoResponseStruct struct {
+	Username  string `json:"username"`
+	Photo     string `json:"photo"`
+	LiveTitle string `json:"live_title"`
+	Flv       string `json:"flv"`
+}
+
+type BeLiveInfo struct {
+	ID       uint   `json:"id"`
+	Username string `json:"username"`
+	Photo    string `json:"photo"`
+	Img      string `json:"img"`
+	Title    string `json:"title"`
+	Online   int    `json:"online"`
+}
+
+type BeLiveInfoList []BeLiveInfo

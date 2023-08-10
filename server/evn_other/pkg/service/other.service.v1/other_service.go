@@ -6,6 +6,7 @@ import (
 	model2 "dragonsss.cn/evn_common/model"
 	"dragonsss.cn/evn_common/model/common"
 	"dragonsss.cn/evn_common/model/rotograph"
+	"dragonsss.cn/evn_common/model/user"
 	"dragonsss.cn/evn_common/model/video"
 	"dragonsss.cn/evn_grpc/other"
 	"dragonsss.cn/evn_other/config"
@@ -16,6 +17,10 @@ import (
 	"dragonsss.cn/evn_other/pkg/model"
 	"encoding/json"
 	"go.uber.org/zap"
+	"io"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 // OtherService grpc 登陆服务 实现
@@ -75,4 +80,120 @@ func (o *OtherService) GetHomeInfo(ctx context.Context, req *other.HomeRequest) 
 		VideoList: string(videoJSON),
 	}
 	return response, nil
+}
+
+func (o *OtherService) GetLiveRoom(ctx context.Context, req *other.CommonIDRequest) (*other.GetLiveRoomResponse, error) {
+	//请求直播服务器
+	url := config.C.Live.Agreement + "://" + config.C.Live.IP + ":" + strconv.Itoa(config.C.Live.Api) + "/control/get?room="
+	url = url + strconv.Itoa(int(req.ID))
+	// 创建http get请求
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
+	// 解析http请求中body 数据到我们定义的结构体中
+	ReqGetRoom := &model.ReqGetRoom{}
+	decoder := json.NewDecoder(resp.Body)
+	if err := decoder.Decode(ReqGetRoom); err != nil {
+		zap.L().Error("evn_other other_service GetLiveRoom Decode error", zap.Error(err))
+		return nil, errs.GrpcError(model2.RequestError)
+	}
+	if ReqGetRoom.Status != 200 {
+		return nil, errs.GrpcError(model2.RequestError)
+	}
+	response := model.GetLiveRoomResponse("rtmp://"+config.C.Live.IP+":"+strconv.Itoa(config.C.Live.Rtmp)+"/live", ReqGetRoom.Data)
+	return &other.GetLiveRoomResponse{
+		Address: response.(model.GetLiveRoomResponseStruct).Address,
+		Key:     response.(model.GetLiveRoomResponseStruct).Key,
+	}, nil
+}
+
+func (o *OtherService) GetLiveRoomInfo(ctx context.Context, req *other.CommonIDAndUIDRequest) (*other.CommonDataResponse, error) {
+	c := context.Background()
+	userInfo, err := o.menuRepo.FindLiveInfo(c, req)
+	if err != nil {
+		zap.L().Error("evn_other other_service GetLiveRoomInfo FindLiveInfo DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model2.DBError)
+	}
+	flv := config.C.Live.Agreement + "://" + config.C.Live.IP + ":" + strconv.Itoa(config.C.Live.Flv) + "/live/" + strconv.Itoa(int(req.ID)) + ".flv"
+
+	if req.UID > 0 {
+		//添加历史记录
+		err = o.menuRepo.AddLiveRecord(c, req.UID, req.ID)
+		if err != nil {
+			zap.L().Error("evn_other other_service GetLiveRoomInfo AddLiveRecord error", zap.Error(err))
+			return nil, errs.GrpcError(model2.DBError)
+		}
+	}
+
+	infoResponse := model.GetLiveRoomInfoResponse(userInfo, flv, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	rspJSON, err := json.Marshal(infoResponse)
+	if err != nil {
+		zap.L().Error("evn_other other_service GetLiveRoomInfo Marshal error", zap.Error(err))
+		return nil, errs.GrpcError(model2.JsonError)
+	}
+	tmp := &other.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
+}
+
+func (o *OtherService) GetBeLiveList(ctx context.Context, req *other.CommonIDRequest) (*other.CommonDataResponse, error) {
+	c := context.Background()
+	//获取开通播放用户id
+	url := config.C.Live.Agreement + "://" + config.C.Live.IP + ":" + strconv.Itoa(config.C.Live.Api) + "/stat/livestat"
+
+	// 创建http get请求
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
+	// 解析http请求中body 数据到我们定义的结构体中
+	liveStat := &model.LivestatRes{}
+	decoder := json.NewDecoder(resp.Body)
+	if err := decoder.Decode(liveStat); err != nil {
+		zap.L().Error("evn_other other_service GetBeLiveList Decode error", zap.Error(err))
+		return nil, errs.GrpcError(model2.RequestError)
+	}
+	if liveStat.Status != 200 {
+		return nil, errs.GrpcError(model2.RequestError)
+	}
+	//获取live中正在直播列表
+	keys := make([]uint, 0)
+	for _, kv := range liveStat.Data.Publishers {
+		ka := strings.Split(kv.Key, "live/")
+		uintKey, _ := strconv.ParseUint(ka[1], 10, 19)
+		keys = append(keys, uint(uintKey))
+	}
+	userList := &user.UserList{}
+	if len(keys) > 0 {
+		userList, err = o.menuRepo.GetBeLiveList(c, keys)
+		if err != nil {
+			zap.L().Error("evn_other other_service GetBeLiveList GetBeLiveList DB_error", zap.Error(err))
+			return nil, errs.GrpcError(model2.DBError)
+		}
+	}
+
+	listResponse := model.GetBeLiveListResponse(userList, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	rspJSON, err := json.Marshal(listResponse)
+	if err != nil {
+		zap.L().Error("evn_other other_service GetBeLiveList Marshal error", zap.Error(err))
+		return nil, errs.GrpcError(model2.JsonError)
+	}
+	tmp := &other.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
 }

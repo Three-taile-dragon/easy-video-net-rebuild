@@ -23,6 +23,9 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OtherServiceClient interface {
 	GetHomeInfo(ctx context.Context, in *HomeRequest, opts ...grpc.CallOption) (*HomeResponse, error)
+	GetLiveRoom(ctx context.Context, in *CommonIDRequest, opts ...grpc.CallOption) (*GetLiveRoomResponse, error)
+	GetLiveRoomInfo(ctx context.Context, in *CommonIDAndUIDRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
+	GetBeLiveList(ctx context.Context, in *CommonIDRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
 }
 
 type otherServiceClient struct {
@@ -42,11 +45,41 @@ func (c *otherServiceClient) GetHomeInfo(ctx context.Context, in *HomeRequest, o
 	return out, nil
 }
 
+func (c *otherServiceClient) GetLiveRoom(ctx context.Context, in *CommonIDRequest, opts ...grpc.CallOption) (*GetLiveRoomResponse, error) {
+	out := new(GetLiveRoomResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/GetLiveRoom", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) GetLiveRoomInfo(ctx context.Context, in *CommonIDAndUIDRequest, opts ...grpc.CallOption) (*CommonDataResponse, error) {
+	out := new(CommonDataResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/GetLiveRoomInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) GetBeLiveList(ctx context.Context, in *CommonIDRequest, opts ...grpc.CallOption) (*CommonDataResponse, error) {
+	out := new(CommonDataResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/GetBeLiveList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OtherServiceServer is the server API for OtherService service.
 // All implementations must embed UnimplementedOtherServiceServer
 // for forward compatibility
 type OtherServiceServer interface {
 	GetHomeInfo(context.Context, *HomeRequest) (*HomeResponse, error)
+	GetLiveRoom(context.Context, *CommonIDRequest) (*GetLiveRoomResponse, error)
+	GetLiveRoomInfo(context.Context, *CommonIDAndUIDRequest) (*CommonDataResponse, error)
+	GetBeLiveList(context.Context, *CommonIDRequest) (*CommonDataResponse, error)
 	mustEmbedUnimplementedOtherServiceServer()
 }
 
@@ -56,6 +89,15 @@ type UnimplementedOtherServiceServer struct {
 
 func (UnimplementedOtherServiceServer) GetHomeInfo(context.Context, *HomeRequest) (*HomeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHomeInfo not implemented")
+}
+func (UnimplementedOtherServiceServer) GetLiveRoom(context.Context, *CommonIDRequest) (*GetLiveRoomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLiveRoom not implemented")
+}
+func (UnimplementedOtherServiceServer) GetLiveRoomInfo(context.Context, *CommonIDAndUIDRequest) (*CommonDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLiveRoomInfo not implemented")
+}
+func (UnimplementedOtherServiceServer) GetBeLiveList(context.Context, *CommonIDRequest) (*CommonDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBeLiveList not implemented")
 }
 func (UnimplementedOtherServiceServer) mustEmbedUnimplementedOtherServiceServer() {}
 
@@ -88,6 +130,60 @@ func _OtherService_GetHomeInfo_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OtherService_GetLiveRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommonIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).GetLiveRoom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/GetLiveRoom",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).GetLiveRoom(ctx, req.(*CommonIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_GetLiveRoomInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommonIDAndUIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).GetLiveRoomInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/GetLiveRoomInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).GetLiveRoomInfo(ctx, req.(*CommonIDAndUIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_GetBeLiveList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommonIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).GetBeLiveList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/GetBeLiveList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).GetBeLiveList(ctx, req.(*CommonIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OtherService_ServiceDesc is the grpc.ServiceDesc for OtherService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -98,6 +194,18 @@ var OtherService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetHomeInfo",
 			Handler:    _OtherService_GetHomeInfo_Handler,
+		},
+		{
+			MethodName: "GetLiveRoom",
+			Handler:    _OtherService_GetLiveRoom_Handler,
+		},
+		{
+			MethodName: "GetLiveRoomInfo",
+			Handler:    _OtherService_GetLiveRoomInfo_Handler,
+		},
+		{
+			MethodName: "GetBeLiveList",
+			Handler:    _OtherService_GetBeLiveList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

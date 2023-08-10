@@ -23,4 +23,5 @@ var (
 	JsonError           = errs.NewError(10102011, "json转换错误")
 	NoLoginError        = errs.NewError(101020012, "用户未登陆")
 	ParamsError         = errs.NewError(101020013, "参数错误")
+	RequestError        = errs.NewError(101020014, "请求错误")
 )

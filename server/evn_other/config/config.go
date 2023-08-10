@@ -21,6 +21,7 @@ type Config struct {
 	JC    *JwtConfig
 	AC    *AesConfig
 	Host  *HostConfig
+	Live  *LiveConfig
 }
 type ServerConfig struct {
 	Name string
@@ -62,6 +63,15 @@ type HostConfig struct {
 	LocalHost      string
 }
 
+type LiveConfig struct {
+	IP        string
+	Rtmp      int
+	Flv       int
+	Hls       int
+	Api       int
+	Agreement string
+}
+
 func InitConfig() *Config {
 	//初始化viper
 	conf := &Config{viper: viper.New()}
@@ -85,6 +95,7 @@ func InitConfig() *Config {
 	conf.ReadJwtConfig()
 	conf.ReadAesConfig()
 	conf.ReadHostConfig()
+	conf.ReadLiveConfig()
 	return conf
 }
 
@@ -177,10 +188,22 @@ func (c *Config) ReadAesConfig() {
 	c.AC = ac
 }
 
-// ReadServerConfig 读取腾讯云oss配置
+// ReadHostConfig 读取腾讯云oss配置
 func (c *Config) ReadHostConfig() {
 	hostConfig := &HostConfig{}
 	hostConfig.TencentOssHost = c.viper.GetString("host.tencentOss.host")
 	hostConfig.LocalHost = c.viper.GetString("host.local.host")
 	c.Host = hostConfig
+}
+
+// ReadLiveConfig 读取直播配置
+func (c *Config) ReadLiveConfig() {
+	liveConfig := &LiveConfig{}
+	liveConfig.IP = c.viper.GetString("live.ip")
+	liveConfig.Rtmp = c.viper.GetInt("live.rtmp")
+	liveConfig.Flv = c.viper.GetInt("live.flv")
+	liveConfig.Hls = c.viper.GetInt("live.hls")
+	liveConfig.Api = c.viper.GetInt("live.api")
+	liveConfig.Agreement = c.viper.GetString("live.agreement")
+	c.Live = liveConfig
 }

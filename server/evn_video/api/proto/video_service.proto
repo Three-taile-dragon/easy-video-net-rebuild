@@ -1,8 +1,8 @@
 //grpc 登陆服务配置文件
 
 syntax = "proto3";
-package project.service.v1;
-option go_package = "evn_project/pkg/service/project.service.v1";
+package video.service.v1;
+option go_package = "evn_video/pkg/service/video.service.v1";
 
 
 message IndexRequest{
@@ -25,6 +25,6 @@ message  IndexResponse{
   repeated MenuMessage menus = 1;
 }
 
-service ProjectService {
+service VideoService {
   rpc Index(IndexRequest) returns (IndexResponse) {}
 }
