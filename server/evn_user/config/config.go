@@ -177,7 +177,7 @@ func (c *Config) ReadAesConfig() {
 	c.AC = ac
 }
 
-// ReadServerConfig 读取腾讯云oss配置
+// ReadHostConfig 读取腾讯云oss配置
 func (c *Config) ReadHostConfig() {
 	hostConfig := &HostConfig{}
 	hostConfig.TencentOssHost = c.viper.GetString("host.tencentOss.host")

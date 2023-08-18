@@ -3,9 +3,9 @@ package router
 import (
 	"dragonsss.cn/evn_common/discovery"
 	"dragonsss.cn/evn_common/logs"
-	"dragonsss.cn/evn_grpc/project"
-	"dragonsss.cn/evn_project/config"
-	projectServiceV1 "dragonsss.cn/evn_project/pkg/service/project.service.v1"
+	"dragonsss.cn/evn_grpc/ws"
+	"dragonsss.com/evn_ws/config"
+	ws_service_v1 "dragonsss.com/evn_ws/pkg/service/ws.service.v1"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -43,7 +43,7 @@ func RegisterGrpc() *grpc.Server {
 	c := gRPCConfig{
 		Addr: config.C.GC.Addr,
 		RegisterFunc: func(g *grpc.Server) {
-			project.RegisterProjectServiceServer(g, projectServiceV1.New())
+			ws.RegisterWsServiceServer(g, ws_service_v1.New())
 		},
 	}
 	s := grpc.NewServer()

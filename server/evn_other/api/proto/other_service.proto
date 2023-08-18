@@ -25,7 +25,6 @@ message CommonIDRequest {
 message CommonIDAndUIDRequest {
   uint32 ID = 1;
   uint32 UID = 2;
-
 }
 
 message GetLiveRoomResponse {

@@ -1,4 +1,4 @@
-package project
+package other
 
 import (
 	"dragonsss.cn/evn_api/api/cors"
