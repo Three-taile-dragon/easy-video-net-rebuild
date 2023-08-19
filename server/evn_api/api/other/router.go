@@ -40,4 +40,13 @@ func (*RouterProject) Router(r *gin.Engine) {
 		liveRouter.POST("/getLiveRoomInfo", l.getLiveRoomInfo)
 		liveRouter.POST("/getBeLiveList", l.getBeLiveList)
 	}
+	discussRouter := r.Group("/api/contribution")
+	discussRouter.Use(cors.Cors())
+	discussRouter.Use(midd.TokenVerify())
+	{
+		d := NewDiscuss()
+		discussRouter.POST("/getDiscussVideoList", d.getDiscussVideoList)
+		discussRouter.POST("/getDiscussArticleList", d.getDiscussArticleList)
+		discussRouter.POST("/getDiscussBarrageList", d.getDiscussBarrageList)
+	}
 }

@@ -26,6 +26,9 @@ type OtherServiceClient interface {
 	GetLiveRoom(ctx context.Context, in *CommonIDRequest, opts ...grpc.CallOption) (*GetLiveRoomResponse, error)
 	GetLiveRoomInfo(ctx context.Context, in *CommonIDAndUIDRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
 	GetBeLiveList(ctx context.Context, in *CommonIDRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
+	GetDiscussVideoList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
+	GetDiscussArticleList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
+	GetDiscussBarrageList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
 }
 
 type otherServiceClient struct {
@@ -72,6 +75,33 @@ func (c *otherServiceClient) GetBeLiveList(ctx context.Context, in *CommonIDRequ
 	return out, nil
 }
 
+func (c *otherServiceClient) GetDiscussVideoList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error) {
+	out := new(CommonDataResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/GetDiscussVideoList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) GetDiscussArticleList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error) {
+	out := new(CommonDataResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/GetDiscussArticleList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) GetDiscussBarrageList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error) {
+	out := new(CommonDataResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/GetDiscussBarrageList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OtherServiceServer is the server API for OtherService service.
 // All implementations must embed UnimplementedOtherServiceServer
 // for forward compatibility
@@ -80,6 +110,9 @@ type OtherServiceServer interface {
 	GetLiveRoom(context.Context, *CommonIDRequest) (*GetLiveRoomResponse, error)
 	GetLiveRoomInfo(context.Context, *CommonIDAndUIDRequest) (*CommonDataResponse, error)
 	GetBeLiveList(context.Context, *CommonIDRequest) (*CommonDataResponse, error)
+	GetDiscussVideoList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error)
+	GetDiscussArticleList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error)
+	GetDiscussBarrageList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error)
 	mustEmbedUnimplementedOtherServiceServer()
 }
 
@@ -98,6 +131,15 @@ func (UnimplementedOtherServiceServer) GetLiveRoomInfo(context.Context, *CommonI
 }
 func (UnimplementedOtherServiceServer) GetBeLiveList(context.Context, *CommonIDRequest) (*CommonDataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBeLiveList not implemented")
+}
+func (UnimplementedOtherServiceServer) GetDiscussVideoList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDiscussVideoList not implemented")
+}
+func (UnimplementedOtherServiceServer) GetDiscussArticleList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDiscussArticleList not implemented")
+}
+func (UnimplementedOtherServiceServer) GetDiscussBarrageList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDiscussBarrageList not implemented")
 }
 func (UnimplementedOtherServiceServer) mustEmbedUnimplementedOtherServiceServer() {}
 
@@ -184,6 +226,60 @@ func _OtherService_GetBeLiveList_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OtherService_GetDiscussVideoList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommonDiscussRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).GetDiscussVideoList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/GetDiscussVideoList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).GetDiscussVideoList(ctx, req.(*CommonDiscussRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_GetDiscussArticleList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommonDiscussRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).GetDiscussArticleList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/GetDiscussArticleList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).GetDiscussArticleList(ctx, req.(*CommonDiscussRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_GetDiscussBarrageList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommonDiscussRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).GetDiscussBarrageList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/GetDiscussBarrageList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).GetDiscussBarrageList(ctx, req.(*CommonDiscussRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OtherService_ServiceDesc is the grpc.ServiceDesc for OtherService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -206,6 +302,18 @@ var OtherService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetBeLiveList",
 			Handler:    _OtherService_GetBeLiveList_Handler,
+		},
+		{
+			MethodName: "GetDiscussVideoList",
+			Handler:    _OtherService_GetDiscussVideoList_Handler,
+		},
+		{
+			MethodName: "GetDiscussArticleList",
+			Handler:    _OtherService_GetDiscussArticleList_Handler,
+		},
+		{
+			MethodName: "GetDiscussBarrageList",
+			Handler:    _OtherService_GetDiscussBarrageList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

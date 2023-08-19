@@ -2,8 +2,8 @@ package barrage
 
 import (
 	"dragonsss.cn/evn_common/model/common"
+	"dragonsss.cn/evn_common/model/user"
 	"gorm.io/datatypes"
-	"os/user"
 )
 
 type Barrage struct {

@@ -32,9 +32,18 @@ message GetLiveRoomResponse {
   string Key = 2;
 }
 
+message CommonDiscussRequest {
+  int32 Page = 1;
+  int32 Size = 2;
+  uint32 Uid = 3;
+}
+
 service OtherService {
   rpc GetHomeInfo(HomeRequest) returns (HomeResponse) {}
   rpc GetLiveRoom(CommonIDRequest) returns (GetLiveRoomResponse) {}
   rpc GetLiveRoomInfo(CommonIDAndUIDRequest) returns (CommonDataResponse) {}
   rpc GetBeLiveList(CommonIDRequest) returns (CommonDataResponse) {}
+  rpc GetDiscussVideoList(CommonDiscussRequest) returns (CommonDataResponse) {}
+  rpc GetDiscussArticleList(CommonDiscussRequest) returns (CommonDataResponse) {}
+  rpc GetDiscussBarrageList(CommonDiscussRequest) returns (CommonDataResponse) {}
 }

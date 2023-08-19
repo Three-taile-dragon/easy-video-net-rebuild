@@ -116,17 +116,17 @@ export const deleteArticleByID = (params: DeleteArticleByIDReq) => {
 
 //获取评论管理视频评论
 export const getDiscussVideoList = (params: GetDiscussVideoListReq) => {
-    return httpRequest.post<GetDiscussVideoListRes>('/contribution/getDiscussVideoList',params);
+    return httpRequest.post<GetDiscussVideoListRes>('/api/contribution/getDiscussVideoList',params);
 }
 
 //获取评论管理文章评论
 export const getDiscussArticleList = (params: GetDiscussArticleListReq) => {
-    return httpRequest.post<GetDiscussArticleListRes>('/contribution/getDiscussArticleList',params);
+    return httpRequest.post<GetDiscussArticleListRes>('/api/contribution/getDiscussArticleList',params);
 }
 
 //获取弹幕管理
 export const getDiscussBarrageList = (params: GetDiscussBarrageListReq) => {
-    return httpRequest.post<GetDiscussBarrageListRes>('/contribution/getDiscussBarrageList',params);
+    return httpRequest.post<GetDiscussBarrageListRes>('/api/contribution/getDiscussBarrageList',params);
 }
 
 //获取弹幕管理

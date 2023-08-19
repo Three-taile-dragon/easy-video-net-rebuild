@@ -1,6 +1,9 @@
 package other
 
-import "time"
+import (
+	"dragonsss.cn/evn_common/model/common"
+	"time"
+)
 
 type HomeRequest struct {
 	Page int64 `json:"page"`
@@ -56,3 +59,51 @@ type BeLiveInfo struct {
 }
 
 type BeLiveInfoList []BeLiveInfo
+
+type GetDiscussVideoListReceiveStruct struct {
+	PageInfo common.PageInfo `json:"page_info"`
+}
+
+type GetDiscussVideoListItem struct {
+	ID        uint      `json:"id"`
+	Username  string    `json:"username"`
+	Photo     string    `json:"photo"`
+	Comment   string    `json:"comment"`
+	Cover     string    `json:"cover"`
+	Title     string    `json:"title"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type GetDiscussVideoListStruct []GetDiscussVideoListItem
+
+type GetDiscussArticleListReceiveStruct struct {
+	PageInfo common.PageInfo `json:"page_info"`
+}
+
+type GetDiscussArticleListItem struct {
+	ID        uint      `json:"id"`
+	Username  string    `json:"username"`
+	Photo     string    `json:"photo"`
+	Comment   string    `json:"comment"`
+	Cover     string    `json:"cover"`
+	Title     string    `json:"title"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type GetDiscussArticleListStruct []GetDiscussArticleListItem
+
+type GetDiscussBarrageListReceiveStruct struct {
+	PageInfo common.PageInfo `json:"page_info"`
+}
+
+type GetDiscussBarrageListItem struct {
+	ID        uint      `json:"id"`
+	Username  string    `json:"username"`
+	Photo     string    `json:"photo"`
+	Comment   string    `json:"comment"`
+	Cover     string    `json:"cover"`
+	Title     string    `json:"title"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type GetDiscussBarrageListStruct []GetDiscussBarrageListItem

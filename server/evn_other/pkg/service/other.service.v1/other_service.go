@@ -45,7 +45,7 @@ func (o *OtherService) GetHomeInfo(ctx context.Context, req *other.HomeRequest) 
 	var rotographList *rotograph.List
 	rotographList, err := o.menuRepo.FindRotographInfo(c)
 	if err != nil {
-		zap.L().Error("evn_other other_service GetHomeInfo error", zap.Error(err))
+		zap.L().Error("evn_other other_service GetHomeInfo FindRotographInfo DB_error", zap.Error(err))
 		return nil, errs.GrpcError(model2.DBError)
 	}
 
@@ -58,7 +58,7 @@ func (o *OtherService) GetHomeInfo(ctx context.Context, req *other.HomeRequest) 
 	videoList, err = o.menuRepo.FindVideoList(c, tmp)
 
 	if err != nil {
-		zap.L().Error("evn_other other_service GetHomeInfo error", zap.Error(err))
+		zap.L().Error("evn_other other_service GetHomeInfo FindVideoList DB_error", zap.Error(err))
 		return nil, errs.GrpcError(model2.DBError)
 	}
 	res := &model.GetHomeInfoResponse{}
@@ -196,4 +196,106 @@ func (o *OtherService) GetBeLiveList(ctx context.Context, req *other.CommonIDReq
 		Data: string(rspJSON),
 	}
 	return tmp, nil
+}
+
+func (o *OtherService) GetDiscussVideoList(ctx context.Context, req *other.CommonDiscussRequest) (*other.CommonDataResponse, error) {
+	c := context.Background()
+	//获取用户发布的视频
+	videoList, err := o.menuRepo.FindDiscussVideoCommentList(c, req.Uid)
+	if err != nil {
+		zap.L().Error("evn_other other_service GetDiscussVideoList FindDiscussVideoCommentList DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model2.DBError)
+	}
+	if len(*videoList) == 0 {
+		return &other.CommonDataResponse{}, nil
+	}
+	videoIDs := make([]uint, 0)
+	for _, v := range *videoList {
+		videoIDs = append(videoIDs, v.ID)
+	}
+	//得到视频评论信息
+	cml, err := o.menuRepo.GetVideoCommentListByIDs(c, videoIDs, req)
+	if err != nil {
+		zap.L().Error("evn_other other_service GetDiscussVideoList GetVideoCommentListByIDs DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model2.DBError)
+	}
+	listResponse := model.GetDiscussVideoListResponse(cml, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	rspJSON, err := json.Marshal(listResponse)
+	if err != nil {
+		zap.L().Error("evn_other other_service GetDiscussVideoList rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model2.JsonError)
+	}
+
+	response := &other.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return response, nil
+}
+
+func (o *OtherService) GetDiscussArticleList(ctx context.Context, req *other.CommonDiscussRequest) (*other.CommonDataResponse, error) {
+	c := context.Background()
+	//获取用户发布的专栏
+	articleList, err := o.menuRepo.FindDiscussArticleCommentList(c, req.Uid)
+	if err != nil {
+		zap.L().Error("evn_other other_service GetDiscussArticleList FindDiscussArticleCommentList DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model2.DBError)
+	}
+	if len(*articleList) == 0 {
+		return &other.CommonDataResponse{}, nil
+	}
+	articleIDs := make([]uint, 0)
+	for _, v := range *articleList {
+		articleIDs = append(articleIDs, v.ID)
+	}
+	//得到文章评论信息
+	cml, err := o.menuRepo.GetArticleCommentListByIDs(c, articleIDs, req)
+	if err != nil {
+		zap.L().Error("evn_other other_service GetDiscussArticleList GetArticleCommentListByIDs DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model2.DBError)
+	}
+	listResponse := model.GetDiscussArticleListResponse(cml, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	rspJSON, err := json.Marshal(listResponse)
+	if err != nil {
+		zap.L().Error("evn_other other_service GetDiscussArticleList rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model2.JsonError)
+	}
+
+	response := &other.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return response, nil
+}
+
+func (o *OtherService) GetDiscussBarrageList(ctx context.Context, req *other.CommonDiscussRequest) (*other.CommonDataResponse, error) {
+	c := context.Background()
+	//获取用户发布的视频
+	videoList, err := o.menuRepo.FindDiscussVideoCommentList(c, req.Uid)
+	if err != nil {
+		zap.L().Error("evn_other other_service GetDiscussBarrageList FindDiscussVideoCommentList DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model2.DBError)
+	}
+	if len(*videoList) == 0 {
+		return &other.CommonDataResponse{}, nil
+	}
+	videoIDs := make([]uint, 0)
+	for _, v := range *videoList {
+		videoIDs = append(videoIDs, v.ID)
+	}
+	//得到视频弹幕信息
+	cml, err := o.menuRepo.GetVideoBarrageListByIDs(c, videoIDs, req)
+	if err != nil {
+		zap.L().Error("evn_other other_service GetDiscussBarrageList GetVideoBarrageListByIDs error", zap.Error(err))
+		return nil, errs.GrpcError(model2.DBError)
+	}
+	listResponse := model.GetDiscussBarrageListResponse(cml, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	rspJSON, err := json.Marshal(listResponse)
+	if err != nil {
+		zap.L().Error("evn_other other_service GetDiscussBarrageList rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model2.JsonError)
+	}
+
+	response := &other.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return response, nil
 }

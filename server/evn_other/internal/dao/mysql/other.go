@@ -2,11 +2,15 @@ package mysql
 
 import (
 	"context"
+	"dragonsss.cn/evn_common/model/article"
+	comments2 "dragonsss.cn/evn_common/model/article/comments"
 	"dragonsss.cn/evn_common/model/common"
 	"dragonsss.cn/evn_common/model/rotograph"
 	"dragonsss.cn/evn_common/model/user"
 	"dragonsss.cn/evn_common/model/user/record"
 	"dragonsss.cn/evn_common/model/video"
+	"dragonsss.cn/evn_common/model/video/barrage"
+	"dragonsss.cn/evn_common/model/video/comments"
 	"dragonsss.cn/evn_grpc/other"
 	"dragonsss.cn/evn_other/internal/database/gorms"
 )
@@ -112,4 +116,86 @@ func (m *OtherDao) GetBeLiveList(ctx context.Context, keys []uint) (*user.UserLi
 		return nil, err
 	}
 	return userList, nil
+}
+
+func (m *OtherDao) FindDiscussVideoCommentList(ctx context.Context, uid uint32) (*video.VideosContributionList, error) {
+	session := m.conn.Session(ctx)
+	var videoList *video.VideosContributionList
+	err := session.
+		Preload("Comments").
+		Where("uid", uid).
+		Find(&videoList).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return videoList, nil
+}
+
+func (m *OtherDao) GetVideoCommentListByIDs(ctx context.Context, videoIDs []uint, req *other.CommonDiscussRequest) (*comments.CommentList, error) {
+	session := m.conn.Session(ctx)
+	var videoComentList *comments.CommentList
+	err := session.
+		Preload("UserInfo").
+		Preload("VideoInfo").
+		Where("video_id", videoIDs).
+		Limit(int(req.Size)).
+		Offset(int((req.Page - 1) * req.Size)).
+		Order("created_at desc").
+		Find(&videoComentList).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return videoComentList, nil
+}
+
+func (m *OtherDao) FindDiscussArticleCommentList(ctx context.Context, uid uint32) (*article.ArticlesContributionList, error) {
+	session := m.conn.Session(ctx)
+	var articleList *article.ArticlesContributionList
+	err := session.
+		Preload("Comments").
+		Where("uid", uid).
+		Find(&articleList).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return articleList, nil
+}
+
+func (m *OtherDao) GetArticleCommentListByIDs(ctx context.Context, articleIDs []uint, req *other.CommonDiscussRequest) (*comments2.CommentList, error) {
+	session := m.conn.Session(ctx)
+	var articleComentList *comments2.CommentList
+	err := session.
+		Preload("UserInfo").
+		Preload("ArticleInfo").
+		Where("article_id", articleIDs).
+		Limit(int(req.Size)).
+		Offset(int((req.Page - 1) * req.Size)).
+		Order("created_at desc").
+		Find(&articleComentList).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return articleComentList, nil
+}
+
+func (m *OtherDao) GetVideoBarrageListByIDs(ctx context.Context, videoIDs []uint, req *other.CommonDiscussRequest) (*barrage.BarragesList, error) {
+	session := m.conn.Session(ctx)
+	var barragesList *barrage.BarragesList
+	err := session.
+		Preload("UserInfo").
+		Preload("VideoInfo").
+		Where("video_id", videoIDs).
+		Limit(int(req.Size)).
+		Offset(int((req.Page - 1) * req.Size)).
+		Order("created_at desc").
+		Find(&barragesList).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return barragesList, nil
 }

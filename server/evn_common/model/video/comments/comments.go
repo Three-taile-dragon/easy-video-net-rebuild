@@ -2,8 +2,8 @@ package comments
 
 import (
 	"dragonsss.cn/evn_common/model/common"
+	"dragonsss.cn/evn_common/model/user"
 	"dragonsss.cn/evn_common/model/video/barrage"
-	"google.golang.org/appengine/user"
 )
 
 type Comment struct {
