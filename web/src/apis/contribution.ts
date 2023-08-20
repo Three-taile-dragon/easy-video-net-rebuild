@@ -57,14 +57,14 @@ export const getArticleComment = (params: GetArticleCommentReq) => {
 
 //根据id获取视频信息
 export const getVideoContributionByID = (params: GetVideoContributionByIDReq) => {
-    return httpRequest.post<GetVideoContributionByIDRes>('/contribution/getVideoContributionByID', params);
+    return httpRequest.post<GetVideoContributionByIDRes>('/api/contribution/getVideoContributionByID', params);
 }
 
-export const danmakuApi = import.meta.env.VITE_BASE_URL + '/contribution/video/barrage/'
+export const danmakuApi = import.meta.env.VITE_BASE_URL + '/api/contribution/video/barrage/'
 
 //获取视弹幕列表
 export const getVideoBarrageList = (params: GetVideoBarrageListReq) => {
-    return httpRequest.get<GetVideoBarrageListRes>('/contribution/getVideoBarrageList', params);
+    return httpRequest.get<GetVideoBarrageListRes>('/api/contribution/getVideoBarrageList', params);
 }
 
 //发送视弹幕
@@ -79,7 +79,7 @@ export const videoPostComment = (params: VideoPostCommentReq) => {
 
 //单独获取视频评论
 export const getVideoComment = (params: GetVideoCommentReq) => {
-    return httpRequest.post<GetVideoCommentRes>('/contribution/getVideoComment', params);
+    return httpRequest.post<GetVideoCommentRes>('/api/contribution/getVideoComment', params);
 }
 
 

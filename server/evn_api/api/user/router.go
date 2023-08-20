@@ -32,8 +32,14 @@ func (*RouterUser) Router(r *gin.Engine) {
 	group.POST("/register", h.register)
 	group.POST("/refreshToken", h.refreshToken)
 	group.POST("/forget", h.forget)
-	group.POST("/space/getSpaceIndividual", h.getSpaceIndividual)
-	group.POST("/space/getReleaseInformation", h.getReleaseInformation)
+	//非必须登入
+	spaceRouterNotNecessary := r.Group("/api/space")
+	spaceRouterNotNecessary.Use(cors.Cors())
+	spaceRouterNotNecessary.Use(midd.TokenVerifyNotNecessary())
+	{
+		spaceRouterNotNecessary.POST("/getSpaceIndividual", h.getSpaceIndividual)
+		spaceRouterNotNecessary.POST("/getReleaseInformation", h.getReleaseInformation)
+	}
 	//必须登入
 	spaceRouter := r.Group("/api/user/space").Use(midd.TokenVerify())
 	{

@@ -20,6 +20,7 @@ type Config struct {
 	MC    *MysqlConfig
 	JC    *JwtConfig
 	AC    *AesConfig
+	Host  *HostConfig
 }
 type ServerConfig struct {
 	Name string
@@ -56,6 +57,11 @@ type AesConfig struct {
 	AesKey string
 }
 
+type HostConfig struct {
+	TencentOssHost string
+	LocalHost      string
+}
+
 func InitConfig() *Config {
 	//初始化viper
 	conf := &Config{viper: viper.New()}
@@ -78,6 +84,7 @@ func InitConfig() *Config {
 	conf.ReadMysqlConfig()
 	conf.ReadJwtConfig()
 	conf.ReadAesConfig()
+	conf.ReadHostConfig()
 	return conf
 }
 
@@ -168,4 +175,12 @@ func (c *Config) ReadAesConfig() {
 		AesKey: c.viper.GetString("aes.key"),
 	}
 	c.AC = ac
+}
+
+// ReadHostConfig 读取腾讯云oss配置
+func (c *Config) ReadHostConfig() {
+	hostConfig := &HostConfig{}
+	hostConfig.TencentOssHost = c.viper.GetString("host.tencentOss.host")
+	hostConfig.LocalHost = c.viper.GetString("host.local.host")
+	c.Host = hostConfig
 }

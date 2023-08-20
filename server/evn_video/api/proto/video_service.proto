@@ -4,27 +4,38 @@ syntax = "proto3";
 package video.service.v1;
 option go_package = "evn_video/pkg/service/video.service.v1";
 
+message CommonDataResponse{
+  string data = 1;
+}
 
-message IndexRequest{
-  string token = 1;
+message CommonIDRequest {
+  uint32 ID = 1;
 }
-message MenuMessage {
-  int64  id = 1;
-  int64 pid = 2;
-  string title = 3;
-  string icon = 4;
-  string url = 5;
-  string filePath = 6;
-  string role = 7;
-  int32 status = 8;
-  string values = 9;
-  int32 showSlider = 10;
-  repeated MenuMessage children = 11;
+
+message CommonIDAndUIDRequest {
+  uint32 ID = 1;
+  uint32 UID = 2;
 }
-message  IndexResponse{
-  repeated MenuMessage menus = 1;
+
+message CommonPageInfo {
+  int32 Page = 1;
+  int32 Size = 2;
+  string Keyword = 3;
+}
+
+message GetVideoCommentRequest {
+  CommonPageInfo PageInfo = 1;
+  uint32 VideoID = 2;
+}
+
+message GetVideoContributionByIDRequest {
+  uint32 VideoID = 1;
+  uint32 Uid = 2;
 }
 
 service VideoService {
-  rpc Index(IndexRequest) returns (IndexResponse) {}
+  rpc GetVideoBarrage(CommonIDRequest) returns (CommonDataResponse) {}
+  rpc GetVideoBarrageList(CommonIDRequest) returns (CommonDataResponse) {}
+  rpc GetVideoComment(GetVideoCommentRequest) returns (CommonDataResponse) {}
+  rpc GetVideoContributionByID(GetVideoContributionByIDRequest) returns (CommonDataResponse) {}
 }

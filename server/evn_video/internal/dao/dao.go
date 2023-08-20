@@ -1,8 +1,8 @@
 package dao
 
 import (
-	"dragonsss.cn/evn_project/internal/database"
-	"dragonsss.cn/evn_project/internal/database/gorms"
+	"dragonsss.com/evn_video/internal/database"
+	"dragonsss.com/evn_video/internal/database/gorms"
 )
 
 //事务的具体实现

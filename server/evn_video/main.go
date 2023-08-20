@@ -2,8 +2,8 @@ package main
 
 import (
 	srv "dragonsss.cn/evn_common"
-	"dragonsss.cn/evn_project/config"
-	"dragonsss.cn/evn_project/router"
+	"dragonsss.com/evn_video/config"
+	"dragonsss.com/evn_video/router"
 	"github.com/gin-gonic/gin"
 )
 

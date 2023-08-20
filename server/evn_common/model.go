@@ -3,6 +3,7 @@ package common
 import (
 	"dragonsss.cn/evn_api/pkg/model/other"
 	ws2 "dragonsss.cn/evn_grpc/ws"
+	"github.com/gin-gonic/gin"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 	"net/http"
@@ -86,4 +87,22 @@ func ErrorWsProto(ws *websocket.Conn, msg string) {
 	}
 	res, _ := proto.Marshal(message)
 	_ = ws.WriteMessage(websocket.BinaryMessage, res)
+}
+
+type Data struct {
+	Code    MyCode      `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"` // omitempty当data为空时,不展示这个字段
+	Version interface{} `json:"version,omitempty"`
+}
+
+// BarrageSuccess 弹幕播放器响应
+func (r *Result) BarrageSuccess(ctx *gin.Context, data interface{}) any {
+	rd := &Data{
+		Code:    0,
+		Message: CodeSuccess.Msg(),
+		Data:    data,
+		Version: 3,
+	}
+	return rd
 }
