@@ -2,11 +2,14 @@ package mysql
 
 import (
 	"context"
+	"dragonsss.cn/evn_common/model"
 	"dragonsss.cn/evn_common/model/article"
 	comments2 "dragonsss.cn/evn_common/model/article/comments"
 	"dragonsss.cn/evn_common/model/common"
 	"dragonsss.cn/evn_common/model/rotograph"
+	"dragonsss.cn/evn_common/model/upload"
 	"dragonsss.cn/evn_common/model/user"
+	"dragonsss.cn/evn_common/model/user/attention"
 	"dragonsss.cn/evn_common/model/user/record"
 	"dragonsss.cn/evn_common/model/video"
 	"dragonsss.cn/evn_common/model/video/barrage"
@@ -198,4 +201,68 @@ func (m *OtherDao) GetVideoBarrageListByIDs(ctx context.Context, videoIDs []uint
 		return nil, err
 	}
 	return barragesList, nil
+}
+
+func (m *OtherDao) FindUploadMethod(ctx context.Context, method string) (*upload.Upload, error) {
+	var up *upload.Upload
+	session := m.conn.Session(ctx)
+	err := session.
+		Where("interface", method).
+		Find(&up).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	if up.ID <= 0 {
+		return nil, model.SystemError
+	}
+	return up, nil
+}
+
+func (m *OtherDao) SearchVideo(ctx context.Context, page int32, size int32, keyword string) (*video.VideosContributionList, error) {
+	var vd *video.VideosContributionList
+	session := m.conn.Session(ctx)
+	err := session.
+		Where("`title` LIKE ?", "%"+keyword+"%").
+		Preload("Likes").
+		Preload("Comments").
+		Preload("Barrage").
+		Preload("UserInfo").
+		Limit(int(size)).
+		Offset(int((page - 1) * size)).
+		Order("created_at desc").
+		Find(&vd).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return vd, nil
+}
+
+func (m *OtherDao) SearchUser(ctx context.Context, page int32, size int32, keyword string) (*user.UserList, error) {
+	var ul *user.UserList
+	session := m.conn.Session(ctx)
+	err := session.
+		Where("`username` LIKE ?", "%"+keyword+"%").
+		Find(&ul).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return ul, nil
+}
+
+func (m *OtherDao) GetAttentionList(ctx context.Context, uid uint32) (*attention.AttentionsList, error) {
+	var al *attention.AttentionsList
+	session := m.conn.Session(ctx)
+	err := session.
+		Where("uid", uid).
+		Preload("AttentionUserInfo").
+		Find(&al).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return al, nil
 }

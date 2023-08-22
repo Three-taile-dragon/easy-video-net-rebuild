@@ -1,6 +1,7 @@
 package response
 
 import (
+	"dragonsss.cn/evn_common"
 	consts "dragonsss.com/evn_ws/utils"
 	"dragonsss.com/evn_ws/utils/proto/pb"
 	"github.com/gorilla/websocket"
@@ -10,15 +11,15 @@ import (
 /*json 交互*/
 
 type DataWs struct {
-	Code    MyCode      `json:"code"`
-	Type    string      `json:"type,omitempty"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"` // omitempty当data为空时,不展示这个字段
+	Code    common.MyCode `json:"code"`
+	Type    string        `json:"type,omitempty"`
+	Message string        `json:"message"`
+	Data    interface{}   `json:"data,omitempty"` // omitempty当data为空时,不展示这个字段
 }
 
 func NotLoginWs(ws *websocket.Conn, msg string) {
 	rd := &DataWs{
-		Code:    CodeNotLogin,
+		Code:    common.CodeNotLogin,
 		Message: msg,
 		Data:    nil,
 	}
@@ -30,9 +31,9 @@ func NotLoginWs(ws *websocket.Conn, msg string) {
 
 func SuccessWs(ws *websocket.Conn, tp string, data interface{}) {
 	rd := &DataWs{
-		Code:    CodeSuccess,
+		Code:    common.CodeSuccess,
 		Type:    tp,
-		Message: CodeSuccess.Msg(),
+		Message: common.CodeSuccess.Msg(),
 		Data:    data,
 	}
 	err := ws.WriteJSON(rd)
@@ -43,7 +44,7 @@ func SuccessWs(ws *websocket.Conn, tp string, data interface{}) {
 
 func ErrorWs(ws *websocket.Conn, msg string) {
 	rd := &DataWs{
-		Code:    CodeServerBusy,
+		Code:    common.CodeServerBusy,
 		Type:    consts.VideoSocketTypeError,
 		Message: msg,
 		Data:    nil,

@@ -6,8 +6,10 @@ import (
 	"dragonsss.cn/evn_api/config"
 	common "dragonsss.cn/evn_common"
 	"dragonsss.cn/evn_common/errs"
+	"dragonsss.cn/evn_common/model"
 	user2 "dragonsss.cn/evn_grpc/user"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"net/http"
 	"time"
 )
@@ -46,6 +48,39 @@ func TokenVerifyNotNecessary() gin.HandlerFunc {
 			c.Next()
 			return
 		}
+		//2.调用user服务进行token认证
+		ctxo, canel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer canel()
+		response, err := rpc.UserServiceClient.TokenVerify(ctxo, &user2.TokenRequest{Token: token, Secret: config.C.JC.AccessSecret, IsEncrypt: false})
+		//3.处理结果 认证通过，将信息放入gin上下文 失败就返回未登录
+		if err != nil {
+			code, msg := errs.ParseGrpcError(err)
+			c.JSON(http.StatusOK, result.Fail(code, msg))
+			c.Abort() //防止继续执行
+			return
+		}
+		//成功
+		c.Set("currentUid", response.Id)
+		c.Set("currentUserName", response.Username)
+		c.Next()
+	}
+}
+
+func ParameterTokenVerify() gin.HandlerFunc {
+	type qu struct {
+		Token string `json:"token"`
+	}
+	return func(c *gin.Context) {
+		//1.从Parameter中获取token
+		result := &common.Result{}
+		req := new(qu)
+		if err := c.ShouldBindBodyWith(req, binding.JSON); err != nil {
+			code, msg := errs.ParseGrpcError(model.SystemError)
+			c.JSON(http.StatusOK, result.Fail(code, msg))
+			c.Abort() //防止继续执行
+			return
+		}
+		token := req.Token
 		//2.调用user服务进行token认证
 		ctxo, canel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer canel()

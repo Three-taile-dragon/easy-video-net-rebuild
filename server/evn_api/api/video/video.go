@@ -9,6 +9,7 @@ import (
 	video2 "dragonsss.cn/evn_grpc/video"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"net/http"
 	"strconv"
 	"time"
@@ -139,7 +140,7 @@ func (v HandleVideo) getVideoComment(c *gin.Context) {
 		return
 	}
 	//4.返回结果
-	c.JSON(http.StatusOK, result.BarrageSuccess(c, videoCommentsJson))
+	c.JSON(http.StatusOK, result.Success(videoCommentsJson))
 }
 
 func (v HandleVideo) getVideoContributionByID(c *gin.Context) {
@@ -182,5 +183,77 @@ func (v HandleVideo) getVideoContributionByID(c *gin.Context) {
 		return
 	}
 	//4.返回结果
+	c.JSON(http.StatusOK, result.Success(rspJson))
+}
+
+func (v HandleVideo) sendVideoBarrage(c *gin.Context) {
+	result := common.Result{}
+	var req video.SendVideoBarrageReceiveStruct
+	err := c.ShouldBindBodyWith(&req, binding.JSON)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	uid := c.GetInt64("currentUid")
+	//调用grpc
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
+
+	msg := &video2.SendVideoBarrageRequest{
+		Author: req.Author,
+		Color:  uint32(req.Color),
+		ID:     req.ID,
+		Text:   req.Text,
+		Time:   float32(req.Time),
+		Type:   uint32(req.Type),
+		Uid:    uint32(uid),
+	}
+	rsp, err := rpc.VideoServiceClient.SendVideoBarrage(ctx, msg)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误信息
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+
+	// 创建新的 rspJson  实例
+	var rspJson video.SendVideoBarrageReceiveStruct
+	//如果没有返回数据
+	if rsp.Data == "" {
+		c.JSON(http.StatusOK, result.BarrageSuccess(c, &video.SendVideoBarrageReceiveStruct{}))
+		return
+	}
+	// 将 JSON 字符串解码到 SendVideoBarrageReceiveStruct 实例
+	err = json.Unmarshal([]byte(rsp.Data), &rspJson)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err)
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	//4.返回结果
 	c.JSON(http.StatusOK, result.BarrageSuccess(c, rspJson))
+}
+
+func (v HandleVideo) createVideoContribution(c *gin.Context) {
+
+}
+
+func (v HandleVideo) updateVideoContribution(c *gin.Context) {
+
+}
+
+func (v HandleVideo) deleteVideoByID(c *gin.Context) {
+
+}
+
+func (v HandleVideo) videoPostComment(c *gin.Context) {
+
+}
+
+func (v HandleVideo) getVideoManagementList(c *gin.Context) {
+
+}
+
+func (v HandleVideo) likeVideo(c *gin.Context) {
+
 }

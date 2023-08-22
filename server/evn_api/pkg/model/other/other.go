@@ -107,3 +107,31 @@ type GetDiscussBarrageListItem struct {
 }
 
 type GetDiscussBarrageListStruct []GetDiscussBarrageListItem
+
+type UploadingMethodStruct struct {
+	Method string `json:"method"  binding:"required"`
+}
+
+type UploadingDirStruct struct {
+	Interface string `json:"interface"  binding:"required"`
+}
+
+type GetFullPathOfImageMethodStruct struct {
+	Path string `json:"path"  binding:"required"`
+	Type string `json:"type"  binding:"required"`
+}
+
+type SearchStruct struct {
+	PageInfo common.PageInfo `json:"page_info" binding:"required"`
+	Type     string          `json:"type" binding:"required"`
+}
+
+type UserInfo struct {
+	ID          uint   `json:"id"`
+	Username    string `json:"username"`
+	Photo       string `json:"photo"`
+	Signature   string `json:"signature"`
+	IsAttention bool   `json:"is_attention"`
+}
+
+type UserInfoList []UserInfo

@@ -1,16 +1,16 @@
-package response
+package common
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-type Data struct {
-	Code    MyCode      `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"` // omitempty当data为空时,不展示这个字段
-	Version interface{} `json:"version,omitempty"`
-}
+//type Data struct {
+//	Code    MyCode `json:"code"`
+//	Message string          `json:"message"`
+//	Data    interface{}     `json:"data,omitempty"` // omitempty当data为空时,不展示这个字段
+//	Version interface{}     `json:"version,omitempty"`
+//}
 
 func Error(ctx *gin.Context, msg string) {
 	rd := &Data{
@@ -55,7 +55,7 @@ func ErrorWithMsg(ctx *gin.Context, code MyCode) {
 	ctx.JSON(http.StatusOK, rd)
 }
 
-//BarrageSuccess 弹幕播放器响应
+// BarrageSuccess 弹幕播放器响应
 func BarrageSuccess(ctx *gin.Context, data interface{}) {
 	rd := &Data{
 		Code:    0,

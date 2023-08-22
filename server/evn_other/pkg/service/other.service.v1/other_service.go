@@ -2,6 +2,7 @@ package other_service_v1
 
 import (
 	"context"
+	"dragonsss.cn/evn_common/conversion"
 	"dragonsss.cn/evn_common/errs"
 	model2 "dragonsss.cn/evn_common/model"
 	"dragonsss.cn/evn_common/model/common"
@@ -292,6 +293,98 @@ func (o *OtherService) GetDiscussBarrageList(ctx context.Context, req *other.Com
 	if err != nil {
 		zap.L().Error("evn_other other_service GetDiscussBarrageList rspJSON error", zap.Error(err))
 		return nil, errs.GrpcError(model2.JsonError)
+	}
+
+	response := &other.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return response, nil
+}
+
+func (o *OtherService) UploadingMethod(ctx context.Context, req *other.UploadingMethodRequest) (*other.UploadingMethodResponse, error) {
+	c := context.Background()
+	//获取上传类型
+	tp, err := o.menuRepo.FindUploadMethod(c, req.Method)
+	if err != nil {
+		zap.L().Error("evn_other other_service UploadingMethod FindUploadMethod DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model2.DBError)
+	}
+	rsp := model.UploadingMethodResponse(tp.Method)
+	return &other.UploadingMethodResponse{Tp: rsp.(model.UploadingMethodResponseStruct).Tp}, nil
+}
+
+func (o *OtherService) UploadingDir(ctx context.Context, req *other.UploadingDirRequest) (*other.UploadingDirResponse, error) {
+	c := context.Background()
+	//获取上传信息
+	tp, err := o.menuRepo.FindUploadMethod(c, req.Interface)
+	if err != nil {
+		zap.L().Error("evn_other other_service UploadingDir FindUploadMethod DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model2.DBError)
+	}
+	rsp := model.UploadingDirResponse(tp.Path, tp.Quality)
+	return &other.UploadingDirResponse{Path: rsp.(model.UploadingDirResponseStruct).Path, Quality: float32(rsp.(model.UploadingDirResponseStruct).Quality)}, nil
+}
+
+func (o *OtherService) GetFullPathOfImage(ctx context.Context, req *other.GetFullPathOfImageRequest) (*other.CommonDataResponse, error) {
+	//获取完整链接
+	path, err := conversion.SwitchIngStorageFun(req.Type, req.Path, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	if err != nil {
+		zap.L().Error("evn_other other_service GetFullPathOfImage SwitchIngStorageFun DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model2.DBError)
+	}
+	return &other.CommonDataResponse{Data: path}, nil
+}
+
+func (o *OtherService) Search(ctx context.Context, req *other.SearchRequest) (*other.CommonDataResponse, error) {
+	c := context.Background()
+	var rspJSON []byte
+	switch req.Type {
+	case "video":
+		//视频搜索
+		list, err := o.menuRepo.SearchVideo(c, req.Page, req.Size, req.Keyword)
+		if err != nil {
+			zap.L().Error("evn_other other_service Search SearchVideo DB_error", zap.Error(err))
+			return nil, errs.GrpcError(model2.DBError)
+		}
+		//if len(*list) == 0 {
+		//	return &other.CommonDataResponse{}, errs.GrpcError(model2.DBError)
+		//}
+		listResponse, _ := model.SearchVideoResponse(list, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+		rspJSON, err = json.Marshal(listResponse)
+		if err != nil {
+			zap.L().Error("evn_other other_service Search rspJSON error", zap.Error(err))
+			return nil, errs.GrpcError(model2.JsonError)
+		}
+
+	case "user":
+		//搜素用户
+		list, err := o.menuRepo.SearchUser(c, req.Page, req.Size, req.Keyword)
+		if err != nil {
+			zap.L().Error("evn_other other_service Search SearchUser DB_error", zap.Error(err))
+			return nil, errs.GrpcError(model2.DBError)
+		}
+		//if len(*list) == 0 {
+		//	return &other.CommonDataResponse{}, nil
+		//}
+		aids := make([]uint, 0)
+		if req.Uid != 0 {
+			//用户登入情况下
+			al, err := o.menuRepo.GetAttentionList(c, req.Uid)
+			if err != nil {
+				zap.L().Error("evn_other other_service Search GetAttentionList DB_error", zap.Error(err))
+				return nil, errs.GrpcError(model2.DBError)
+			}
+			for _, v := range *al {
+				aids = append(aids, v.AttentionID)
+			}
+		}
+		listResponse, _ := model.SearchUserResponse(list, aids, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+		rspJSON, err = json.Marshal(listResponse)
+		if err != nil {
+			zap.L().Error("evn_other other_service Search rspJSON error", zap.Error(err))
+			return nil, errs.GrpcError(model2.JsonError)
+		}
+
 	}
 
 	response := &other.CommonDataResponse{

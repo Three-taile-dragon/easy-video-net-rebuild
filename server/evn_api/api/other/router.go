@@ -49,4 +49,26 @@ func (*RouterProject) Router(r *gin.Engine) {
 		discussRouter.POST("/getDiscussArticleList", d.getDiscussArticleList)
 		discussRouter.POST("/getDiscussBarrageList", d.getDiscussBarrageList)
 	}
+	commonality := r.Group("/api/commonality")
+	commonality.Use(cors.Cors())
+	commonality.Use(midd.TokenVerify())
+	c := NewCommonality()
+	{
+		//本地上传
+		commonality.POST("/upload", c.upload)
+		commonality.POST("/UploadSlice", c.uploadSlice)
+		commonality.POST("/uploadCheck", c.uploadCheck)
+		commonality.POST("/uploadMerge", c.uploadMerge)
+		commonality.POST("/uploadingMethod", c.uploadingMethod)
+		commonality.POST("/uploadingDir", c.uploadingDir)
+		commonality.POST("/getFullPathOfImage", c.getFullPathOfImage)
+		commonality.POST("/uploadOss", c.uploadOss)
+	}
+	//非必须登入
+	contributionRouterNotNecessary := r.Group("/api/commonality")
+	contributionRouterNotNecessary.Use(cors.Cors())
+	contributionRouterNotNecessary.Use(midd.TokenVerifyNotNecessary())
+	{
+		contributionRouterNotNecessary.POST("/search", c.search)
+	}
 }

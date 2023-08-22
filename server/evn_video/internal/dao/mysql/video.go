@@ -204,3 +204,14 @@ func (v VideoDao) GetRecommendList(ctx context.Context) (*video.VideosContributi
 	}
 	return videoList, nil
 }
+
+func (v VideoDao) CreateVideoBarrage(ctx context.Context, bg *barrage.Barrage) (bool, error) {
+	session := v.conn.Session(ctx)
+	err := session.
+		Create(&bg).
+		Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}

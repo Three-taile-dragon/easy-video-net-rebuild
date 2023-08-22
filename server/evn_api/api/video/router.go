@@ -40,4 +40,23 @@ func (*RouterVideo) Router(r *gin.Engine) {
 	{
 		contributionRouterNotNecessary.POST("/getVideoContributionByID", v.getVideoContributionByID)
 	}
+	//需要登入 body参数携带 token
+	contributionRouterParameter := r.Group("/api/contribution")
+	contributionRouterParameter.Use(cors.Cors())
+	contributionRouterParameter.Use(midd.ParameterTokenVerify())
+	{
+		contributionRouterParameter.POST("/video/barrage/v3/", v.sendVideoBarrage)
+	}
+	//请求头携带
+	contributionRouter := r.Group("contribution")
+	contributionRouter.Use(cors.Cors())
+	contributionRouter.Use(midd.TokenVerify())
+	{
+		contributionRouter.POST("/createVideoContribution", v.createVideoContribution)
+		contributionRouter.POST("/updateVideoContribution", v.updateVideoContribution)
+		contributionRouter.POST("/deleteVideoByID", v.deleteVideoByID)
+		contributionRouter.POST("/videoPostComment", v.videoPostComment)
+		contributionRouter.POST("/getVideoManagementList", v.getVideoManagementList)
+		contributionRouter.POST("/likeVideo", v.likeVideo)
+	}
 }

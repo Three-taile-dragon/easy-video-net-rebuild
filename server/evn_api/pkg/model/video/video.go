@@ -135,3 +135,13 @@ type Response struct {
 	VideoInfo     Info          `json:"videoInfo"`
 	RecommendList RecommendList `json:"recommendList"`
 }
+
+type SendVideoBarrageReceiveStruct struct {
+	Author string  `json:"author"`
+	Color  uint    `json:"color" binding:"required"`
+	ID     string  `json:"id" binding:"required"`
+	Text   string  `json:"text" binding:"required"`
+	Time   float64 `json:"time"`
+	Type   uint    `json:"type"`
+	Token  string  `json:"token" binding:"required"`
+}

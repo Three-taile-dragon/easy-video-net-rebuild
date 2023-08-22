@@ -38,6 +38,37 @@ message CommonDiscussRequest {
   uint32 Uid = 3;
 }
 
+message UploadingMethodRequest{
+  string method = 1;
+}
+
+message UploadingMethodResponse{
+  string Tp = 1;
+}
+
+message UploadingDirRequest{
+  string Interface = 1;
+}
+
+message UploadingDirResponse{
+  string Path = 1;
+  float Quality = 2;
+}
+
+message GetFullPathOfImageRequest{
+  string Path = 1;
+  string Type = 2;
+}
+
+message SearchRequest{
+  int32 Page = 1;
+  int32 Size = 2;
+  string Keyword = 3;
+  string Type = 4;
+  uint32 Uid = 5;
+}
+
+
 service OtherService {
   rpc GetHomeInfo(HomeRequest) returns (HomeResponse) {}
   rpc GetLiveRoom(CommonIDRequest) returns (GetLiveRoomResponse) {}
@@ -46,4 +77,8 @@ service OtherService {
   rpc GetDiscussVideoList(CommonDiscussRequest) returns (CommonDataResponse) {}
   rpc GetDiscussArticleList(CommonDiscussRequest) returns (CommonDataResponse) {}
   rpc GetDiscussBarrageList(CommonDiscussRequest) returns (CommonDataResponse) {}
+  rpc UploadingMethod(UploadingMethodRequest) returns (UploadingMethodResponse){}
+  rpc UploadingDir(UploadingDirRequest) returns (UploadingDirResponse){}
+  rpc GetFullPathOfImage(GetFullPathOfImageRequest) returns (CommonDataResponse){}
+  rpc Search(SearchRequest) returns (CommonDataResponse){}
 }

@@ -69,7 +69,7 @@ export const getVideoBarrageList = (params: GetVideoBarrageListReq) => {
 
 //发送视弹幕
 export const sendVideoBarrage = (params: SendVideoBarrageReq) => {
-    return httpRequest.post('/contribution/video/barrage/v3/', params);
+    return httpRequest.post('/api/contribution/video/barrage/v3/', params);
 }
 
 //文章发布评论

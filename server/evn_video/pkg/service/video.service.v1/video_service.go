@@ -4,6 +4,7 @@ import (
 	"context"
 	"dragonsss.cn/evn_common/errs"
 	"dragonsss.cn/evn_common/model"
+	"dragonsss.cn/evn_common/model/video/barrage"
 	"dragonsss.cn/evn_grpc/video"
 	"dragonsss.com/evn_video/config"
 	"dragonsss.com/evn_video/internal/dao"
@@ -12,6 +13,7 @@ import (
 	"dragonsss.com/evn_video/internal/repo"
 	model2 "dragonsss.com/evn_video/pkg/model"
 	consts "dragonsss.com/evn_ws/utils"
+	sokcet "dragonsss.com/evn_ws/utils/video"
 	"encoding/json"
 	"go.uber.org/zap"
 	"strconv"
@@ -172,6 +174,44 @@ func (vs *VideoService) GetVideoContributionByID(ctx context.Context, req *video
 	rspJSON, err := json.Marshal(rsp)
 	if err != nil {
 		zap.L().Error("evn_video video_service GetVideoContributionByID rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model.JsonError)
+	}
+	tmp := &video.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
+}
+
+func (vs *VideoService) SendVideoBarrage(ctx context.Context, req *video.SendVideoBarrageRequest) (*video.CommonDataResponse, error) {
+	c := context.Background()
+	//保存弹幕
+	videoID, _ := strconv.ParseUint(req.ID, 0, 19)
+	bg := barrage.Barrage{
+		Uid:     uint(req.Uid),
+		VideoID: uint(videoID),
+		Time:    float64(req.Time),
+		Author:  req.Author,
+		Type:    uint(req.Type),
+		Text:    req.Text,
+		Color:   uint(req.Color),
+	}
+	//获取视频评论
+	if is, err := vs.videoRepo.CreateVideoBarrage(c, &bg); !is || err != nil {
+		zap.L().Error("evn_video video_service SendVideoBarrage CreateVideoBarrage DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	//socket消息通知
+	res := sokcet.ChanInfo{
+		Type: consts.VideoSocketTypeResponseBarrageNum,
+		Data: nil,
+	}
+	for _, v := range sokcet.Severe.VideoRoom[uint(videoID)] {
+		v.MsgList <- res
+	}
+
+	rspJSON, err := json.Marshal(req)
+	if err != nil {
+		zap.L().Error("evn_video video_service SendVideoBarrage rspJSON error", zap.Error(err))
 		return nil, errs.GrpcError(model.JsonError)
 	}
 	tmp := &video.CommonDataResponse{

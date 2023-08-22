@@ -624,6 +624,7 @@ func (u *UserDao) AddChat(ctx context.Context, ci *chatList.ChatsListInfo) (bool
 	//判断是否存在
 	session := u.conn.Session(ctx)
 	is := &chatList.ChatsListInfo{}
+	is.ID = 0
 	err := session.
 		Where("uid = ? And tid = ?", ci.Uid, ci.Tid).
 		Find(&is).

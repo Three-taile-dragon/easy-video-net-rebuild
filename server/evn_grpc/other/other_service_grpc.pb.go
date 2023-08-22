@@ -29,6 +29,10 @@ type OtherServiceClient interface {
 	GetDiscussVideoList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
 	GetDiscussArticleList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
 	GetDiscussBarrageList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
+	UploadingMethod(ctx context.Context, in *UploadingMethodRequest, opts ...grpc.CallOption) (*UploadingMethodResponse, error)
+	UploadingDir(ctx context.Context, in *UploadingDirRequest, opts ...grpc.CallOption) (*UploadingDirResponse, error)
+	GetFullPathOfImage(ctx context.Context, in *GetFullPathOfImageRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
+	Search(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
 }
 
 type otherServiceClient struct {
@@ -102,6 +106,42 @@ func (c *otherServiceClient) GetDiscussBarrageList(ctx context.Context, in *Comm
 	return out, nil
 }
 
+func (c *otherServiceClient) UploadingMethod(ctx context.Context, in *UploadingMethodRequest, opts ...grpc.CallOption) (*UploadingMethodResponse, error) {
+	out := new(UploadingMethodResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/UploadingMethod", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) UploadingDir(ctx context.Context, in *UploadingDirRequest, opts ...grpc.CallOption) (*UploadingDirResponse, error) {
+	out := new(UploadingDirResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/UploadingDir", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) GetFullPathOfImage(ctx context.Context, in *GetFullPathOfImageRequest, opts ...grpc.CallOption) (*CommonDataResponse, error) {
+	out := new(CommonDataResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/GetFullPathOfImage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) Search(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*CommonDataResponse, error) {
+	out := new(CommonDataResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/Search", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OtherServiceServer is the server API for OtherService service.
 // All implementations must embed UnimplementedOtherServiceServer
 // for forward compatibility
@@ -113,6 +153,10 @@ type OtherServiceServer interface {
 	GetDiscussVideoList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error)
 	GetDiscussArticleList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error)
 	GetDiscussBarrageList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error)
+	UploadingMethod(context.Context, *UploadingMethodRequest) (*UploadingMethodResponse, error)
+	UploadingDir(context.Context, *UploadingDirRequest) (*UploadingDirResponse, error)
+	GetFullPathOfImage(context.Context, *GetFullPathOfImageRequest) (*CommonDataResponse, error)
+	Search(context.Context, *SearchRequest) (*CommonDataResponse, error)
 	mustEmbedUnimplementedOtherServiceServer()
 }
 
@@ -140,6 +184,18 @@ func (UnimplementedOtherServiceServer) GetDiscussArticleList(context.Context, *C
 }
 func (UnimplementedOtherServiceServer) GetDiscussBarrageList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDiscussBarrageList not implemented")
+}
+func (UnimplementedOtherServiceServer) UploadingMethod(context.Context, *UploadingMethodRequest) (*UploadingMethodResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadingMethod not implemented")
+}
+func (UnimplementedOtherServiceServer) UploadingDir(context.Context, *UploadingDirRequest) (*UploadingDirResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadingDir not implemented")
+}
+func (UnimplementedOtherServiceServer) GetFullPathOfImage(context.Context, *GetFullPathOfImageRequest) (*CommonDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFullPathOfImage not implemented")
+}
+func (UnimplementedOtherServiceServer) Search(context.Context, *SearchRequest) (*CommonDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Search not implemented")
 }
 func (UnimplementedOtherServiceServer) mustEmbedUnimplementedOtherServiceServer() {}
 
@@ -280,6 +336,78 @@ func _OtherService_GetDiscussBarrageList_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OtherService_UploadingMethod_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadingMethodRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).UploadingMethod(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/UploadingMethod",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).UploadingMethod(ctx, req.(*UploadingMethodRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_UploadingDir_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadingDirRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).UploadingDir(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/UploadingDir",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).UploadingDir(ctx, req.(*UploadingDirRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_GetFullPathOfImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFullPathOfImageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).GetFullPathOfImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/GetFullPathOfImage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).GetFullPathOfImage(ctx, req.(*GetFullPathOfImageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_Search_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).Search(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/Search",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).Search(ctx, req.(*SearchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OtherService_ServiceDesc is the grpc.ServiceDesc for OtherService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -314,6 +442,22 @@ var OtherService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDiscussBarrageList",
 			Handler:    _OtherService_GetDiscussBarrageList_Handler,
+		},
+		{
+			MethodName: "UploadingMethod",
+			Handler:    _OtherService_UploadingMethod_Handler,
+		},
+		{
+			MethodName: "UploadingDir",
+			Handler:    _OtherService_UploadingDir_Handler,
+		},
+		{
+			MethodName: "GetFullPathOfImage",
+			Handler:    _OtherService_GetFullPathOfImage_Handler,
+		},
+		{
+			MethodName: "Search",
+			Handler:    _OtherService_Search_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
