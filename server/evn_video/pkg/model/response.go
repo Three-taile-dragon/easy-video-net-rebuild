@@ -3,9 +3,11 @@ package model
 import (
 	"context"
 	"dragonsss.cn/evn_common/conversion"
+	"dragonsss.cn/evn_common/model/common"
 	"dragonsss.cn/evn_common/model/video"
 	"dragonsss.cn/evn_common/model/video/barrage"
 	"dragonsss.com/evn_video/internal/dao/mysql"
+	"encoding/json"
 	"time"
 )
 
@@ -292,4 +294,53 @@ type RecommendList []recommendVideo
 type Response struct {
 	VideoInfo     Info          `json:"videoInfo"`
 	RecommendList RecommendList `json:"recommendList"`
+}
+
+type GetVideoManagementListItem struct {
+	ID              uint      `json:"id"`
+	Uid             uint      `json:"uid" `
+	Title           string    `json:"title" `
+	Video           string    `json:"video"`
+	Cover           string    `json:"cover" `
+	Reprinted       bool      `json:"reprinted"`
+	CoverUrl        string    `json:"cover_url"`
+	CoverUploadType string    `json:"cover_upload_type"`
+	VideoDuration   int64     `json:"video_duration"`
+	Label           []string  `json:"label"`
+	Introduce       string    `json:"introduce"`
+	Heat            int       `json:"heat"`
+	BarrageNumber   int       `json:"barrageNumber"`
+	CommentsNumber  int       `json:"comments_number"`
+	CreatedAt       time.Time `json:"created_at"`
+}
+
+type GetVideoManagementList []GetVideoManagementListItem
+
+func GetVideoManagementListResponse(vc *video.VideosContributionList, localhost string, tencentOssHost string) (interface{}, error) {
+	list := make(GetVideoManagementList, 0)
+	for _, v := range *vc {
+		coverJson := new(common.Img)
+		_ = json.Unmarshal(v.Cover, coverJson)
+		cover, _ := conversion.FormattingJsonSrc(v.Cover, localhost, tencentOssHost)
+		videoSrc, _ := conversion.FormattingJsonSrc(v.Video, localhost, tencentOssHost)
+		info := GetVideoManagementListItem{
+			ID:              v.ID,
+			Uid:             v.Uid,
+			Title:           v.Title,
+			Video:           videoSrc,
+			Cover:           cover,
+			Reprinted:       conversion.Int8TurnBool(v.Reprinted),
+			CoverUploadType: coverJson.Tp,
+			CoverUrl:        coverJson.Src,
+			VideoDuration:   v.VideoDuration,
+			Label:           conversion.StringConversionMap(v.Label),
+			Introduce:       v.Introduce,
+			Heat:            v.Heat,
+			BarrageNumber:   len(v.Barrage),
+			CommentsNumber:  len(v.Comments),
+			CreatedAt:       v.CreatedAt,
+		}
+		list = append(list, info)
+	}
+	return list, nil
 }

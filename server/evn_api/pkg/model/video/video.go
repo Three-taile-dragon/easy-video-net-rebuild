@@ -162,3 +162,51 @@ type CreateVideoContributionReceiveStruct struct {
 	VideoDuration   int64    `json:"videoDuration" binding:"required"`
 	Media           *string  `json:"media"`
 }
+
+type UpdateVideoContributionReceiveStruct struct {
+	ID              uint     `json:"id" binding:"required"`
+	Cover           string   `json:"cover" binding:"required"`
+	CoverUploadType string   `json:"coverUploadType" binding:"required"`
+	Title           string   `json:"title" binding:"required"`
+	Reprinted       *bool    `json:"reprinted" binding:"required"`
+	Label           []string `json:"label"`
+	Introduce       string   `json:"introduce" binding:"required"`
+}
+
+type DeleteVideoByIDReceiveStruct struct {
+	ID uint `json:"id"`
+}
+
+type VideosPostCommentReceiveStruct struct {
+	VideoID   uint   `json:"video_id"`
+	Content   string `json:"content"`
+	ContentID uint   `json:"content_id"`
+}
+
+type GetVideoManagementListReceiveStruct struct {
+	PageInfo common.PageInfo `json:"page_info"`
+}
+
+type GetVideoManagementListItem struct {
+	ID              uint      `json:"id"`
+	Uid             uint      `json:"uid" `
+	Title           string    `json:"title" `
+	Video           string    `json:"video"`
+	Cover           string    `json:"cover" `
+	Reprinted       bool      `json:"reprinted"`
+	CoverUrl        string    `json:"cover_url"`
+	CoverUploadType string    `json:"cover_upload_type"`
+	VideoDuration   int64     `json:"video_duration"`
+	Label           []string  `json:"label"`
+	Introduce       string    `json:"introduce"`
+	Heat            int       `json:"heat"`
+	BarrageNumber   int       `json:"barrageNumber"`
+	CommentsNumber  int       `json:"comments_number"`
+	CreatedAt       time.Time `json:"created_at"`
+}
+
+type GetVideoManagementList []GetVideoManagementListItem
+
+type LikeVideoReceiveStruct struct {
+	VideoID uint `json:"video_id"`
+}

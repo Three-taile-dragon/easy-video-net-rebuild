@@ -57,6 +57,30 @@ message CreateVideoContributionRequest{
     uint32 Uid = 11;
 }
 
+message UpdateVideoContributionRequest{
+  uint32 ID = 1;
+  string Cover = 2;
+  string CoverUploadType = 3;
+  string Title = 4;
+  bool Reprinted = 5;
+  repeated string Label = 6;
+  string Introduce = 7;
+  uint32 Uid = 8;
+}
+
+message VideoPostCommentRequest {
+  uint32 VideoID = 1;
+  string Content = 2;
+  uint32 ContentID = 3;
+  uint32 Uid = 4;
+}
+
+message GetVideoManagementListRequest {
+  CommonPageInfo PageInfo = 1;
+  uint32 Uid = 2;
+}
+
+
 service VideoService {
   rpc GetVideoBarrage(CommonIDRequest) returns (CommonDataResponse) {}
   rpc GetVideoBarrageList(CommonIDRequest) returns (CommonDataResponse) {}
@@ -64,4 +88,9 @@ service VideoService {
   rpc GetVideoContributionByID(GetVideoContributionByIDRequest) returns (CommonDataResponse) {}
   rpc SendVideoBarrage(SendVideoBarrageRequest) returns (CommonDataResponse) {}
   rpc CreateVideoContribution(CreateVideoContributionRequest) returns (CommonDataResponse) {}
+  rpc UpdateVideoContribution(UpdateVideoContributionRequest) returns (CommonDataResponse) {}
+  rpc DeleteVideoByID(CommonIDAndUIDRequest) returns (CommonDataResponse) {}
+  rpc VideoPostComment(VideoPostCommentRequest) returns (CommonDataResponse) {}
+  rpc GetVideoManagementList(GetVideoManagementListRequest) returns (CommonDataResponse) {}
+  rpc LikeVideo(CommonIDAndUIDRequest) returns (CommonDataResponse) {}
 }

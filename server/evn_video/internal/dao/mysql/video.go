@@ -6,11 +6,14 @@ import (
 	"dragonsss.cn/evn_common/model/user/attention"
 	"dragonsss.cn/evn_common/model/user/collect"
 	"dragonsss.cn/evn_common/model/user/favorites"
+	"dragonsss.cn/evn_common/model/user/notice"
 	"dragonsss.cn/evn_common/model/user/record"
 	"dragonsss.cn/evn_common/model/video"
 	"dragonsss.cn/evn_common/model/video/barrage"
+	"dragonsss.cn/evn_common/model/video/comments"
 	"dragonsss.cn/evn_common/model/video/like"
 	video2 "dragonsss.cn/evn_grpc/video"
+	"dragonsss.com/evn_video/internal/database"
 	"dragonsss.com/evn_video/internal/database/gorms"
 	"gorm.io/gorm"
 )
@@ -240,4 +243,154 @@ func (v VideoDao) UpdateVideo(ctx context.Context, videoContribution *video.Vide
 		return false, err
 	}
 	return true, nil
+}
+
+func (v VideoDao) DeleteVideoByID(ctx context.Context, req *video2.CommonIDAndUIDRequest) (bool, error) {
+	session := v.conn.Session(ctx)
+	var video1 *video.VideosContribution
+	err := session.
+		Where("id", req.ID).
+		Find(&video1).
+		Error
+	if err != nil {
+		return false, err
+	}
+	if video1.Uid != uint(req.UID) {
+		return false, nil
+	}
+	err1 := session.
+		Where("id", req.ID).
+		Delete(&video1).
+		Error
+	if err1 != nil {
+		return false, err1
+	}
+	return true, nil
+}
+
+func (v VideoDao) GetCommentFirstIDByID(ctx context.Context, contentID uint32) (*comments.Comment, error) {
+	session := v.conn.Session(ctx)
+	var com *comments.Comment
+	err := session.
+		Where("id", contentID).
+		Find(&com).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	//循环获取最顶层的评论ID
+	for com.CommentID != 0 {
+		c := context.Background()
+		com, err = v.GetCommentFirstIDByID(c, uint32(com.CommentID))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return com, nil
+}
+
+func (v VideoDao) GetCommentUserIDByID(ctx context.Context, contentID uint32) (*comments.Comment, error) {
+	session := v.conn.Session(ctx)
+	var com *comments.Comment
+	err := session.
+		Where("id", contentID).
+		Find(&com).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return com, nil
+}
+
+func (v VideoDao) CreateComment(conn database.DbConn, ctx context.Context, comment *comments.Comment) error {
+	v.conn = conn.(*gorms.GormConn) //使用事务操作
+	return v.conn.Tx(ctx).Create(comment).Error
+}
+
+func (v VideoDao) GetVideoManagementList(ctx context.Context, req *video2.GetVideoManagementListRequest) (*video.VideosContributionList, error) {
+	session := v.conn.Session(ctx)
+	var video1 *video.VideosContributionList
+	err := session.
+		Where("uid", req.Uid).
+		Preload("Likes").
+		Preload("Comments").
+		Preload("Barrage").
+		Limit(int(req.PageInfo.Size)).
+		Offset(int((req.PageInfo.Page - 1) * req.PageInfo.Size)).
+		Order("created_at desc").
+		Find(&video1).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return video1, nil
+}
+
+func (v VideoDao) GetLikeVideo(conn database.DbConn, ctx context.Context, req *video2.CommonIDAndUIDRequest) (*like.Likes, error) {
+	v.conn = conn.(*gorms.GormConn) //使用事务操作
+	session := v.conn.Tx(ctx)
+	var li *like.Likes
+	err := session.
+		Where("uid", req.UID).
+		Where("video_id", req.ID).
+		Find(&li).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return li, nil
+}
+
+func (v VideoDao) DeleteLikeVideo(conn database.DbConn, ctx context.Context, req *video2.CommonIDAndUIDRequest, li *like.Likes) error {
+	v.conn = conn.(*gorms.GormConn) //使用事务操作
+	session := v.conn.Tx(ctx)
+	err := session.
+		Where("uid", req.UID).
+		Where("video_id", req.ID).
+		Delete(&li).
+		Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (v VideoDao) AddNotice(ctx context.Context, uid uint, cid uint, tid uint, tp string, c string) error {
+	session := v.conn.Session(ctx)
+	err := session.
+		Create(&notice.Notice{
+			Uid:     uid,
+			Cid:     cid,
+			ToID:    tid,
+			Type:    tp,
+			Content: c,
+			ISRead:  0,
+		}).
+		Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (v VideoDao) DeleteNotice(ctx context.Context, videoUid uint, uid uint32, videoID uint32, videoLike string) error {
+	session := v.conn.Session(ctx)
+	err := session.
+		Where(&notice.Notice{
+			Uid:  videoUid,
+			Cid:  uint(uid),
+			ToID: uint(videoID),
+			Type: videoLike,
+		}).
+		Delete(&notice.Notice{}).
+		Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (v VideoDao) LikeVideo(conn database.DbConn, ctx context.Context, likeVideo *like.Likes) error {
+	v.conn = conn.(*gorms.GormConn) //使用事务操作
+	return v.conn.Tx(ctx).Create(likeVideo).Error
 }

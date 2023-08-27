@@ -6,7 +6,10 @@ import (
 	"dragonsss.cn/evn_common/model/user/favorites"
 	video2 "dragonsss.cn/evn_common/model/video"
 	"dragonsss.cn/evn_common/model/video/barrage"
+	"dragonsss.cn/evn_common/model/video/comments"
+	"dragonsss.cn/evn_common/model/video/like"
 	"dragonsss.cn/evn_grpc/video"
+	"dragonsss.com/evn_video/internal/database"
 )
 
 type VideoRepo interface {
@@ -24,4 +27,14 @@ type VideoRepo interface {
 	CreateVideoBarrage(ctx context.Context, bg *barrage.Barrage) (bool, error)
 	CreateVideo(ctx context.Context, videoContribution *video2.VideosContribution) (bool, error)
 	UpdateVideo(ctx context.Context, videoContribution *video2.VideosContribution) (bool, error)
+	DeleteVideoByID(ctx context.Context, req *video.CommonIDAndUIDRequest) (bool, error)
+	GetCommentFirstIDByID(ctx context.Context, contentID uint32) (*comments.Comment, error)
+	GetCommentUserIDByID(ctx context.Context, contentID uint32) (*comments.Comment, error)
+	CreateComment(conn database.DbConn, ctx context.Context, comment *comments.Comment) error
+	AddNotice(ctx context.Context, uid uint, cid uint, tid uint, tp string, c string) error
+	GetVideoManagementList(ctx context.Context, req *video.GetVideoManagementListRequest) (*video2.VideosContributionList, error)
+	GetLikeVideo(conn database.DbConn, ctx context.Context, req *video.CommonIDAndUIDRequest) (*like.Likes, error)
+	DeleteLikeVideo(conn database.DbConn, ctx context.Context, req *video.CommonIDAndUIDRequest, li *like.Likes) error
+	DeleteNotice(ctx context.Context, videoUid uint, uid uint32, videoID uint32, videoLike string) error
+	LikeVideo(conn database.DbConn, ctx context.Context, likeVideo *like.Likes) error
 }

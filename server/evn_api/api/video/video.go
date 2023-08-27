@@ -173,7 +173,7 @@ func (v HandleVideo) getVideoContributionByID(c *gin.Context) {
 	var rspJson video.Response
 	//如果没有返回数据
 	if rsp.Data == "" {
-		c.JSON(http.StatusOK, result.BarrageSuccess(c, &video.Response{}))
+		c.JSON(http.StatusOK, result.Success(&video.Response{}))
 		return
 	}
 	// 将 JSON 字符串解码到 Response 实例
@@ -265,25 +265,167 @@ func (v HandleVideo) createVideoContribution(c *gin.Context) {
 		return
 	}
 	//4.返回结果
-	c.JSON(http.StatusOK, result.BarrageSuccess(c, rsp.Data))
+	c.JSON(http.StatusOK, result.Success(rsp.Data))
 }
 
 func (v HandleVideo) updateVideoContribution(c *gin.Context) {
+	result := common.Result{}
+	var req video.UpdateVideoContributionReceiveStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	uid := c.GetInt64("currentUid")
+	//调用grpc
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
 
+	msg := &video2.UpdateVideoContributionRequest{}
+	err = copier.Copy(msg, req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	msg.Uid = uint32(uid)
+	rsp, err := rpc.VideoServiceClient.UpdateVideoContribution(ctx, msg)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误信息
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	//4.返回结果
+	c.JSON(http.StatusOK, result.Success(rsp.Data))
 }
 
 func (v HandleVideo) deleteVideoByID(c *gin.Context) {
+	result := common.Result{}
+	var req video.DeleteVideoByIDReceiveStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	uid := c.GetInt64("currentUid")
+	//调用grpc
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
 
+	msg := &video2.CommonIDAndUIDRequest{
+		ID:  uint32(req.ID),
+		UID: uint32(uid),
+	}
+	rsp, err := rpc.VideoServiceClient.DeleteVideoByID(ctx, msg)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误信息
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	//4.返回结果
+	c.JSON(http.StatusOK, result.Success(rsp.Data))
 }
 
 func (v HandleVideo) videoPostComment(c *gin.Context) {
+	result := common.Result{}
+	var req video.VideosPostCommentReceiveStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	uid := c.GetInt64("currentUid")
+	//调用grpc
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
 
+	msg := &video2.VideoPostCommentRequest{
+		VideoID:   uint32(req.VideoID),
+		Content:   req.Content,
+		ContentID: uint32(req.ContentID),
+		Uid:       uint32(uid),
+	}
+	rsp, err := rpc.VideoServiceClient.VideoPostComment(ctx, msg)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误信息
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	//4.返回结果
+	c.JSON(http.StatusOK, result.Success(rsp.Data))
 }
 
 func (v HandleVideo) getVideoManagementList(c *gin.Context) {
+	result := common.Result{}
+	var req video.GetVideoManagementListReceiveStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	uid := c.GetInt64("currentUid")
+	//调用grpc
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
 
+	msg := &video2.GetVideoManagementListRequest{
+		PageInfo: &video2.CommonPageInfo{
+			Page: int32(req.PageInfo.Page),
+			Size: int32(req.PageInfo.Size),
+		},
+		Uid: uint32(uid),
+	}
+	rsp, err := rpc.VideoServiceClient.GetVideoManagementList(ctx, msg)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误信息
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	// 创建新的 rspJson  实例
+	var rspJson video.GetVideoManagementList
+	//如果没有返回数据
+	if rsp.Data == "" {
+		c.JSON(http.StatusOK, result.Success(&video.GetVideoManagementList{}))
+		return
+	}
+	// 将 JSON 字符串解码到 GetVideoManagementList 实例
+	err = json.Unmarshal([]byte(rsp.Data), &rspJson)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err)
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	//4.返回结果
+	c.JSON(http.StatusOK, result.Success(rspJson))
 }
 
 func (v HandleVideo) likeVideo(c *gin.Context) {
+	result := common.Result{}
+	var req video.LikeVideoReceiveStruct
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	uid := c.GetInt64("currentUid")
+	//调用grpc
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
 
+	msg := &video2.CommonIDAndUIDRequest{
+		ID:  uint32(req.VideoID),
+		UID: uint32(uid),
+	}
+	rsp, err := rpc.VideoServiceClient.LikeVideo(ctx, msg)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误信息
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	//4.返回结果
+	c.JSON(http.StatusOK, result.Success(rsp.Data))
 }

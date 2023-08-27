@@ -37,7 +37,7 @@ import (
 	"time"
 )
 
-// LoginService grpc 登陆服务实现
+// UserService grpc 登陆服务实现
 type UserService struct {
 	user2.UnimplementedUserServiceServer
 	cache       repo.Cache

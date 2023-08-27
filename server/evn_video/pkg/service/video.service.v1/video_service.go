@@ -7,17 +7,21 @@ import (
 	"dragonsss.cn/evn_common/errs"
 	"dragonsss.cn/evn_common/model"
 	"dragonsss.cn/evn_common/model/common"
+	notice2 "dragonsss.cn/evn_common/model/user/notice"
 	video2 "dragonsss.cn/evn_common/model/video"
 	"dragonsss.cn/evn_common/model/video/barrage"
+	"dragonsss.cn/evn_common/model/video/comments"
 	"dragonsss.cn/evn_grpc/video"
 	"dragonsss.com/evn_video/config"
 	"dragonsss.com/evn_video/internal/dao"
 	"dragonsss.com/evn_video/internal/dao/mysql"
+	"dragonsss.com/evn_video/internal/database"
 	"dragonsss.com/evn_video/internal/database/tran"
 	"dragonsss.com/evn_video/internal/repo"
 	model2 "dragonsss.com/evn_video/pkg/model"
 	"dragonsss.com/evn_video/pkg/utils"
 	consts "dragonsss.com/evn_ws/utils"
+	"dragonsss.com/evn_ws/utils/notice"
 	sokcet "dragonsss.com/evn_ws/utils/video"
 	"encoding/json"
 	"fmt"
@@ -395,4 +399,186 @@ func (vs *VideoService) CreateVideoContribution(ctx context.Context, req *video.
 
 	}(width, height, videoContribution)
 	return &video.CommonDataResponse{Data: "保存成功"}, nil
+}
+
+func (vs *VideoService) UpdateVideoContribution(ctx context.Context, req *video.UpdateVideoContributionRequest) (*video.CommonDataResponse, error) {
+	c := context.Background()
+	//获取视频信息
+	videoInfo, err := vs.videoRepo.FindVideoByID(c, req.ID)
+	if err != nil {
+		zap.L().Error("evn_video video_service UpdateVideoContribution FindVideoByID DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	if videoInfo.Uid != uint(req.Uid) {
+		return &video.CommonDataResponse{Data: "非法操作"}, errs.GrpcError(model.ParamsError)
+	}
+	coverImg, _ := json.Marshal(common.Img{
+		Src: req.Cover,
+		Tp:  req.CoverUploadType,
+	})
+	videoInfo.Cover = coverImg
+	videoInfo.Title = req.Title
+	videoInfo.Label = conversion.MapConversionString(req.Label)
+	videoInfo.Reprinted = conversion.BoolTurnInt8(req.Reprinted)
+	videoInfo.Introduce = req.Introduce
+
+	if is, err := vs.videoRepo.UpdateVideo(c, videoInfo); !is || err != nil {
+		zap.L().Error("evn_video video_service UpdateVideoContribution UpdateVideo DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+
+	return &video.CommonDataResponse{Data: "更新成功"}, nil
+}
+
+func (vs *VideoService) DeleteVideoByID(ctx context.Context, req *video.CommonIDAndUIDRequest) (*video.CommonDataResponse, error) {
+	c := context.Background()
+	if is, err := vs.videoRepo.DeleteVideoByID(c, req); !is || err != nil {
+		zap.L().Error("evn_video video_service DeleteVideoByID DeleteVideoByID DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	return &video.CommonDataResponse{Data: "删除成功"}, nil
+}
+
+func (vs *VideoService) VideoPostComment(ctx context.Context, req *video.VideoPostCommentRequest) (*video.CommonDataResponse, error) {
+	c := context.Background()
+	//获取视频信息
+	videoInfo, err := vs.videoRepo.FindVideoByID(c, req.VideoID)
+	if err != nil {
+		zap.L().Error("evn_video video_service VideoPostComment FindVideoByID DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	CommentFirstID, err := vs.videoRepo.GetCommentFirstIDByID(c, req.ContentID)
+	if err != nil {
+		zap.L().Error("evn_video video_service VideoPostComment GetCommentFirstIDByID DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	CommentUserID, err := vs.videoRepo.GetCommentUserIDByID(c, req.ContentID)
+	if err != nil {
+		zap.L().Error("evn_video video_service VideoPostComment GetCommentUserIDByID DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	comment := comments.Comment{
+		Uid:            uint(req.Uid),
+		VideoID:        uint(req.VideoID),
+		Context:        req.Content,
+		CommentID:      uint(req.ContentID),
+		CommentUserID:  CommentUserID.Uid,
+		CommentFirstID: CommentFirstID.ID,
+	}
+	//将存入部分使用事务包裹 使得可以回滚数据库操作
+	err = vs.transaction.Action(func(conn database.DbConn) error {
+		err = vs.videoRepo.CreateComment(conn, c, &comment)
+		if err != nil {
+			zap.L().Error("evn_video video_service VideoPostComment CreateComment Tx_DB_error", zap.Error(err))
+			return errs.GrpcError(model.DBError)
+		}
+		//消息通知
+		if videoInfo.Uid == comment.Uid {
+			return nil
+		}
+		//添加消息通知
+		err = vs.videoRepo.AddNotice(c, videoInfo.Uid, comment.Uid, videoInfo.ID, notice2.VideoComment, comment.Context)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return &video.CommonDataResponse{Data: "发布失败"}, err
+	}
+	//socket推送(在线的情况下)
+	if _, ok := notice.Severe.UserMapChannel[videoInfo.UserInfo.ID]; ok {
+		userChannel := notice.Severe.UserMapChannel[videoInfo.UserInfo.ID]
+		userChannel.NoticeMessage(notice2.VideoComment)
+	}
+	return &video.CommonDataResponse{Data: "发布成功"}, nil
+}
+
+func (vs *VideoService) GetVideoManagementList(ctx context.Context, req *video.GetVideoManagementListRequest) (*video.CommonDataResponse, error) {
+	c := context.Background()
+	//获取个人发布视频信息
+	list, err := vs.videoRepo.GetVideoManagementList(c, req)
+	if err != nil {
+		zap.L().Error("evn_video video_service GetVideoManagementList FindVideoByID DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	rsp, err := model2.GetVideoManagementListResponse(list, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	if err != nil {
+		zap.L().Error("evn_video video_service GetVideoManagementList GetVideoManagementListResponse error", zap.Error(err))
+		return nil, errs.GrpcError(model.SystemError)
+	}
+
+	rspJSON, err := json.Marshal(rsp)
+	if err != nil {
+		zap.L().Error("evn_video video_service GetVideoManagementList rspJSON error", zap.Error(err))
+		return nil, errs.GrpcError(model.JsonError)
+	}
+	tmp := &video.CommonDataResponse{
+		Data: string(rspJSON),
+	}
+	return tmp, nil
+}
+
+func (vs *VideoService) LikeVideo(ctx context.Context, req *video.CommonIDAndUIDRequest) (*video.CommonDataResponse, error) {
+	c := context.Background()
+	//获取视频信息
+	videoInfo, err := vs.videoRepo.FindVideoByID(c, req.ID)
+	if err != nil {
+		zap.L().Error("evn_video video_service LikeVideo FindVideoByID DB_error", zap.Error(err))
+		return nil, errs.GrpcError(model.DBError)
+	}
+	//将存入部分使用事务包裹 使得可以回滚数据库操作
+	err = vs.transaction.Action(func(conn database.DbConn) error {
+		likeVideo, err2 := vs.videoRepo.GetLikeVideo(conn, c, req)
+		if err2 != nil {
+			zap.L().Error("evn_video video_service LikeVideo GetLikeVideo Tx_DB_error", zap.Error(err2))
+
+			return err
+		}
+		if likeVideo.ID > 0 {
+			err2 := vs.videoRepo.DeleteLikeVideo(conn, c, req, likeVideo)
+			if err2 != nil {
+				zap.L().Error("evn_video video_service LikeVideo DeleteLikeVideo Tx_DB_error", zap.Error(err2))
+				return err
+			}
+			//点赞自己作品不进行通知
+			if videoInfo.UserInfo.ID == uint(req.UID) {
+				return nil
+			}
+			//删除消息通知
+			err = vs.videoRepo.DeleteNotice(c, videoInfo.UserInfo.ID, req.UID, req.ID, notice2.VideoLike)
+			if err != nil {
+				zap.L().Error("evn_video video_service LikeVideo DeleteNotice Tx_DB_error", zap.Error(err))
+
+				return err
+			}
+		} else {
+			likeVideo.Uid = uint(req.UID)
+			likeVideo.VideoID = uint(req.ID)
+			err = vs.videoRepo.LikeVideo(conn, c, likeVideo)
+			if err != nil {
+				zap.L().Error("evn_video video_service LikeVideo LikeVideo Tx_DB_error", zap.Error(err))
+				return errs.GrpcError(model.DBError)
+			}
+			//点赞自己作品不进行通知
+			if videoInfo.UserInfo.ID == uint(req.UID) {
+				return nil
+			}
+			//添加消息通知
+			err = vs.videoRepo.AddNotice(c, videoInfo.UserInfo.ID, uint(req.UID), uint(req.ID), notice2.VideoLike, "赞了您的作品")
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return &video.CommonDataResponse{Data: "操作失败"}, err
+	}
+	//socket推送(在线的情况下)
+	if _, ok := notice.Severe.UserMapChannel[videoInfo.UserInfo.ID]; ok {
+		userChannel := notice.Severe.UserMapChannel[videoInfo.UserInfo.ID]
+		userChannel.NoticeMessage(notice2.VideoLike)
+	}
+	return &video.CommonDataResponse{Data: "操作成功"}, nil
 }

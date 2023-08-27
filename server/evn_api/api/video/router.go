@@ -47,7 +47,7 @@ func (*RouterVideo) Router(r *gin.Engine) {
 		contributionRouterParameter.POST("/video/barrage/v3/", v.sendVideoBarrage)
 	}
 	//请求头携带
-	contributionRouter := r.Group("contribution")
+	contributionRouter := r.Group("/api/contribution")
 	contributionRouter.Use(cors.Cors())
 	contributionRouter.Use(midd.TokenVerify())
 	{
