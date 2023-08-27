@@ -29,9 +29,9 @@ var (
 	Temporary = filepath.ToSlash(config.C.UP.LocalConfig.TmpFileUrl + "assets/tmp")
 )
 
-func UploadOss(file *multipart.FileHeader, ctx *gin.Context) (results interface{}, err error) {
+func UploadOss(file *multipart.FileHeader, interface1 string, ctx *gin.Context) (results interface{}, err error) {
 	mForm := ctx.Request.MultipartForm
-	//上传文件明
+	//上传文件
 	var fileName string
 	fileName = strings.Join(mForm.Value["name"], fileName)
 	var fileInterface string
@@ -49,7 +49,7 @@ func UploadOss(file *multipart.FileHeader, ctx *gin.Context) (results interface{
 		return nil, fmt.Errorf("上传接口不存在")
 	}
 	method := new(upload.Upload)
-	method.Path = config.C.UP.FileUrl + rsp.Path
+	method.Path = config.C.UP.LocalConfig.TmpFileUrl + rsp.Path
 	index := strings.LastIndex(fileName, ".")
 	suffix := fileName[index:]
 	err = validator.CheckVideoSuffix(suffix)
@@ -69,6 +69,12 @@ func UploadOss(file *multipart.FileHeader, ctx *gin.Context) (results interface{
 		zap.L().Error("临时文件保存失败-保存路径为："+tmpDst+"错误原因 : ", zap.Error(err))
 		return nil, fmt.Errorf("上传失败")
 	}
+	// 如果interface 是 视频投稿的接口 则只保存到临时文件
+	//	后续上传到腾讯云 云点播 使用 createVideoContribution 接口完成
+	if interface1 == "videoContribution" || interface1 == "videoContributionCover" {
+		return rsp.Path + "/" + fileName, nil
+	}
+
 	//stsCredentialResult, err := tengcentyunOss.GetStsCredentialResult()
 	bucketUrl, _ := url.Parse(config.C.UP.TencentConfig.Host)
 	//bucketUrl, _ := url.Parse("https://easy-video-1300278197.cos.ap-guangzhou.myqcloud.com")
@@ -115,16 +121,14 @@ func UploadOss(file *multipart.FileHeader, ctx *gin.Context) (results interface{
 	}
 	// c.Object.Upload 不能用 sls 临时令牌
 	_, _, upErr := c.Object.Upload(
-		//TODO 优化
-		cTime, method.Path+"/"+fileName, tmpDst, opt,
-		//cTime, method.Path+"/"+fileName, "F:/Vue3/easy-video-net-rebuild/server/"+tmpDst, opt,
+		cTime, rsp.Path+"/"+fileName, tmpDst, opt,
 	)
 	//fmt.Println(v)
 	if upErr != nil {
 		zap.L().Error("保存文件失败-保存路径为："+tmpDst+"错误原因:", zap.Error(upErr))
 		return nil, fmt.Errorf("上传失败")
 	} else {
-		return method.Path + "/" + fileName, nil
+		return rsp.Path + "/" + fileName, nil
 	}
 }
 
@@ -161,19 +165,19 @@ func Upload(file *multipart.FileHeader, ctx *gin.Context) (results interface{}, 
 		return nil, fmt.Errorf("非法后缀！")
 	}
 	//检测文件夹是否创建
-	if !location.IsDir(Temporary) {
-		if err = os.MkdirAll(Temporary, 0775); err != nil {
+	if !location.IsDir(method.Path) {
+		if err = os.MkdirAll(method.Path, 0775); err != nil {
 			zap.L().Error("文件夹创建失败 创建路径为："+method.Path, zap.Error(err))
 			return nil, fmt.Errorf("文件夹创建失败")
 		}
 	}
-	dst := filepath.ToSlash(Temporary + "/" + fileName)
+	dst := filepath.ToSlash(method.Path + "/" + fileName)
 	err = ctx.SaveUploadedFile(file, dst)
 	if err != nil {
 		zap.L().Error("文件保存失败-保存路径为："+dst+"错误原因 : ", zap.Error(err))
 		return nil, fmt.Errorf("上传失败")
 	} else {
-		return dst, nil
+		return rsp.Path + "/" + fileName, nil
 	}
 
 }
@@ -204,12 +208,6 @@ func UploadSlice(file *multipart.FileHeader, ctx *gin.Context) (results interfac
 	}
 	method := new(upload.Upload)
 	method.Path = config.C.UP.LocalConfig.FileUrl + rsp.Path
-	//index := strings.LastIndex(fileName, ".")
-	//suffix := fileName[index:]
-	//err = validator.CheckVideoSuffix(suffix)
-	//if err != nil {
-	//	return nil, fmt.Errorf("非法后缀！")
-	//}
 	//检测文件夹是否创建
 	if !location.IsDir(Temporary) {
 		if err = os.MkdirAll(Temporary, 0775); err != nil {
@@ -224,7 +222,7 @@ func UploadSlice(file *multipart.FileHeader, ctx *gin.Context) (results interfac
 		return nil, fmt.Errorf("上传失败")
 	} else {
 		_ = os.Chmod(dst, 0775)
-		return dst, nil
+		return rsp.Path + "/" + fileName, nil
 	}
 
 }
@@ -277,8 +275,8 @@ func UploadMerge(data *other2.UploadMergeStruct) (results interface{}, err error
 	}
 	method := new(upload.Upload)
 	method.Path = config.C.UP.LocalConfig.FileUrl + rsp.Path
-	if !location.IsDir(filepath.ToSlash(method.Path)) {
-		if err = os.MkdirAll(filepath.ToSlash(method.Path), 0775); err != nil {
+	if !location.IsDir(method.Path) {
+		if err = os.MkdirAll(method.Path, 0775); err != nil {
 			zap.L().Error("文件夹创建失败 创建路径为："+method.Path, zap.Error(err))
 			return nil, fmt.Errorf("创建保存路径失败")
 		}
@@ -344,5 +342,5 @@ func UploadMerge(data *other2.UploadMergeStruct) (results interface{}, err error
 			zap.L().Error("合并操作删除临时分片失败 err: ", zap.Error(err))
 		}
 	}
-	return dst, nil
+	return rsp.Path + "/" + data.FileName, nil
 }

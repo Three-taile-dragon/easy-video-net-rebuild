@@ -161,7 +161,8 @@ func (c HandleCommonality) getFullPathOfImage(ctx *gin.Context) {
 func (c HandleCommonality) uploadOss(ctx *gin.Context) {
 	result := common.Result{}
 	file, _ := ctx.FormFile("file")
-	results, err := service.UploadOss(file, ctx)
+	interface1 := ctx.GetString("interface")
+	results, err := service.UploadOss(file, interface1, ctx)
 	if err != nil {
 		code, msg := errs.ParseGrpcError(model.SystemError)
 		ctx.JSON(http.StatusOK, result.Fail(code, msg))

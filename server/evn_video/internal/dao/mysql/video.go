@@ -215,3 +215,29 @@ func (v VideoDao) CreateVideoBarrage(ctx context.Context, bg *barrage.Barrage) (
 	}
 	return true, nil
 }
+
+func (v VideoDao) CreateVideo(ctx context.Context, videoContribution *video.VideosContribution) (bool, error) {
+	session := v.conn.Session(ctx)
+	err := session.
+		Create(&videoContribution).
+		Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (v VideoDao) UpdateVideo(ctx context.Context, videoContribution *video.VideosContribution) (bool, error) {
+	session := v.conn.Session(ctx)
+	err := session.
+		Where("uid", videoContribution.Uid).
+		Where("title", videoContribution.Title).
+		Where("created_at", videoContribution.CreatedAt).
+		Model(&video.VideosContribution{}).
+		Updates(&videoContribution).
+		Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}

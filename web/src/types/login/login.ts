@@ -4,6 +4,7 @@ export interface loginReq  {
 }
 
 export interface userInfoRes {
+    username: string
     id : number
     photo : string
     token : string

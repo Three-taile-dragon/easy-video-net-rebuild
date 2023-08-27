@@ -22,4 +22,6 @@ type VideoRepo interface {
 	AddVideoRecord(ctx context.Context, uid uint32, videoID uint32) error
 	GetRecommendList(ctx context.Context) (*video2.VideosContributionList, error)
 	CreateVideoBarrage(ctx context.Context, bg *barrage.Barrage) (bool, error)
+	CreateVideo(ctx context.Context, videoContribution *video2.VideosContribution) (bool, error)
+	UpdateVideo(ctx context.Context, videoContribution *video2.VideosContribution) (bool, error)
 }

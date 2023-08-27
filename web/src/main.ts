@@ -12,7 +12,7 @@ import 'virtual:svg-icons-register'
 import Particles from "vue3-particles"
 import App from './App.vue'
 import router from "./router/index"
-
+import NPlayer from "@nplayer/vue";
 
 
 const app = createApp(App)
@@ -21,6 +21,7 @@ pinia.use(piniaPluginPersistedstate);
 app.use(pinia)
 app.use(router)
 app.use(ElementPlus)
+app.use(NPlayer)
 app.use(Particles) //粒子动画
 
 

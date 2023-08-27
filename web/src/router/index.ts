@@ -1,4 +1,4 @@
-import { useGlobalStore } from "@/store/main";
+import { useGlobalStore, useUserStore } from "@/store/main";
 import { createRouter, createWebHistory } from "vue-router";
 
 import creation from "@/router/creation";
@@ -8,6 +8,7 @@ import search from "@/router/search";
 import articleShow from "@/router/show/article";
 import videoShow from "@/router/show/video";
 import space from "@/router/space";
+import { ElMessage } from "element-plus";
 const routes = [
     {
         path: '',
@@ -86,17 +87,17 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
     const globalStore = useGlobalStore()
     globalStore.globalData.router.currentRouter = to.path
-    // if(to.path !== "/login"){
-    //     let  userInfo = useUserStore();
-    //     if (userInfo.userInfoData.id == 0 ){
-    //         ElMessage({
-    //             message: '请先登入',
-    //             type: 'error',
-    //         })
-    //         next({name : "Login"})
-    //         return
-    //     }
-    // }
+    if(to.path !== "/login"){
+        let  userInfo = useUserStore();
+        if (userInfo.userInfoData.id == 0 ){
+            ElMessage({
+                message: '请先登入',
+                type: 'error',
+            })
+            next({name : "Login"})
+            return
+        }
+    }
 
     next()
 })

@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/jinzhu/copier"
 	"net/http"
 	"strconv"
 	"time"
@@ -235,7 +236,36 @@ func (v HandleVideo) sendVideoBarrage(c *gin.Context) {
 }
 
 func (v HandleVideo) createVideoContribution(c *gin.Context) {
+	result := common.Result{}
+	var req video.CreateVideoContributionReceiveStruct
+	err := c.ShouldBindBodyWith(&req, binding.JSON)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	uid := c.GetInt64("currentUid")
+	//调用grpc
+	//对grpc进行两秒超时处理
+	ctx, canel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer canel()
 
+	msg := &video2.CreateVideoContributionRequest{}
+	err = copier.Copy(msg, req)
+	if err != nil {
+		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
+		return
+	}
+	msg.Uid = uint32(uid)
+	//msg.Reprinted = *req.Reprinted
+	//msg.Media = *req.Media
+	rsp, err := rpc.VideoServiceClient.CreateVideoContribution(ctx, msg)
+	if err != nil {
+		code, msg := errs.ParseGrpcError(err) //解析grpc错误信息
+		c.JSON(http.StatusOK, result.Fail(code, msg))
+		return
+	}
+	//4.返回结果
+	c.JSON(http.StatusOK, result.BarrageSuccess(c, rsp.Data))
 }
 
 func (v HandleVideo) updateVideoContribution(c *gin.Context) {

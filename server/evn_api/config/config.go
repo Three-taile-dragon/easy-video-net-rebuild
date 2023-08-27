@@ -170,6 +170,7 @@ func (c *Config) ReadHostConfig() {
 	c.Host = hostConfig
 }
 
+// ReadUploadConfig 读取上传配置
 func (c *Config) ReadUploadConfig() {
 	tencentConfig := &TencentConfig{}
 	tencentConfig.Region = c.viper.GetString("upload.tencentOss.region")

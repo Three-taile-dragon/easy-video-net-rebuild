@@ -43,7 +43,7 @@ type GetVideoBarrageListReceiveStruct struct {
 }
 
 type barrageInfo struct {
-	Time     int       `json:"time"`
+	Time     float64   `json:"time"`
 	Text     string    `json:"text"`
 	SendTime time.Time `json:"sendTime"`
 }
@@ -87,6 +87,10 @@ type Info struct {
 	ID             uint             `json:"id"`
 	Uid            uint             `json:"uid" `
 	Title          string           `json:"title" `
+	AppID          string           `json:"appID"`
+	FileID         string           `json:"fileID"`
+	PSign          string           `json:"pSign"`
+	LicenseUrl     string           `json:"licenseUrl"`
 	Video          string           `json:"video"`
 	Video720p      string           `json:"video_720p"`
 	Video480p      string           `json:"video_480p"`
@@ -144,4 +148,17 @@ type SendVideoBarrageReceiveStruct struct {
 	Time   float64 `json:"time"`
 	Type   uint    `json:"type"`
 	Token  string  `json:"token" binding:"required"`
+}
+
+type CreateVideoContributionReceiveStruct struct {
+	Video           string   `json:"video" binding:"required"`
+	VideoUploadType string   `json:"videoUploadType" binding:"required"`
+	Cover           string   `json:"cover" binding:"required"`
+	CoverUploadType string   `json:"coverUploadType" binding:"required"`
+	Title           string   `json:"title" binding:"required"`
+	Reprinted       *bool    `json:"reprinted" binding:"required"`
+	Label           []string `json:"label"`
+	Introduce       string   `json:"introduce" binding:"required"`
+	VideoDuration   int64    `json:"videoDuration" binding:"required"`
+	Media           *string  `json:"media"`
 }

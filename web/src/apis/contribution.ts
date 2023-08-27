@@ -64,7 +64,7 @@ export const danmakuApi = import.meta.env.VITE_BASE_URL + '/api/contribution/vid
 
 //获取视弹幕列表
 export const getVideoBarrageList = (params: GetVideoBarrageListReq) => {
-    return httpRequest.get<GetVideoBarrageListRes>('/api/contribution/getVideoBarrageList', params);
+    return httpRequest.get<GetVideoBarrageListRes[]>('/api/contribution/getVideoBarrageList', params);
 }
 
 //发送视弹幕

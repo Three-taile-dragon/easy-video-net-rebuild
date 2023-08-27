@@ -20,13 +20,17 @@ interface creatorInfo {
 export interface VideoInfo {
     videoInfo: VInfo
     recommendList: RecommendList
-    barrageList: GetVideoBarrageListRes
+    barrageList: GetVideoBarrageListRes[]
 }
 
 export interface VInfo {
     id: number
     uid: number
     title: string
+    fileID: string
+    appID: string
+    pSign: string
+    licenseUrl: string
     video: string
     video_720p: string
     video_480p: string
@@ -73,6 +77,13 @@ export interface GetVideoBarrageListRes {
     sendTime: string
 }
 
+export interface BarrageListConvert {
+    mode: number
+    text: string
+    stime: number
+    size: number
+    color: string
+}
 
 export interface SendVideoBarrageReq {
     author: string

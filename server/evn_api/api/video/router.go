@@ -26,7 +26,6 @@ func (*RouterVideo) Router(r *gin.Engine) {
 	v := New()
 	//不需要登入
 	contributionRouterNoVerification := r.Group("/api/contribution")
-	//使用token认证中间件
 	contributionRouterNoVerification.Use(cors.Cors())
 	{
 		contributionRouterNoVerification.GET("/video/barrage/v3/", v.getVideoBarrage)

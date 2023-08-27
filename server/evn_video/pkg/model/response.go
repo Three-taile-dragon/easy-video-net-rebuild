@@ -25,7 +25,7 @@ func GetVideoBarrageResponse(list *barrage.BarragesList) interface{} {
 
 // 获取视频弹幕响应
 type barrageInfo struct {
-	Time     int       `json:"time"`
+	Time     float64   `json:"time"`
 	Text     string    `json:"text"`
 	SendTime time.Time `json:"sendTime"`
 }
@@ -36,7 +36,7 @@ func GetVideoBarrageListResponse(list *barrage.BarragesList) interface{} {
 	barrageList := make(barrageInfoList, 0)
 	for _, v := range *list {
 		info := barrageInfo{
-			Time:     int(v.Time),
+			Time:     v.Time,
 			Text:     v.Text,
 			SendTime: v.PublicModel.CreatedAt,
 		}
@@ -186,6 +186,7 @@ func GetVideoContributionByIDResponse(vc *video.VideosContribution, recommendVid
 			ID:             vc.ID,
 			Uid:            vc.Uid,
 			Title:          vc.Title,
+			FileID:         vc.MediaID,
 			Video:          videoSrc,
 			Video720p:      video720pSrc,
 			Video480p:      video480pSrc,
@@ -240,6 +241,10 @@ type Info struct {
 	ID             uint             `json:"id"`
 	Uid            uint             `json:"uid" `
 	Title          string           `json:"title" `
+	AppID          string           `json:"appID"`
+	FileID         string           `json:"fileID"`
+	PSign          string           `json:"pSign"`
+	LicenseUrl     string           `json:"licenseUrl"`
 	Video          string           `json:"video"`
 	Video720p      string           `json:"video_720p"`
 	Video480p      string           `json:"video_480p"`

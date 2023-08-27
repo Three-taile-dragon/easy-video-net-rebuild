@@ -43,10 +43,25 @@ message SendVideoBarrageRequest{
   uint32 Uid = 7;
 }
 
+message CreateVideoContributionRequest{
+    string Video = 1;
+    string VideoUploadType = 2;
+    string Cover = 3;
+    string CoverUploadType = 4;
+    string Title = 5;
+    bool Reprinted = 6;
+    repeated string Label = 7;
+    string Introduce = 8;
+    int64 VideoDuration = 9;
+    string Media = 10;
+    uint32 Uid = 11;
+}
+
 service VideoService {
   rpc GetVideoBarrage(CommonIDRequest) returns (CommonDataResponse) {}
   rpc GetVideoBarrageList(CommonIDRequest) returns (CommonDataResponse) {}
   rpc GetVideoComment(GetVideoCommentRequest) returns (CommonDataResponse) {}
   rpc GetVideoContributionByID(GetVideoContributionByIDRequest) returns (CommonDataResponse) {}
   rpc SendVideoBarrage(SendVideoBarrageRequest) returns (CommonDataResponse) {}
+  rpc CreateVideoContribution(CreateVideoContributionRequest) returns (CommonDataResponse) {}
 }
