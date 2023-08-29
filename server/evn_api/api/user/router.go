@@ -33,7 +33,7 @@ func (*RouterUser) Router(r *gin.Engine) {
 	group.POST("/refreshToken", h.refreshToken)
 	group.POST("/forget", h.forget)
 	//非必须登入
-	spaceRouterNotNecessary := r.Group("/api/space")
+	spaceRouterNotNecessary := r.Group("/api/user/space")
 	spaceRouterNotNecessary.Use(cors.Cors())
 	spaceRouterNotNecessary.Use(midd.TokenVerifyNotNecessary())
 	{

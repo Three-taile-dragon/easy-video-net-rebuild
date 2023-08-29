@@ -43,10 +43,11 @@ type GetLiveRoomInfoReceiveStruct struct {
 }
 
 type GetLiveRoomInfoResponseStruct struct {
-	Username  string `json:"username"`
-	Photo     string `json:"photo"`
-	LiveTitle string `json:"live_title"`
-	Flv       string `json:"flv"`
+	Username   string `json:"username"`
+	Photo      string `json:"photo"`
+	LiveTitle  string `json:"live_title"`
+	Flv        string `json:"flv"`
+	LicenseUrl string `json:"licenseUrl"`
 }
 
 type BeLiveInfo struct {

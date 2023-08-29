@@ -23,36 +23,36 @@ export const updateVideoContribution = (params: UpdateVideoContributionReq) => {
 
 //发布专栏
 export const createArticleContribution = (params: AreateArticleContributionReq) => {
-    return httpRequest.post('/contribution/createArticleContribution', params);
+    return httpRequest.post('/api/contribution/createArticleContribution', params);
 }
 
 //更新专栏
 export const updateArticleContribution = (params: UpdateArticleContributionReq) => {
-    return httpRequest.post('/contribution/updateArticleContribution', params);
+    return httpRequest.post('/api/contribution/updateArticleContribution', params);
 }
 
 //查询专栏列表
 export const getArticleContributionList = (params: GetArticleContributionListReq) => {
-    return httpRequest.post<GetArticleContributionListRes>('/contribution/getArticleContributionList', params);
+    return httpRequest.post<GetArticleContributionListRes>('/api/contribution/getArticleContributionList', params);
 }
 //根据用户获取专栏信息
 export const getArticleContributionListByUser = (params: GetArticleContributionListByUserReq) => {
-    return httpRequest.post<GetArticleContributionListByUserRes>('/contribution/getArticleContributionListByUser', params);
+    return httpRequest.post<GetArticleContributionListByUserRes>('/api/contribution/getArticleContributionListByUser', params);
 }
 
 //根据文章ID获取文章信息
 export const getArticleContributionByID = (params: GetArticleContributionByIDReq) => {
-    return httpRequest.post<GetArticleContributionByIDRes>('/contribution/getArticleContributionByID', params);
+    return httpRequest.post<GetArticleContributionByIDRes>('/api/contribution/getArticleContributionByID', params);
 }
 
 //文章发布评论
 export const articlePostComment = (params: ArticlePostCommentReq) => {
-    return httpRequest.post('/contribution/articlePostComment', params);
+    return httpRequest.post('/api/contribution/articlePostComment', params);
 }
 
 //单独获取文章评论
 export const getArticleComment = (params: GetArticleCommentReq) => {
-    return httpRequest.post<GetArticleCommentRes>('/contribution/getArticleComment', params);
+    return httpRequest.post<GetArticleCommentRes>('/api/contribution/getArticleComment', params);
 }
 
 //根据id获取视频信息
@@ -85,12 +85,12 @@ export const getVideoComment = (params: GetVideoCommentReq) => {
 
 //获取文章分类
 export const getArticleClassificationList = () => {
-    return httpRequest.post<GetArticleClassificationListRes>('/contribution/getArticleClassificationList');
+    return httpRequest.post<GetArticleClassificationListRes>('/api/contribution/getArticleClassificationList');
 }
 
 //获取文章类目信息
 export const getArticleTotalInfo = () => {
-    return httpRequest.post<getArticleTotalInfoRes>('/contribution/getArticleTotalInfo');
+    return httpRequest.post<getArticleTotalInfoRes>('/api/contribution/getArticleTotalInfo');
 }
 
 //创作中心获取个人发布视频
@@ -105,13 +105,13 @@ export const deleteVideoByID = (params: DeleteVideoByIDReq) => {
 
 //创作中心获取个人发布专栏
 export const getArticleManagementList = (params: GetArticleManagementListReq) => {
-    return httpRequest.post<GetArticleManagementListRes>('/contribution/getArticleManagementList',params);
+    return httpRequest.post<GetArticleManagementListRes>('/api/contribution/getArticleManagementList',params);
 }
 
 
 //根据id删除专栏
 export const deleteArticleByID = (params: DeleteArticleByIDReq) => {
-    return httpRequest.post('/contribution/deleteArticleByID',params);
+    return httpRequest.post('/api/contribution/deleteArticleByID',params);
 }
 
 //获取评论管理视频评论
@@ -121,12 +121,12 @@ export const getDiscussVideoList = (params: GetDiscussVideoListReq) => {
 
 //获取评论管理文章评论
 export const getDiscussArticleList = (params: GetDiscussArticleListReq) => {
-    return httpRequest.post<GetDiscussArticleListRes>('/contribution/getDiscussArticleList',params);
+    return httpRequest.post<GetDiscussArticleListRes>('/api/contribution/getDiscussArticleList',params);
 }
 
 //获取评论列表
 export const getDiscussBarrageList = (params: GetDiscussBarrageListReq) => {
-    return httpRequest.post<GetDiscussBarrageListRes>('/contribution/getDiscussBarrageList',params);
+    return httpRequest.post<GetDiscussBarrageListRes>('/api/contribution/getDiscussBarrageList',params);
 }
 
 //视频点赞

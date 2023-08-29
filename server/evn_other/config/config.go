@@ -22,6 +22,7 @@ type Config struct {
 	AC    *AesConfig
 	Host  *HostConfig
 	Live  *LiveConfig
+	Vod   *VodConfig
 }
 type ServerConfig struct {
 	Name string
@@ -72,13 +73,22 @@ type LiveConfig struct {
 	Agreement string
 }
 
+type VodConfig struct {
+	Appid                 int64
+	Key                   string
+	LicenseUrl            string
+	AudioVideoType        string
+	RawAdaptiveDefinition int64
+	PsignExpire           int64
+}
+
 func InitConfig() *Config {
 	//初始化viper
 	conf := &Config{viper: viper.New()}
 	workDir, _ := os.Getwd()
 	conf.viper.SetConfigName("config")
 	conf.viper.SetConfigType("yaml")
-	conf.viper.AddConfigPath("/opt/easy-video-net-rebuild/evn_other/config")
+	conf.viper.AddConfigPath("/opt/evn/evn_other/config")
 	conf.viper.AddConfigPath(workDir + "/config")
 	//读入配置
 	err := conf.viper.ReadInConfig()
@@ -96,6 +106,7 @@ func InitConfig() *Config {
 	conf.ReadAesConfig()
 	conf.ReadHostConfig()
 	conf.ReadLiveConfig()
+	conf.ReadVodConfig()
 	return conf
 }
 
@@ -206,4 +217,16 @@ func (c *Config) ReadLiveConfig() {
 	liveConfig.Api = c.viper.GetInt("live.api")
 	liveConfig.Agreement = c.viper.GetString("live.agreement")
 	c.Live = liveConfig
+}
+
+// ReadVodConfig 读取腾讯云vod配置
+func (c *Config) ReadVodConfig() {
+	vodConfig := &VodConfig{}
+	vodConfig.Appid = c.viper.GetInt64("vod.appid")
+	vodConfig.Key = c.viper.GetString("vod.key")
+	vodConfig.LicenseUrl = c.viper.GetString("vod.licenseUrl")
+	vodConfig.AudioVideoType = c.viper.GetString("vod.audioVideoType")
+	vodConfig.RawAdaptiveDefinition = c.viper.GetInt64("vod.rawAdaptiveDefinition")
+	vodConfig.PsignExpire = c.viper.GetInt64("vod.psignExpire")
+	c.Vod = vodConfig
 }

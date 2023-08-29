@@ -32,4 +32,5 @@ export interface GetLiveRoomInfoRes {
     photo: string
     live_title: string
     flv :string
+    licenseUrl: string
 }

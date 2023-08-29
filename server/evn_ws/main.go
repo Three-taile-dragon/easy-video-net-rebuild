@@ -5,6 +5,7 @@ import (
 	_ "dragonsss.com/evn_ws/api"
 	"dragonsss.com/evn_ws/config"
 	"dragonsss.com/evn_ws/router"
+	_ "dragonsss.com/evn_ws/utils/socket"
 	"github.com/gin-gonic/gin"
 )
 

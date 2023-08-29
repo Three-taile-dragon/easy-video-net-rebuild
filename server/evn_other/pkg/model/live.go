@@ -43,19 +43,21 @@ func GetLiveRoomResponse(address string, key string) interface{} {
 }
 
 type GetLiveRoomInfoResponseStruct struct {
-	Username  string `json:"username"`
-	Photo     string `json:"photo"`
-	LiveTitle string `json:"live_title"`
-	Flv       string `json:"flv"`
+	Username   string `json:"username"`
+	Photo      string `json:"photo"`
+	LiveTitle  string `json:"live_title"`
+	Flv        string `json:"flv"`
+	LicenseUrl string `json:"licenseUrl"`
 }
 
-func GetLiveRoomInfoResponse(info *user.User, flv string, localhost string, tencentOssHost string) interface{} {
+func GetLiveRoomInfoResponse(info *user.User, flv string, licenseUrl string, localhost string, tencentOssHost string) interface{} {
 	photo, _ := conversion.FormattingJsonSrc(info.Photo, localhost, tencentOssHost)
 	return GetLiveRoomInfoResponseStruct{
-		Username:  info.Username,
-		Photo:     photo,
-		LiveTitle: info.LiveInfo.Title,
-		Flv:       flv,
+		Username:   info.Username,
+		Photo:      photo,
+		LiveTitle:  info.LiveInfo.Title,
+		Flv:        flv,
+		LicenseUrl: licenseUrl,
 	}
 }
 

@@ -227,6 +227,7 @@ export const tcPlayerInit = async (myRef: Ref, route: RouteLocationNormalizedLoa
         appID: videoInfo.videoInfo.appID,
         psign: videoInfo.videoInfo.pSign,
         licenseUrl: videoInfo.videoInfo.licenseUrl,
+        autoplay: true,
         plugins: {
           ProgressMarker: true,
           ContextMenu: {
@@ -241,6 +242,8 @@ export const tcPlayerInit = async (myRef: Ref, route: RouteLocationNormalizedLoa
       })
     }else{
       tp = new TCPlayer(myRef.value, {
+        autoplay: true,
+        reportable: false,
         licenseUrl: videoInfo.videoInfo.licenseUrl,
         sources: [{
           src: bestQualityUrl(videoInfo),

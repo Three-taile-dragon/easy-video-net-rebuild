@@ -132,8 +132,8 @@ func (o *OtherService) GetLiveRoomInfo(ctx context.Context, req *other.CommonIDA
 			return nil, errs.GrpcError(model2.DBError)
 		}
 	}
-
-	infoResponse := model.GetLiveRoomInfoResponse(userInfo, flv, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
+	licenseUrl := config.C.Vod.LicenseUrl
+	infoResponse := model.GetLiveRoomInfoResponse(userInfo, flv, licenseUrl, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
 	rspJSON, err := json.Marshal(infoResponse)
 	if err != nil {
 		zap.L().Error("evn_other other_service GetLiveRoomInfo Marshal error", zap.Error(err))
