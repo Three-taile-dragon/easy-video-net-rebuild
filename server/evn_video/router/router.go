@@ -3,9 +3,9 @@ package router
 import (
 	"dragonsss.cn/evn_common/discovery"
 	"dragonsss.cn/evn_common/logs"
-	"dragonsss.cn/evn_grpc/project"
-	"dragonsss.cn/evn_project/config"
-	projectServiceV1 "dragonsss.cn/evn_project/pkg/service/project.service.v1"
+	"dragonsss.cn/evn_grpc/video"
+	"dragonsss.com/evn_video/config"
+	videoservicev1 "dragonsss.com/evn_video/pkg/service/video.service.v1"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -43,7 +43,7 @@ func RegisterGrpc() *grpc.Server {
 	c := gRPCConfig{
 		Addr: config.C.GC.Addr,
 		RegisterFunc: func(g *grpc.Server) {
-			project.RegisterProjectServiceServer(g, projectServiceV1.New())
+			video.RegisterVideoServiceServer(g, videoservicev1.New())
 		},
 	}
 	s := grpc.NewServer()
@@ -64,7 +64,7 @@ func RegisterGrpc() *grpc.Server {
 	return s
 }
 
-// 注册etcd服务
+// RegisterEtcdServer 注册etcd服务
 func RegisterEtcdServer() {
 	etcdRegister := discovery.NewResolver(config.C.EC.Addrs, logs.LG)
 	resolver.Register(etcdRegister)

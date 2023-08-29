@@ -1,7 +1,8 @@
-package project
+package other
 
 import (
 	"context"
+	"dragonsss.cn/evn_api/api/other/rpc"
 	other2 "dragonsss.cn/evn_api/pkg/model/other"
 	common "dragonsss.cn/evn_common"
 	"dragonsss.cn/evn_common/errs"
@@ -22,15 +23,20 @@ func (p *HandleProject) getHomeInfo(c *gin.Context) {
 	result := &common.Result{}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	req := &other2.HomeRequest{}
+	var req struct {
+		PageInfo struct {
+			Page int64 `json:"page"`
+			Size int64 `json:"size"`
+		} `json:"page_info"`
+	}
 	err := c.ShouldBind(&req)
 	if err != nil {
 		c.JSON(http.StatusOK, result.Fail(http.StatusBadRequest, "参数格式有误"))
 		return
 	}
-	//msg := &other.HomeRequest{Page: req.Page, Size: req.Size}
-	msg := &other.HomeRequest{Page: 1, Size: 15}
-	rsp, err := OtherServiceClient.GetHomeInfo(ctx, msg)
+	msg := &other.HomeRequest{Page: req.PageInfo.Page, Size: req.PageInfo.Size}
+	//msg := &other.HomeRequest{Page: 1, Size: 15}
+	rsp, err := rpc.OtherServiceClient.GetHomeInfo(ctx, msg)
 	if err != nil {
 		code, msg := errs.ParseGrpcError(err)
 		c.JSON(http.StatusOK, result.Fail(code, msg))

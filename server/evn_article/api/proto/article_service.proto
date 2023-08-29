@@ -1,0 +1,84 @@
+//grpc 登陆服务配置文件
+
+syntax = "proto3";
+package article.service.v1;
+option go_package = "evn_article/pkg/service/article.service.v1";
+
+message CommonDataResponse{
+  string data = 1;
+}
+
+message CommonIDRequest {
+  uint32 ID = 1;
+}
+
+message CommonIDAndUIDRequest {
+  uint32 ID = 1;
+  uint32 UID = 2;
+}
+
+message CommonPageInfo {
+  int32 Page = 1;
+  int32 Size = 2;
+  string Keyword = 3;
+}
+
+message CommonZeroRequest {
+
+}
+
+message GetArticleCommentRequest {
+  CommonPageInfo PageInfo = 1;
+  uint32 ArticleID = 2;
+}
+
+message CreateArticleContributionRequest{
+  string Cover = 1;
+  string CoverUploadType = 2;
+  string ArticleContributionUploadType = 3;
+  string Title = 4;
+  repeated string Label = 5;
+  string Content = 6;
+  bool Comments = 7;
+  uint32 ClassificationID = 8;
+  uint32 Uid = 9;
+}
+
+message UpdateArticleContributionRequest{
+  uint32 ID = 1;
+  string Cover = 2;
+  string CoverUploadType = 3;
+  string ArticleContributionUploadType = 4;
+  string Title = 5;
+  repeated string Label = 6;
+  string Content = 7;
+  bool Comments = 8;
+  uint32 ClassificationID = 9;
+  uint32 Uid = 10;
+}
+
+message ArticlePostCommentRequest {
+  uint32 ArticleID = 1;
+  string Content = 2;
+  uint32 ContentID = 3;
+  uint32 Uid = 4;
+}
+
+message GetArticleManagementListRequest {
+  CommonPageInfo PageInfo = 1;
+  uint32 Uid = 2;
+}
+
+service ArticleService {
+  rpc GetArticleContributionList(CommonPageInfo) returns (CommonDataResponse) {}
+  rpc GetArticleContributionListByUser(CommonIDRequest) returns (CommonDataResponse) {}
+  rpc GetArticleComment(GetArticleCommentRequest) returns (CommonDataResponse) {}
+  rpc GetArticleClassificationList(CommonZeroRequest) returns (CommonDataResponse) {}
+  rpc GetArticleTotalInfo(CommonZeroRequest) returns (CommonDataResponse) {}
+  rpc GetArticleContributionByID(CommonIDAndUIDRequest) returns (CommonDataResponse) {}
+  rpc CreateArticleContribution(CreateArticleContributionRequest) returns (CommonDataResponse) {}
+  rpc UpdateArticleContribution(UpdateArticleContributionRequest) returns (CommonDataResponse) {}
+  rpc DeleteArticleByID(CommonIDAndUIDRequest) returns (CommonDataResponse) {}
+  rpc ArticlePostComment(ArticlePostCommentRequest) returns (CommonDataResponse) {}
+  rpc GetArticleManagementList(GetArticleManagementListRequest) returns (CommonDataResponse) {}
+}

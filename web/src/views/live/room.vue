@@ -7,7 +7,9 @@
             <div class="live-box">
               <LiveHeader :src="liveInfo?.photo ? liveInfo?.photo : ''"
                 :titel="liveInfo?.live_title ? liveInfo?.live_title : ''" />
-              <div ref="videoRef" class="player" id="dplay" />
+              <!-- <div ref="videoRef" class="player" id="dplay" /> -->
+              <video ref="myRef" :class="{ 'player': true, 'dplayer-comment-show': !userStore.userInfoData.token }" id="player-container-id" preload="auto" playsinline webkit-playsinline>
+    </video>
             </div>
           </el-col>
           <el-col :span="6">
@@ -44,9 +46,13 @@ import Announcement from "@/components/LiveBroadcast/announcement.vue";
 import Column from "@/components/LiveBroadcast/column.vue";
 import LiveHeader from "@/components/LiveBroadcast/liveHeader.vue";
 import Side from "@/components/LiveBroadcast/side.vue";
-import { useInit, useLiveRoomProp, useWebSocket } from "@/logic/live/liveRoom";
+import { useInit, useLiveRoomProp, useWebSocket,tcPlayerInit} from "@/logic/live/liveRoom";
 import DPlayer from "dplayer";
 import { onMounted, ref } from "vue";
+
+
+import TCPlayer from 'tcplayer.js';
+import 'tcplayer.js/dist/tcplayer.min.css';
 
 components: {
   LiveHeader
@@ -58,12 +64,18 @@ const sideRef = ref()
 var dp: DPlayer //播放器配置对象
 const { videoRef, userStore, route, router, roomID, liveInfo } = useLiveRoomProp()
 
+const myRef = ref(null);
+
+var player = ref(tcPlayerInit)
+
+
 
 const sendMessage = ref((tset: string) => {
 })
 
 onMounted(async () => {
-  dp = await useInit(videoRef, route, router, roomID, liveInfo) as DPlayer
+  // dp = await useInit(videoRef, route, router, roomID, liveInfo) as DPlayer
+  player = await tcPlayerInit(myRef, route, router, roomID, liveInfo)
   sendMessage.value = useWebSocket(dp, userStore, sideRef, roomID, router).sendMessage
 })
 

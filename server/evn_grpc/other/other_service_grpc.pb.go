@@ -23,6 +23,16 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OtherServiceClient interface {
 	GetHomeInfo(ctx context.Context, in *HomeRequest, opts ...grpc.CallOption) (*HomeResponse, error)
+	GetLiveRoom(ctx context.Context, in *CommonIDRequest, opts ...grpc.CallOption) (*GetLiveRoomResponse, error)
+	GetLiveRoomInfo(ctx context.Context, in *CommonIDAndUIDRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
+	GetBeLiveList(ctx context.Context, in *CommonIDRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
+	GetDiscussVideoList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
+	GetDiscussArticleList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
+	GetDiscussBarrageList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
+	UploadingMethod(ctx context.Context, in *UploadingMethodRequest, opts ...grpc.CallOption) (*UploadingMethodResponse, error)
+	UploadingDir(ctx context.Context, in *UploadingDirRequest, opts ...grpc.CallOption) (*UploadingDirResponse, error)
+	GetFullPathOfImage(ctx context.Context, in *GetFullPathOfImageRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
+	Search(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*CommonDataResponse, error)
 }
 
 type otherServiceClient struct {
@@ -42,11 +52,111 @@ func (c *otherServiceClient) GetHomeInfo(ctx context.Context, in *HomeRequest, o
 	return out, nil
 }
 
+func (c *otherServiceClient) GetLiveRoom(ctx context.Context, in *CommonIDRequest, opts ...grpc.CallOption) (*GetLiveRoomResponse, error) {
+	out := new(GetLiveRoomResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/GetLiveRoom", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) GetLiveRoomInfo(ctx context.Context, in *CommonIDAndUIDRequest, opts ...grpc.CallOption) (*CommonDataResponse, error) {
+	out := new(CommonDataResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/GetLiveRoomInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) GetBeLiveList(ctx context.Context, in *CommonIDRequest, opts ...grpc.CallOption) (*CommonDataResponse, error) {
+	out := new(CommonDataResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/GetBeLiveList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) GetDiscussVideoList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error) {
+	out := new(CommonDataResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/GetDiscussVideoList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) GetDiscussArticleList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error) {
+	out := new(CommonDataResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/GetDiscussArticleList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) GetDiscussBarrageList(ctx context.Context, in *CommonDiscussRequest, opts ...grpc.CallOption) (*CommonDataResponse, error) {
+	out := new(CommonDataResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/GetDiscussBarrageList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) UploadingMethod(ctx context.Context, in *UploadingMethodRequest, opts ...grpc.CallOption) (*UploadingMethodResponse, error) {
+	out := new(UploadingMethodResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/UploadingMethod", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) UploadingDir(ctx context.Context, in *UploadingDirRequest, opts ...grpc.CallOption) (*UploadingDirResponse, error) {
+	out := new(UploadingDirResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/UploadingDir", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) GetFullPathOfImage(ctx context.Context, in *GetFullPathOfImageRequest, opts ...grpc.CallOption) (*CommonDataResponse, error) {
+	out := new(CommonDataResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/GetFullPathOfImage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *otherServiceClient) Search(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*CommonDataResponse, error) {
+	out := new(CommonDataResponse)
+	err := c.cc.Invoke(ctx, "/other.service.v1.OtherService/Search", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OtherServiceServer is the server API for OtherService service.
 // All implementations must embed UnimplementedOtherServiceServer
 // for forward compatibility
 type OtherServiceServer interface {
 	GetHomeInfo(context.Context, *HomeRequest) (*HomeResponse, error)
+	GetLiveRoom(context.Context, *CommonIDRequest) (*GetLiveRoomResponse, error)
+	GetLiveRoomInfo(context.Context, *CommonIDAndUIDRequest) (*CommonDataResponse, error)
+	GetBeLiveList(context.Context, *CommonIDRequest) (*CommonDataResponse, error)
+	GetDiscussVideoList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error)
+	GetDiscussArticleList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error)
+	GetDiscussBarrageList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error)
+	UploadingMethod(context.Context, *UploadingMethodRequest) (*UploadingMethodResponse, error)
+	UploadingDir(context.Context, *UploadingDirRequest) (*UploadingDirResponse, error)
+	GetFullPathOfImage(context.Context, *GetFullPathOfImageRequest) (*CommonDataResponse, error)
+	Search(context.Context, *SearchRequest) (*CommonDataResponse, error)
 	mustEmbedUnimplementedOtherServiceServer()
 }
 
@@ -56,6 +166,36 @@ type UnimplementedOtherServiceServer struct {
 
 func (UnimplementedOtherServiceServer) GetHomeInfo(context.Context, *HomeRequest) (*HomeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHomeInfo not implemented")
+}
+func (UnimplementedOtherServiceServer) GetLiveRoom(context.Context, *CommonIDRequest) (*GetLiveRoomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLiveRoom not implemented")
+}
+func (UnimplementedOtherServiceServer) GetLiveRoomInfo(context.Context, *CommonIDAndUIDRequest) (*CommonDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLiveRoomInfo not implemented")
+}
+func (UnimplementedOtherServiceServer) GetBeLiveList(context.Context, *CommonIDRequest) (*CommonDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBeLiveList not implemented")
+}
+func (UnimplementedOtherServiceServer) GetDiscussVideoList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDiscussVideoList not implemented")
+}
+func (UnimplementedOtherServiceServer) GetDiscussArticleList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDiscussArticleList not implemented")
+}
+func (UnimplementedOtherServiceServer) GetDiscussBarrageList(context.Context, *CommonDiscussRequest) (*CommonDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDiscussBarrageList not implemented")
+}
+func (UnimplementedOtherServiceServer) UploadingMethod(context.Context, *UploadingMethodRequest) (*UploadingMethodResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadingMethod not implemented")
+}
+func (UnimplementedOtherServiceServer) UploadingDir(context.Context, *UploadingDirRequest) (*UploadingDirResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadingDir not implemented")
+}
+func (UnimplementedOtherServiceServer) GetFullPathOfImage(context.Context, *GetFullPathOfImageRequest) (*CommonDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFullPathOfImage not implemented")
+}
+func (UnimplementedOtherServiceServer) Search(context.Context, *SearchRequest) (*CommonDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Search not implemented")
 }
 func (UnimplementedOtherServiceServer) mustEmbedUnimplementedOtherServiceServer() {}
 
@@ -88,6 +228,186 @@ func _OtherService_GetHomeInfo_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OtherService_GetLiveRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommonIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).GetLiveRoom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/GetLiveRoom",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).GetLiveRoom(ctx, req.(*CommonIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_GetLiveRoomInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommonIDAndUIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).GetLiveRoomInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/GetLiveRoomInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).GetLiveRoomInfo(ctx, req.(*CommonIDAndUIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_GetBeLiveList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommonIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).GetBeLiveList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/GetBeLiveList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).GetBeLiveList(ctx, req.(*CommonIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_GetDiscussVideoList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommonDiscussRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).GetDiscussVideoList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/GetDiscussVideoList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).GetDiscussVideoList(ctx, req.(*CommonDiscussRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_GetDiscussArticleList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommonDiscussRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).GetDiscussArticleList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/GetDiscussArticleList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).GetDiscussArticleList(ctx, req.(*CommonDiscussRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_GetDiscussBarrageList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommonDiscussRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).GetDiscussBarrageList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/GetDiscussBarrageList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).GetDiscussBarrageList(ctx, req.(*CommonDiscussRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_UploadingMethod_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadingMethodRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).UploadingMethod(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/UploadingMethod",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).UploadingMethod(ctx, req.(*UploadingMethodRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_UploadingDir_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadingDirRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).UploadingDir(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/UploadingDir",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).UploadingDir(ctx, req.(*UploadingDirRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_GetFullPathOfImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFullPathOfImageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).GetFullPathOfImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/GetFullPathOfImage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).GetFullPathOfImage(ctx, req.(*GetFullPathOfImageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OtherService_Search_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtherServiceServer).Search(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/other.service.v1.OtherService/Search",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtherServiceServer).Search(ctx, req.(*SearchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OtherService_ServiceDesc is the grpc.ServiceDesc for OtherService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -98,6 +418,46 @@ var OtherService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetHomeInfo",
 			Handler:    _OtherService_GetHomeInfo_Handler,
+		},
+		{
+			MethodName: "GetLiveRoom",
+			Handler:    _OtherService_GetLiveRoom_Handler,
+		},
+		{
+			MethodName: "GetLiveRoomInfo",
+			Handler:    _OtherService_GetLiveRoomInfo_Handler,
+		},
+		{
+			MethodName: "GetBeLiveList",
+			Handler:    _OtherService_GetBeLiveList_Handler,
+		},
+		{
+			MethodName: "GetDiscussVideoList",
+			Handler:    _OtherService_GetDiscussVideoList_Handler,
+		},
+		{
+			MethodName: "GetDiscussArticleList",
+			Handler:    _OtherService_GetDiscussArticleList_Handler,
+		},
+		{
+			MethodName: "GetDiscussBarrageList",
+			Handler:    _OtherService_GetDiscussBarrageList_Handler,
+		},
+		{
+			MethodName: "UploadingMethod",
+			Handler:    _OtherService_UploadingMethod_Handler,
+		},
+		{
+			MethodName: "UploadingDir",
+			Handler:    _OtherService_UploadingDir_Handler,
+		},
+		{
+			MethodName: "GetFullPathOfImage",
+			Handler:    _OtherService_GetFullPathOfImage_Handler,
+		},
+		{
+			MethodName: "Search",
+			Handler:    _OtherService_Search_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -32,23 +32,25 @@ export const useLoginProp = () => {
 
 
     const loginForm = reactive<loginReq>({
-        username: "",
+        name: "",
         password: ""
     })
 
     const regFormRef = ref<FormInstance>()
     const regForm = reactive<registReq>({
         email: "",
-        username: "",
+        name: "",
         password: "",
-        verificationCode: "",
+        password2: "",
+        captcha: "",
     })
 
     const forgetFormRef = ref<FormInstance>()
     const forgetForm = reactive<forgetReq>({
         email: "",
         password: "",
-        verificationCode: "",
+        password2: "",
+        captcha: "",
     })
 
     let sendEmailInfo = reactive<sendEmailInfo>({
@@ -216,7 +218,7 @@ export const useForgetrMethod = (forgetForm: forgetReq, currentModel: Ref<boolea
                     })
                     forgetForm.email = ""
                     forgetForm.password = ""
-                    forgetForm.verificationCode = ""
+                    forgetForm.captcha = ""
                     //清除表单校验 需要延迟
                     setTimeout(() => {
                         formEl.clearValidate()

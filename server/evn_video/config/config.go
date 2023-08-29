@@ -20,6 +20,9 @@ type Config struct {
 	MC    *MysqlConfig
 	JC    *JwtConfig
 	AC    *AesConfig
+	Host  *HostConfig
+	UP    *UploadConfig
+	Vod   *VodConfig
 }
 type ServerConfig struct {
 	Name string
@@ -56,13 +59,48 @@ type AesConfig struct {
 	AesKey string
 }
 
+type HostConfig struct {
+	TencentOssHost string
+	LocalHost      string
+}
+
+type TencentConfig struct {
+	SecretId        string `ini:"secretId"`
+	SecretKey       string `ini:"secretKey"`
+	Appid           string `ini:"appid"`
+	Bucket          string `ini:"bucket"`
+	Region          string `ini:"region"`
+	DurationSeconds int    `ini:"durationSeconds"`
+	Host            string `ini:"host"`
+	TmpFileUrl      string
+}
+
+type LocalConfig struct {
+	FileUrl    string
+	TmpFileUrl string
+}
+
+type UploadConfig struct {
+	*TencentConfig
+	*LocalConfig
+}
+
+type VodConfig struct {
+	Appid                 int64
+	Key                   string
+	LicenseUrl            string
+	AudioVideoType        string
+	RawAdaptiveDefinition int64
+	PsignExpire           int64
+}
+
 func InitConfig() *Config {
 	//初始化viper
 	conf := &Config{viper: viper.New()}
 	workDir, _ := os.Getwd()
 	conf.viper.SetConfigName("config")
 	conf.viper.SetConfigType("yaml")
-	conf.viper.AddConfigPath("/opt/lbk_background/evn_project/config")
+	conf.viper.AddConfigPath("/opt/evn/evn_video/config")
 	conf.viper.AddConfigPath(workDir + "/config")
 	//读入配置
 	err := conf.viper.ReadInConfig()
@@ -78,6 +116,9 @@ func InitConfig() *Config {
 	conf.ReadMysqlConfig()
 	conf.ReadJwtConfig()
 	conf.ReadAesConfig()
+	conf.ReadHostConfig()
+	conf.ReadUploadConfig()
+	conf.ReadVodConfig()
 	return conf
 }
 
@@ -168,4 +209,47 @@ func (c *Config) ReadAesConfig() {
 		AesKey: c.viper.GetString("aes.key"),
 	}
 	c.AC = ac
+}
+
+// ReadHostConfig 读取腾讯云oss配置
+func (c *Config) ReadHostConfig() {
+	hostConfig := &HostConfig{}
+	hostConfig.TencentOssHost = c.viper.GetString("host.tencentOss.host")
+	hostConfig.LocalHost = c.viper.GetString("host.local.host")
+	c.Host = hostConfig
+}
+
+// ReadUploadConfig 读取上传配置
+func (c *Config) ReadUploadConfig() {
+	tencentConfig := &TencentConfig{}
+	tencentConfig.Region = c.viper.GetString("upload.tencentOss.region")
+	tencentConfig.Bucket = c.viper.GetString("upload.tencentOss.bucket")
+	tencentConfig.SecretId = c.viper.GetString("upload.tencentOss.secretId")
+	tencentConfig.SecretKey = c.viper.GetString("upload.tencentOss.secretKey")
+	tencentConfig.Appid = c.viper.GetString("upload.tencentOss.appid")
+	tencentConfig.Host = c.viper.GetString("upload.tencentOss.host")
+	tencentConfig.DurationSeconds = c.viper.GetInt("upload.tencentOss.durationSeconds")
+	tencentConfig.TmpFileUrl = c.viper.GetString("upload.tencentOss.tmpFileUrl")
+
+	localConfig := &LocalConfig{}
+	localConfig.FileUrl = c.viper.GetString("upload.local.fileUrl")
+	localConfig.TmpFileUrl = c.viper.GetString("upload.local.tmpFileUrl")
+
+	upConfig := &UploadConfig{
+		tencentConfig,
+		localConfig,
+	}
+	c.UP = upConfig
+}
+
+// ReadVodConfig 读取腾讯云vod配置
+func (c *Config) ReadVodConfig() {
+	vodConfig := &VodConfig{}
+	vodConfig.Appid = c.viper.GetInt64("vod.appid")
+	vodConfig.Key = c.viper.GetString("vod.key")
+	vodConfig.LicenseUrl = c.viper.GetString("vod.licenseUrl")
+	vodConfig.AudioVideoType = c.viper.GetString("vod.audioVideoType")
+	vodConfig.RawAdaptiveDefinition = c.viper.GetInt64("vod.rawAdaptiveDefinition")
+	vodConfig.PsignExpire = c.viper.GetInt64("vod.psignExpire")
+	c.Vod = vodConfig
 }

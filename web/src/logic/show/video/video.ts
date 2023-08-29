@@ -1,13 +1,14 @@
 import { danmakuApi, getVideoBarrageList, getVideoContributionByID, likeVideo, sendVideoBarrage } from "@/apis/contribution";
 import globalScss from "@/assets/styles/global/export.module.scss";
 import { useGlobalStore, useUserStore } from "@/store/main";
-import { GetVideoBarrageListReq, GetVideoContributionByIDReq, LikeVideoReq, SendVideoBarrageReq, VideoInfo } from "@/types/show/video/video";
+import { GetVideoBarrageListReq, GetVideoContributionByIDReq, LikeVideoReq, SendVideoBarrageReq, VideoInfo,BarrageListConvert } from "@/types/show/video/video";
 import DPlayer, { DPlayerDanmakuItem, DPlayerVideoQuality } from "dplayer";
 import Swal from 'sweetalert2';
 import { Ref, UnwrapNestedRefs, reactive, ref } from "vue";
 import { RouteLocationNormalizedLoaded, Router, useRoute, useRouter } from "vue-router";
 import { numberOfViewers, responseBarrageNum } from './socketFun';
-
+import TCPlayer from 'tcplayer.js';
+import 'tcplayer.js/dist/tcplayer.min.css';
 
 export const useVideoProp = () => {
   const route = useRoute()
@@ -17,6 +18,7 @@ export const useVideoProp = () => {
   const videoRef = ref()
   const videoID = ref<number>(0)
   const videoInfo = reactive(<VideoInfo>{})
+  const barrageListConvert = reactive(<BarrageListConvert>{})
   const barrageInput = ref("")
   const barrageListShow = ref(false)
   const videoBarrage = ref(true)
@@ -34,6 +36,7 @@ export const useVideoProp = () => {
     videoRef,
     videoID,
     videoInfo,
+    barrageListConvert,
     barrageInput,
     barrageListShow,
     liveNumber,
@@ -182,6 +185,156 @@ export const useInit = async (videoRef: Ref, route: RouteLocationNormalizedLoade
     global.globalData.loading.loading = false
     console.log(err)
   }
+}
+
+export const tcPlayerInit = async (myRef: Ref, route: RouteLocationNormalizedLoaded, Router: Router, videoID: Ref<Number>, videoInfo: UnwrapNestedRefs<VideoInfo>, global: any) => {
+  try {
+    //绑定视频id
+    if (!route.params.id) {
+      Router.back()
+      Swal.fire({
+        title: "获取视频失败",
+        heightAuto: false,
+        confirmButtonColor: globalScss.colorButtonTheme,
+        icon: "error",
+      })
+      Router.back()
+      return
+    }
+    global.globalData.loading.loading = true
+    videoID.value = Number(route.params.id)
+    //得到视频信息
+    const vinfo = await getVideoContributionByID(<GetVideoContributionByIDReq>{
+      video_id: videoID.value
+    })
+    if (!vinfo.data) return false
+    videoInfo.videoInfo = vinfo.data.videoInfo
+    videoInfo.recommendList = vinfo.data.recommendList
+
+    //获取视频弹幕信息
+    const barrageList = await getVideoBarrageList(<GetVideoBarrageListReq>{
+      id: videoID.value.toString()
+    })
+    if (!barrageList.data) return false
+    videoInfo.barrageList = barrageList.data
+    //获取当前用户信息
+    const userStore = useUserStore()
+    //初始化播放器
+    var tp:any
+    if (videoInfo.videoInfo.fileID != "") {
+      tp = new TCPlayer(myRef.value, {
+        fileID: videoInfo.videoInfo.fileID,
+        appID: videoInfo.videoInfo.appID,
+        psign: videoInfo.videoInfo.pSign,
+        licenseUrl: videoInfo.videoInfo.licenseUrl,
+        autoplay: true,
+        plugins: {
+          ProgressMarker: true,
+          ContextMenu: {
+            statistic: true
+          },
+          ContinuePlay: { // 开启续播功能
+            // auto: true, //[可选] 是否在视频播放后自动续播
+            text:'上次播放至 ', //[可选] 提示文案
+            btnText: '恢复播放' //[可选] 按钮文案
+          },
+        }
+      })
+    }else{
+      tp = new TCPlayer(myRef.value, {
+        autoplay: true,
+        reportable: false,
+        licenseUrl: videoInfo.videoInfo.licenseUrl,
+        sources: [{
+          src: bestQualityUrl(videoInfo),
+          type: 'video/mp4',
+        }],    
+        plugins: {
+          ProgressMarker: true,
+          ContextMenu: {
+            statistic: true
+          }
+        }
+      })
+    }
+    console.log(tp)
+    global.globalData.loading.loading = false
+    return tp
+  } catch (err) {
+    global.globalData.loading.loading = false
+    console.log(err)
+  }
+}
+
+export const tcSendBarrage = async (text: Ref<string>, tcplayer: any,tcplayerBarrage: any, userStore: any, videoInfo: UnwrapNestedRefs<VideoInfo>, socket: WebSocket) => {
+  const res = await sendVideoBarrage(<SendVideoBarrageReq>{
+    author: userStore.userInfoData.username,
+    color: 16777215,
+    id: videoInfo.videoInfo.id.toString(),
+    text: text.value,
+    time: tcplayer.currentTime(),
+    type: 0,
+    token: userStore.userInfoData.token,
+  })
+
+  console.log(userStore.userInfoData)
+  if (res.code != 0) {
+    Swal.fire({
+      title: "弹幕服务异常",
+      heightAuto: false,
+      confirmButtonColor: globalScss.colorButtonTheme,
+      icon: "error",
+    })
+    return
+  }
+  var barrage = {
+    "mode":1,
+    "text": text.value,
+    "size": 25,
+    "color":'#ff0000',
+  };
+  // 即时发送弹幕
+  tcplayerBarrage.send(barrage);
+
+  text.value = ""
+  let data = JSON.stringify({
+    type: "sendBarrage",
+    data: ""
+  })
+  socket.send(data)
+
+}
+
+export const barrageConvert = (videoInfo: UnwrapNestedRefs<VideoInfo>) =>{
+  const barrageList = videoInfo.barrageList;
+  const convertedList: BarrageListConvert[] = [];
+
+  for (const barrage of barrageList) {
+    const convertedBarrage: BarrageListConvert = {
+      mode: 1, // 设置合适的弹幕模式
+      text: barrage.text,
+      stime: barrage.time *1000,
+      size: 25, // 设置合适的字体大小
+      color: '#ffffff' // 设置合适的字体颜色
+    };
+
+    convertedList.push(convertedBarrage);
+  }
+
+  return convertedList;
+}
+
+export const bestQualityUrl = (videoInfo: UnwrapNestedRefs<VideoInfo>) =>{
+  if (videoInfo.videoInfo.video != ""){
+    return videoInfo.videoInfo.video
+  }else if (videoInfo.videoInfo.video_720p != "") {
+    return videoInfo.videoInfo.video_720p
+  }else if (videoInfo.videoInfo.video_480p != "") {
+    return videoInfo.videoInfo.video_480p
+  }else if (videoInfo.videoInfo.video_360p != "") {
+    return videoInfo.videoInfo.video_360p
+  }
+  return ""
 }
 
 export const useWebSocket = (userStore: any, videoInfo: UnwrapNestedRefs<VideoInfo>, Router: Router, liveNumber: Ref<number>) => {

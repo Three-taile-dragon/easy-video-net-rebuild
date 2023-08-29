@@ -1,0 +1,29 @@
+//grpc 登陆服务配置文件
+
+syntax = "proto3";
+package ws.service.v1;
+option go_package = "evn_project/pkg/service/ws.service.v1";
+
+
+message CommonDataResponse{
+  string data = 1;
+}
+
+message CommonIDRequest {
+  uint32 ID = 1;
+}
+
+message CommonIDAndUIDRequest {
+  uint32 ID = 1;
+  uint32 UID = 2;
+}
+
+// 总的消息体
+message Message {
+  string msgType  = 1;
+  bytes data = 2;
+}
+
+service WsService {
+  rpc GetChatList(CommonIDRequest) returns (CommonDataResponse) {}
+}

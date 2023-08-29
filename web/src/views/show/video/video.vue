@@ -42,8 +42,11 @@
                     </div>
                 </div>
                 <div class="video-box">
-                    <div ref="videoRef" :class="{ 'player': true, 'dplayer-comment-show': !userStore.userInfoData.token }"
-                        id="dplay" />
+                <!-- 播放器配置 -->
+                    <!-- <div ref="videoRef" :class="{ 'player': true, 'dplayer-comment-show': !userStore.userInfoData.token }"
+                        id="dplay" /> -->
+                        <video ref="myRef" :class="{ 'player': true, 'dplayer-comment-show': !userStore.userInfoData.token }" id="player-container-id" preload="auto" playsinline webkit-playsinline>
+    </video>
                     <div class="video-sending">
                         <div class="live-info">
                             <span>{{ liveNumber }} 人正在看</span> , <span> 已装填 {{ videoInfo?.videoInfo?.barrageNumber }}
@@ -260,7 +263,7 @@ import videoIntroduce from "@/components/videoIntroduce/videoIntroduce.vue";
 import Card from "@/components/videoPageVideoCard/videoPageVideoCard.vue";
 import useAttention from "@/hooks/useAttention";
 import usePersonalLetter from "@/hooks/usePersonalLetter";
-import { useInit, useLikeVideo, useSendBarrage, useVideoProp, useWebSocket } from "@/logic/show/video/video";
+import { useInit, useLikeVideo, useSendBarrage, useVideoProp, useWebSocket, tcPlayerInit, tcSendBarrage,barrageConvert } from "@/logic/show/video/video";
 import { GetVideoCommentRes } from '@/types/show/video/video';
 import { formattingSecondTime, rFC3339ToTime } from "@/utils/conversion/timeConversion";
 import { vRemoveFocus } from "@/utils/customInstruction/focus";
@@ -270,7 +273,11 @@ import DPlayer from "dplayer";
 import Swal from "sweetalert2";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { VueEllipsis3 } from 'vue-ellipsis-3';
+import TcplayerBarragePlugin from 'tcplayer-barrage-plugin';
 
+// // import TCPlayer from '@/utils/tcplayer/tcplayer.v5.0.0.min.js'
+import TCPlayer from 'tcplayer.js';
+import 'tcplayer.js/dist/tcplayer.min.css';
 
 components: {
     commentPosting
@@ -282,11 +289,18 @@ components: {
 }
 
 var dp = ref(<DPlayer>{})  //播放器配置对象
+
+const myRef = ref(null);
+
+var player = ref(tcPlayerInit)
+var tcplayerBarrage = ref(TcplayerBarragePlugin)
+
 var socket: WebSocket //socket
 const { videoRef, route, router, userStore, videoID, videoInfo, barrageInput, barrageListShow, liveNumber, replyCommentsDialog, videoBarrage, global } = useVideoProp()
 
 const sendBarrageEvent = () => {
-    useSendBarrage(barrageInput, dp.value, userStore, videoInfo, socket)
+    // useSendBarrage(barrageInput, dp.value, userStore, videoInfo, socket)
+    tcSendBarrage(barrageInput, player, tcplayerBarrage,userStore, videoInfo, socket)
 }
 
 //回复二级评论
@@ -324,9 +338,6 @@ const favoriteVideoShowClose = (done: () => void) => {
     done()
 }
 
-
-
-
 const watchPath = watch(() => route.path, async () => {
     console.log(route.path)
     if (!route.path.includes('/videoShow/video')) {
@@ -361,7 +372,13 @@ const notOpen = () => {
 }
 
 onMounted(async () => {
-
+    player = await tcPlayerInit(myRef, route, router, videoID, videoInfo, global)
+    tcplayerBarrage = new TcplayerBarragePlugin(player);
+    tcplayerBarrage.init();
+  // 加载弹幕列表
+   const barrageList = barrageConvert(videoInfo) 
+    tcplayerBarrage.load(barrageList);
+    tcplayerBarrage.start();
 })
 
 onUnmounted(() => {

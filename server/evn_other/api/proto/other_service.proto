@@ -4,43 +4,81 @@ syntax = "proto3";
 package other.service.v1;
 option go_package = "evn_other/pkg/service/other.service.v1";
 
-
-
 message HomeRequest{
   int64 page = 1;
   int64 size = 2;
 }
 
-//message rotograph {
-//  string title = 1;
-//  string cover = 2;
-//  string color = 3;
-//  string type = 4;
-//  int64 to_id = 5;
-//}
-//
-//message videoList {
-//  uint32 id = 1;
-//  uint32 uid = 2;
-//  string title = 3;
-//  string video = 4;
-//  string cover = 5;
-//  int64 video_duration = 6;
-//  repeated string label = 7;
-//  string introduce = 8;
-//  int32 heat = 9;
-//  int32 barrageNumber = 10;
-//  string username = 11;
-//  string create_at = 12;
-//}
-
 message HomeResponse{
-//     repeated rotograph rotograph = 1;
-//     repeated videoList = 2;
     string rotograph = 1;
     string videoList = 2;
 }
 
+message CommonDataResponse{
+  string data = 1;
+}
+
+message CommonIDRequest {
+  uint32 ID = 1;
+}
+
+message CommonIDAndUIDRequest {
+  uint32 ID = 1;
+  uint32 UID = 2;
+}
+
+message GetLiveRoomResponse {
+  string Address = 1;
+  string Key = 2;
+}
+
+message CommonDiscussRequest {
+  int32 Page = 1;
+  int32 Size = 2;
+  uint32 Uid = 3;
+}
+
+message UploadingMethodRequest{
+  string method = 1;
+}
+
+message UploadingMethodResponse{
+  string Tp = 1;
+}
+
+message UploadingDirRequest{
+  string Interface = 1;
+}
+
+message UploadingDirResponse{
+  string Path = 1;
+  float Quality = 2;
+}
+
+message GetFullPathOfImageRequest{
+  string Path = 1;
+  string Type = 2;
+}
+
+message SearchRequest{
+  int32 Page = 1;
+  int32 Size = 2;
+  string Keyword = 3;
+  string Type = 4;
+  uint32 Uid = 5;
+}
+
+
 service OtherService {
   rpc GetHomeInfo(HomeRequest) returns (HomeResponse) {}
+  rpc GetLiveRoom(CommonIDRequest) returns (GetLiveRoomResponse) {}
+  rpc GetLiveRoomInfo(CommonIDAndUIDRequest) returns (CommonDataResponse) {}
+  rpc GetBeLiveList(CommonIDRequest) returns (CommonDataResponse) {}
+  rpc GetDiscussVideoList(CommonDiscussRequest) returns (CommonDataResponse) {}
+  rpc GetDiscussArticleList(CommonDiscussRequest) returns (CommonDataResponse) {}
+  rpc GetDiscussBarrageList(CommonDiscussRequest) returns (CommonDataResponse) {}
+  rpc UploadingMethod(UploadingMethodRequest) returns (UploadingMethodResponse){}
+  rpc UploadingDir(UploadingDirRequest) returns (UploadingDirResponse){}
+  rpc GetFullPathOfImage(GetFullPathOfImageRequest) returns (CommonDataResponse){}
+  rpc Search(SearchRequest) returns (CommonDataResponse){}
 }

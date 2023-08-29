@@ -1,6 +1,9 @@
 package other
 
-import "time"
+import (
+	"dragonsss.cn/evn_common/model/common"
+	"time"
+)
 
 type HomeRequest struct {
 	Page int64 `json:"page"`
@@ -35,7 +38,101 @@ type VideoInfo struct {
 
 type VideoInfoList []VideoInfo
 
-//type GetHomeInfoResponse struct {
-//	Rotograph rotographInfoList `json:"rotograph"`
-//	VideoList videoInfoList     `json:"videoList"`
-//}
+type GetLiveRoomInfoReceiveStruct struct {
+	RoomID uint `json:"room_id"`
+}
+
+type GetLiveRoomInfoResponseStruct struct {
+	Username   string `json:"username"`
+	Photo      string `json:"photo"`
+	LiveTitle  string `json:"live_title"`
+	Flv        string `json:"flv"`
+	LicenseUrl string `json:"licenseUrl"`
+}
+
+type BeLiveInfo struct {
+	ID       uint   `json:"id"`
+	Username string `json:"username"`
+	Photo    string `json:"photo"`
+	Img      string `json:"img"`
+	Title    string `json:"title"`
+	Online   int    `json:"online"`
+}
+
+type BeLiveInfoList []BeLiveInfo
+
+type GetDiscussVideoListReceiveStruct struct {
+	PageInfo common.PageInfo `json:"page_info"`
+}
+
+type GetDiscussVideoListItem struct {
+	ID        uint      `json:"id"`
+	Username  string    `json:"username"`
+	Photo     string    `json:"photo"`
+	Comment   string    `json:"comment"`
+	Cover     string    `json:"cover"`
+	Title     string    `json:"title"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type GetDiscussVideoListStruct []GetDiscussVideoListItem
+
+type GetDiscussArticleListReceiveStruct struct {
+	PageInfo common.PageInfo `json:"page_info"`
+}
+
+type GetDiscussArticleListItem struct {
+	ID        uint      `json:"id"`
+	Username  string    `json:"username"`
+	Photo     string    `json:"photo"`
+	Comment   string    `json:"comment"`
+	Cover     string    `json:"cover"`
+	Title     string    `json:"title"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type GetDiscussArticleListStruct []GetDiscussArticleListItem
+
+type GetDiscussBarrageListReceiveStruct struct {
+	PageInfo common.PageInfo `json:"page_info"`
+}
+
+type GetDiscussBarrageListItem struct {
+	ID        uint      `json:"id"`
+	Username  string    `json:"username"`
+	Photo     string    `json:"photo"`
+	Comment   string    `json:"comment"`
+	Cover     string    `json:"cover"`
+	Title     string    `json:"title"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type GetDiscussBarrageListStruct []GetDiscussBarrageListItem
+
+type UploadingMethodStruct struct {
+	Method string `json:"method"  binding:"required"`
+}
+
+type UploadingDirStruct struct {
+	Interface string `json:"interface"  binding:"required"`
+}
+
+type GetFullPathOfImageMethodStruct struct {
+	Path string `json:"path"  binding:"required"`
+	Type string `json:"type"  binding:"required"`
+}
+
+type SearchStruct struct {
+	PageInfo common.PageInfo `json:"page_info" binding:"required"`
+	Type     string          `json:"type" binding:"required"`
+}
+
+type UserInfo struct {
+	ID          uint   `json:"id"`
+	Username    string `json:"username"`
+	Photo       string `json:"photo"`
+	Signature   string `json:"signature"`
+	IsAttention bool   `json:"is_attention"`
+}
+
+type UserInfoList []UserInfo

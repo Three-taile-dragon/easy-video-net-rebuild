@@ -40,7 +40,7 @@ type GormConn struct {
 }
 
 func (g *GormConn) Begin() {
-	g.db = GetDB().Begin()
+	g.tx = GetDB().Begin()
 }
 
 func New() *GormConn {

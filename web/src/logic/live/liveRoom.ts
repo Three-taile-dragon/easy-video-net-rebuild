@@ -10,6 +10,10 @@ import flvJs from "flv.js";
 import Swal from 'sweetalert2';
 import { nextTick, reactive, Ref, ref, UnwrapNestedRefs } from "vue";
 import { RouteLocationNormalizedLoaded, Router, useRoute, useRouter } from "vue-router";
+import TCPlayer from 'tcplayer.js';
+import 'tcplayer.js/dist/tcplayer.min.css';
+import { fa } from "element-plus/es/locale";
+
 export const useLiveRoomProp = () => {
   const route = useRoute()
   const router = useRouter()
@@ -176,6 +180,65 @@ export const useInit = async (videoRef: Ref, route: RouteLocationNormalizedLoade
       },
     });
     return dp
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+export const tcPlayerInit = async (myRef: Ref, route: RouteLocationNormalizedLoaded, Router: Router, roomID: Ref<Number>, liveInfo: UnwrapNestedRefs<GetLiveRoomInfoRes>) => {
+  try {
+    //绑定房间
+    if (!route.params.id) {
+      Router.back()
+      Swal.fire({
+        title: "访问房间失败",
+        heightAuto: false,
+        confirmButtonColor: globalScss.colorButtonTheme,
+        icon: "error",
+      })
+      Router.back()
+      return
+    }
+    roomID.value = Number(route.params.id)
+    //获取直播信息
+
+    const li = await getLiveRoomInfo(<GetLiveRoomInfoReq>{
+      room_id: roomID.value
+    })
+
+    if (!li.data) {
+      Swal.fire({
+        title: "该用户未进行直播配置",
+        heightAuto: false,
+        confirmButtonColor: globalScss.colorButtonTheme,
+        icon: "error",
+      })
+      return
+    }
+    liveInfo.live_title = li.data?.live_title
+    liveInfo.photo = li.data?.photo
+    liveInfo.username = li.data?.username
+    liveInfo.flv = li.data?.flv
+    liveInfo.licenseUrl = li.data?.licenseUrl
+    //初始化播放器
+    var tp:any
+    tp = new TCPlayer(myRef.value, {
+      autoplay: true,
+      reportable: false,
+      licenseUrl: liveInfo.licenseUrl,
+      sources: [{
+        src: liveInfo.flv,
+        type: 'video/flv',
+      }],    
+      plugins: {
+        ProgressMarker: true,
+        ContextMenu: {
+          statistic: true
+        }
+      }
+    })
+    console.log(tp)
+    return tp
   } catch (err) {
     console.log(err)
   }

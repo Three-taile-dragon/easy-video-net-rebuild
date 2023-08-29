@@ -1,6 +1,9 @@
 package user
 
 import (
+	"dragonsss.cn/evn_api/api/cors"
+	"dragonsss.cn/evn_api/api/midd"
+	"dragonsss.cn/evn_api/api/user/rpc"
 	"dragonsss.cn/evn_api/router"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -20,10 +23,58 @@ func init() {
 func (*RouterUser) Router(r *gin.Engine) {
 	//初始化grpc客户端连接
 	//使得可以调用逻辑函数
-	InitRpcUserClient()
+	rpc.InitRpcUserClient()
 	h := New()
-	r.POST("/api/getCaptcha", h.getCaptcha)
-	r.POST("/api/login", h.login)
-	r.POST("/api/register", h.register)
-	r.POST("/api/refreshToken", h.refreshToken)
+	group := r.Group("/api/user")
+	group.Use(cors.Cors())
+	group.POST("/getCaptcha", h.getCaptcha)
+	group.POST("/login", h.login)
+	group.POST("/register", h.register)
+	group.POST("/refreshToken", h.refreshToken)
+	group.POST("/forget", h.forget)
+	//非必须登入
+	spaceRouterNotNecessary := r.Group("/api/user/space")
+	spaceRouterNotNecessary.Use(cors.Cors())
+	spaceRouterNotNecessary.Use(midd.TokenVerifyNotNecessary())
+	{
+		spaceRouterNotNecessary.POST("/getSpaceIndividual", h.getSpaceIndividual)
+		spaceRouterNotNecessary.POST("/getReleaseInformation", h.getReleaseInformation)
+	}
+	//必须登入
+	spaceRouter := r.Group("/api/user/space")
+	spaceRouter.Use(cors.Cors())
+	spaceRouter.Use(midd.TokenVerify())
+	{
+		spaceRouter.POST("/getAttentionList", h.getAttentionList)
+		spaceRouter.POST("/getVermicelliList", h.getVermicelliList)
+	}
+	userRouter := r.Group("/api/user")
+	userRouter.Use(cors.Cors())
+	userRouter.Use(midd.TokenVerify())
+	{
+		u := NewUserControllers()
+		userRouter.POST("/getUserInfo", u.getUserInfo)
+		userRouter.POST("/setUserInfo", u.setUserInfo)
+		userRouter.POST("/determineNameExists", u.determineNameExists)
+		userRouter.POST("/updateAvatar", u.updateAvatar)
+		userRouter.POST("/getLiveData", u.getLiveData)
+		userRouter.POST("/saveLiveData", u.saveLiveData)
+		userRouter.POST("/sendEmailVerificationCodeByChangePassword", u.sendEmailVerificationCodeByChangePassword)
+		userRouter.POST("/changePassword", u.changePassword)
+		userRouter.POST("/attention", u.attention)
+		userRouter.POST("/createFavorites", u.createFavorites)
+		userRouter.POST("/getFavoritesList", u.getFavoritesList)
+		userRouter.POST("/deleteFavorites", u.deleteFavorites)
+		userRouter.POST("/favoriteVideo", u.favoriteVideo)
+		userRouter.POST("/getFavoritesListByFavoriteVideo", u.getFavoritesListByFavoriteVideo)
+		userRouter.POST("/getFavoriteVideoList", u.getFavoriteVideoList)
+		userRouter.POST("/getRecordList", u.getRecordList)
+		userRouter.POST("/clearRecord", u.clearRecord)
+		userRouter.POST("/deleteRecordByID", u.deleteRecordByID)
+		userRouter.POST("/getNoticeList", u.getNoticeList)
+		userRouter.POST("/getChatList", u.getChatList)
+		userRouter.POST("/getChatHistoryMsg", u.getChatHistoryMsg)
+		userRouter.POST("/personalLetter", u.personalLetter)
+		userRouter.POST("/deleteChatItem", u.deleteChatItem)
+	}
 }

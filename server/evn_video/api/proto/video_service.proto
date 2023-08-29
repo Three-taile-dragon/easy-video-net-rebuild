@@ -1,0 +1,96 @@
+//grpc 登陆服务配置文件
+
+syntax = "proto3";
+package video.service.v1;
+option go_package = "evn_video/pkg/service/video.service.v1";
+
+message CommonDataResponse{
+  string data = 1;
+}
+
+message CommonIDRequest {
+  uint32 ID = 1;
+}
+
+message CommonIDAndUIDRequest {
+  uint32 ID = 1;
+  uint32 UID = 2;
+}
+
+message CommonPageInfo {
+  int32 Page = 1;
+  int32 Size = 2;
+  string Keyword = 3;
+}
+
+message GetVideoCommentRequest {
+  CommonPageInfo PageInfo = 1;
+  uint32 VideoID = 2;
+}
+
+message GetVideoContributionByIDRequest {
+  uint32 VideoID = 1;
+  uint32 Uid = 2;
+}
+
+message SendVideoBarrageRequest{
+  string Author = 1;
+  uint32 Color = 2;
+  string ID = 3;
+  string Text = 4;
+  float Time = 5;
+  uint32 Type = 6;
+  uint32 Uid = 7;
+}
+
+message CreateVideoContributionRequest{
+    string Video = 1;
+    string VideoUploadType = 2;
+    string Cover = 3;
+    string CoverUploadType = 4;
+    string Title = 5;
+    bool Reprinted = 6;
+    repeated string Label = 7;
+    string Introduce = 8;
+    int64 VideoDuration = 9;
+    string Media = 10;
+    uint32 Uid = 11;
+}
+
+message UpdateVideoContributionRequest{
+  uint32 ID = 1;
+  string Cover = 2;
+  string CoverUploadType = 3;
+  string Title = 4;
+  bool Reprinted = 5;
+  repeated string Label = 6;
+  string Introduce = 7;
+  uint32 Uid = 8;
+}
+
+message VideoPostCommentRequest {
+  uint32 VideoID = 1;
+  string Content = 2;
+  uint32 ContentID = 3;
+  uint32 Uid = 4;
+}
+
+message GetVideoManagementListRequest {
+  CommonPageInfo PageInfo = 1;
+  uint32 Uid = 2;
+}
+
+
+service VideoService {
+  rpc GetVideoBarrage(CommonIDRequest) returns (CommonDataResponse) {}
+  rpc GetVideoBarrageList(CommonIDRequest) returns (CommonDataResponse) {}
+  rpc GetVideoComment(GetVideoCommentRequest) returns (CommonDataResponse) {}
+  rpc GetVideoContributionByID(GetVideoContributionByIDRequest) returns (CommonDataResponse) {}
+  rpc SendVideoBarrage(SendVideoBarrageRequest) returns (CommonDataResponse) {}
+  rpc CreateVideoContribution(CreateVideoContributionRequest) returns (CommonDataResponse) {}
+  rpc UpdateVideoContribution(UpdateVideoContributionRequest) returns (CommonDataResponse) {}
+  rpc DeleteVideoByID(CommonIDAndUIDRequest) returns (CommonDataResponse) {}
+  rpc VideoPostComment(VideoPostCommentRequest) returns (CommonDataResponse) {}
+  rpc GetVideoManagementList(GetVideoManagementListRequest) returns (CommonDataResponse) {}
+  rpc LikeVideo(CommonIDAndUIDRequest) returns (CommonDataResponse) {}
+}

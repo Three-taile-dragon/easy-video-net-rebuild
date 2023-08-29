@@ -13,8 +13,8 @@
           :rules="registerRules"
         >
           <h3 class="container-title">Register</h3>
-          <el-form-item class="form-item" prop="username">
-            <el-input v-model="regForm.username" type="text" placeholder="昵称" />
+          <el-form-item class="form-item" prop="name">
+            <el-input v-model="regForm.name" type="text" placeholder="昵称" />
           </el-form-item>
           <el-form-item class="form-item" prop="email">
             <el-input
@@ -41,9 +41,17 @@
               placeholder="密码"
             />
           </el-form-item>
-          <el-form-item class="form-item" prop="verificationCode">
+          <el-form-item class="form-item" prop="password2">
             <el-input
-              v-model="regForm.verificationCode"
+              v-model="regForm.password2"
+              type="password"
+              name="password"
+              placeholder="再次输入密码"
+            />
+            </el-form-item>
+          <el-form-item class="form-item" prop="captcha">
+            <el-input
+              v-model="regForm.captcha"
               type="text"
               name="password"
               placeholder="验证码"
@@ -87,9 +95,17 @@
               placeholder="密码"
             />
           </el-form-item>
-          <el-form-item class="form-item" prop="verificationCode">
+          <el-form-item class="form-item" prop="password2">
             <el-input
-              v-model="forgetForm.verificationCode"
+              v-model="regForm.password2"
+              type="password"
+              name="password"
+              placeholder="再次输入密码"
+            />
+            </el-form-item>
+          <el-form-item class="form-item" prop="captcha">
+            <el-input
+              v-model="forgetForm.captcha"
               type="text"
               name="password"
               placeholder="验证码"
@@ -109,8 +125,8 @@
         >
           <h2 class="container-title">Login</h2>
 
-          <el-form-item class="form-item" prop="username">
-            <el-input v-model="loginForm.username" type="text" placeholder="昵称" />
+          <el-form-item class="form-item" prop="name">
+            <el-input v-model="loginForm.name" type="text" placeholder="昵称" />
           </el-form-item>
           <el-form-item class="form-item" prop="passwoed">
             <el-input

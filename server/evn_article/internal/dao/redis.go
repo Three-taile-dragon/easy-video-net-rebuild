@@ -2,7 +2,7 @@ package dao
 
 import (
 	"context"
-	"dragonsss.cn/evn_project/config"
+	"dragonsss.com/evn_article/config"
 	"github.com/go-redis/redis/v8"
 	"time"
 )
@@ -30,4 +30,9 @@ func (rc *RedisCache) Put(ctx context.Context, key, value string, expire time.Du
 func (rc *RedisCache) Get(ctx context.Context, key string) (string, error) {
 	result, err := rc.rdb.Get(ctx, key).Result()
 	return result, err
+}
+
+// R 直接操作Redis
+func (rc *RedisCache) R() *redis.Client {
+	return rc.rdb
 }

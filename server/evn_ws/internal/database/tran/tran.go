@@ -1,7 +1,7 @@
 package tran
 
 import (
-	"dragonsss.cn/evn_project/internal/database"
+	"dragonsss.com/evn_ws/internal/database"
 )
 
 // Transaction 事务的操作 一定跟数据库有关 注入数据库的连接 gorm.db

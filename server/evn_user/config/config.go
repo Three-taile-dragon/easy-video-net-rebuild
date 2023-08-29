@@ -20,6 +20,7 @@ type Config struct {
 	MC    *MysqlConfig
 	JC    *JwtConfig
 	AC    *AesConfig
+	Host  *HostConfig
 }
 type ServerConfig struct {
 	Name string
@@ -56,13 +57,18 @@ type AesConfig struct {
 	AesKey string
 }
 
+type HostConfig struct {
+	TencentOssHost string
+	LocalHost      string
+}
+
 func InitConfig() *Config {
 	//初始化viper
 	conf := &Config{viper: viper.New()}
 	workDir, _ := os.Getwd()
 	conf.viper.SetConfigName("config")
 	conf.viper.SetConfigType("yaml")
-	conf.viper.AddConfigPath("/opt/lbk_background/evn_user/config")
+	conf.viper.AddConfigPath("/opt/evn/evn_user/config")
 	conf.viper.AddConfigPath(workDir + "/config")
 	//读入配置
 	err := conf.viper.ReadInConfig()
@@ -78,6 +84,7 @@ func InitConfig() *Config {
 	conf.ReadMysqlConfig()
 	conf.ReadJwtConfig()
 	conf.ReadAesConfig()
+	conf.ReadHostConfig()
 	return conf
 }
 
@@ -168,4 +175,12 @@ func (c *Config) ReadAesConfig() {
 		AesKey: c.viper.GetString("aes.key"),
 	}
 	c.AC = ac
+}
+
+// ReadHostConfig 读取腾讯云oss配置
+func (c *Config) ReadHostConfig() {
+	hostConfig := &HostConfig{}
+	hostConfig.TencentOssHost = c.viper.GetString("host.tencentOss.host")
+	hostConfig.LocalHost = c.viper.GetString("host.local.host")
+	c.Host = hostConfig
 }

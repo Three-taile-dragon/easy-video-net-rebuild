@@ -3,5 +3,5 @@ import httpRequest from "@/utils/requst"
 
 //获取主页信息
 export const getHomeInfo = (params: GetHomeInfoReq) => {
-    return httpRequest.post<GetHomeInfoRes>('/home/getHomeInfo',params);
+    return httpRequest.post<GetHomeInfoRes>('/api/home/getHomeInfo',params);
 }

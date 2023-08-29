@@ -3,20 +3,20 @@ import { loginReq , userInfoRes ,sendEmailReq,registReq ,forgetReq } from "@/typ
 
 
 export const loginRequist = (params: loginReq) => {
-    return httpRequest.post<userInfoRes>('/login/login', params);
+    return httpRequest.post<userInfoRes>('/api/user/login', params);
 }
 export const regist = (params: registReq) => {
-    return httpRequest.post<userInfoRes>('/login/register', params);
+    return httpRequest.post<userInfoRes>('/api/user/register', params);
 }
 export const sendEmailVerificationCode = (params: sendEmailReq) => {
-    return httpRequest.post('/login/sendEmailVerificationCode', params);
+    return httpRequest.post('/api/user/getCaptcha', params);
 }
 
 export const sendEmailVerificationCodeByForget = (params: sendEmailReq) => {
-    return httpRequest.post('/login/sendEmailVerificationCodeByForget', params);
+    return httpRequest.post('/api/user/getCaptcha', params);
 }
 
 export const forgetRequist = (params: forgetReq) => {
-    return httpRequest.post('/login/forget', params);
+    return httpRequest.post('/api/user/forget', params);
 }
 
