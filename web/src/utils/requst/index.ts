@@ -1,7 +1,7 @@
 import router from "@/router";
 import { useUserStore } from '@/store/main';
 import { FileSliceUpload, FileUpload } from '@/types/idnex';
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse,AxiosRequestHeaders } from 'axios';
 import { ElMessage } from 'element-plus';
 import Swal from "sweetalert2";
 // 数据返回的接口
@@ -59,8 +59,8 @@ class RequestHttp {
      * token校验(JWT) : 接受服务器返回的token,存储到vuex/pinia/本地储存当中
      */
     this.service.interceptors.request.use(
-      (config: AxiosRequestConfig) => {
-        const token = user.userInfoData.token || '';
+      (config: any) =>  {
+        const token = user.userInfoData.token || ''
         return {
           ...config,
           headers: {

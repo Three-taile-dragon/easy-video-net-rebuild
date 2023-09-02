@@ -21,6 +21,7 @@ type Config struct {
 	JC    *JwtConfig
 	AC    *AesConfig
 	Host  *HostConfig
+	Email *EmailConfig
 }
 type ServerConfig struct {
 	Name string
@@ -62,13 +63,20 @@ type HostConfig struct {
 	LocalHost      string
 }
 
+type EmailConfig struct {
+	User string
+	Pass string
+	Host string
+	Port string
+}
+
 func InitConfig() *Config {
 	//初始化viper
 	conf := &Config{viper: viper.New()}
 	workDir, _ := os.Getwd()
 	conf.viper.SetConfigName("config")
 	conf.viper.SetConfigType("yaml")
-	conf.viper.AddConfigPath("/opt/evn/evn_user/config")
+	conf.viper.AddConfigPath("/Initial/config")
 	conf.viper.AddConfigPath(workDir + "/config")
 	//读入配置
 	err := conf.viper.ReadInConfig()
@@ -85,6 +93,7 @@ func InitConfig() *Config {
 	conf.ReadJwtConfig()
 	conf.ReadAesConfig()
 	conf.ReadHostConfig()
+	conf.ReadEmailConfig()
 	return conf
 }
 
@@ -183,4 +192,14 @@ func (c *Config) ReadHostConfig() {
 	hostConfig.TencentOssHost = c.viper.GetString("host.tencentOss.host")
 	hostConfig.LocalHost = c.viper.GetString("host.local.host")
 	c.Host = hostConfig
+}
+
+// ReadEmailConfig 读取邮件收发配置
+func (c *Config) ReadEmailConfig() {
+	emailConfig := &EmailConfig{}
+	emailConfig.User = c.viper.GetString("email.user")
+	emailConfig.Pass = c.viper.GetString("email.pass")
+	emailConfig.Host = c.viper.GetString("email.host")
+	emailConfig.Port = c.viper.GetString("email.port")
+	c.Email = emailConfig
 }

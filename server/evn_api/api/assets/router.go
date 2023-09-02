@@ -26,7 +26,7 @@ func (*RouterAssets) Router(r *gin.Engine) {
 	PrivateGroup.Use()
 	{
 		//静态资源访问
-		r.Static("/assets", "../assets")
+		r.Static("/assets", "/Initial/assets")
 	}
 
 }

@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 import { formattingSecondTime } from "@/utils/conversion/timeConversion";
-import { defineProps, ref } from "vue";
+import { ref } from "vue";
 import { VueEllipsis3 } from 'vue-ellipsis-3';
 import { useRouter } from "vue-router";
 
@@ -80,7 +80,6 @@ const isMouseover = ref(false)
 const jump = () => {
     router.push({ name: "VideoShow", params: { id: props.id } })
 }
-
 </script>
 
 <style scoped lang="scss">

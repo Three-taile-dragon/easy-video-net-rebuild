@@ -65,12 +65,14 @@ type HostConfig struct {
 }
 
 type LiveConfig struct {
-	IP        string
-	Rtmp      int
-	Flv       int
-	Hls       int
-	Api       int
-	Agreement string
+	IP           string
+	ClientIP     string
+	Rtmp         int
+	Flv          int
+	Hls          int
+	Api          int
+	Agreement    string
+	CliAgreement string
 }
 
 type VodConfig struct {
@@ -88,7 +90,7 @@ func InitConfig() *Config {
 	workDir, _ := os.Getwd()
 	conf.viper.SetConfigName("config")
 	conf.viper.SetConfigType("yaml")
-	conf.viper.AddConfigPath("/opt/evn/evn_other/config")
+	conf.viper.AddConfigPath("/Initial/config")
 	conf.viper.AddConfigPath(workDir + "/config")
 	//读入配置
 	err := conf.viper.ReadInConfig()
@@ -211,11 +213,13 @@ func (c *Config) ReadHostConfig() {
 func (c *Config) ReadLiveConfig() {
 	liveConfig := &LiveConfig{}
 	liveConfig.IP = c.viper.GetString("live.ip")
+	liveConfig.ClientIP = c.viper.GetString("live.clientIP")
 	liveConfig.Rtmp = c.viper.GetInt("live.rtmp")
 	liveConfig.Flv = c.viper.GetInt("live.flv")
 	liveConfig.Hls = c.viper.GetInt("live.hls")
 	liveConfig.Api = c.viper.GetInt("live.api")
 	liveConfig.Agreement = c.viper.GetString("live.agreement")
+	liveConfig.CliAgreement = c.viper.GetString("live.cliAgreement")
 	c.Live = liveConfig
 }
 

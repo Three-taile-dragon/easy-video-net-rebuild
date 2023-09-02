@@ -45,7 +45,7 @@
                 <!-- 播放器配置 -->
                     <!-- <div ref="videoRef" :class="{ 'player': true, 'dplayer-comment-show': !userStore.userInfoData.token }"
                         id="dplay" /> -->
-                        <video ref="myRef" :class="{ 'player': true, 'dplayer-comment-show': !userStore.userInfoData.token }" id="player-container-id" preload="auto" playsinline webkit-playsinline>
+                        <video ref="myRef" :class="{ 'player': true, 'dplayer-comment-show': !userStore.userInfoData.token }" id="player-container-id" playsinline webkit-playsinline>
     </video>
                     <div class="video-sending">
                         <div class="live-info">
@@ -344,11 +344,12 @@ const watchPath = watch(() => route.path, async () => {
         return false
     }
     console.log(videoID)
-    dp.value = await useInit(videoRef, route, router, videoID, videoInfo, global) as DPlayer
+    // dp.value = await useInit(videoRef, route, router, videoID, videoInfo, global) as DPlayer
     if (userStore.userInfoData.token) {
         let socketLer = useWebSocket(userStore, videoInfo, router, liveNumber)
         socketLer ? socket = socketLer : ""
     }
+    router.go(0)
 }, { immediate: true, deep: true })
 
 
