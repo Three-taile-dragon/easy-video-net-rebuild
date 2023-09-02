@@ -22,8 +22,11 @@ type Config struct {
 	UP    *UploadConfig
 }
 type ServerConfig struct {
-	Name string
-	Addr string
+	Name    string
+	Addr    string
+	IsHttps bool
+	Cert    string
+	Key     string
 }
 
 type GrpcConfig struct {
@@ -76,7 +79,7 @@ func InitConfig() *Config {
 	workDir, _ := os.Getwd()
 	conf.viper.SetConfigName("config")
 	conf.viper.SetConfigType("yaml")
-	conf.viper.AddConfigPath("/opt/lbk_background/evn_api/config")
+	conf.viper.AddConfigPath("/Initial/config")
 	conf.viper.AddConfigPath(workDir + "/config")
 	//读入配置
 	err := conf.viper.ReadInConfig()
@@ -100,6 +103,9 @@ func (c *Config) ReadServerConfig() {
 	sc := &ServerConfig{}
 	sc.Name = c.viper.GetString("server.name")
 	sc.Addr = c.viper.GetString("server.addr")
+	sc.IsHttps = c.viper.GetBool("server.isHttps")
+	sc.Cert = c.viper.GetString("server.cert")
+	sc.Key = c.viper.GetString("server.key")
 	c.SC = sc
 }
 

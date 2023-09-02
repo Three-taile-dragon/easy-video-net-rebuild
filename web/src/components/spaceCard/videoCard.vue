@@ -29,7 +29,7 @@
 <script setup lang="ts">
 
 import { formattingSecondTime, timestampFormat } from "@/utils/conversion/timeConversion";
-import { defineProps, ref } from "vue";
+import { ref } from "vue";
 import { VueEllipsis3 } from 'vue-ellipsis-3';
 import { useRouter } from "vue-router";
 

@@ -26,6 +26,7 @@ import (
 	"dragonsss.cn/evn_user/internal/database/tran"
 	"dragonsss.cn/evn_user/internal/repo"
 	"dragonsss.cn/evn_user/util"
+	email1 "dragonsss.cn/evn_user/util/email"
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis/v8"
@@ -68,18 +69,21 @@ func (ls *UserService) GetCaptcha(ctx context.Context, req *user2.CaptchaRequest
 	//4.调用短信平台(第三方 放入go func 协程 接口可以快速响应
 	//TODO 完善邮件发送服务
 	go func() {
-		//time.Sleep(2 * time.Second)
-		//zap.L().Info("短信平台调用成功，发送短信")
-		//logs.LG.Debug("短信平台调用成功，发送短信 debug")
-		//zap.L().Debug("短信平台调用成功，发送短信 debug")
-		//zap.L().Error("短信平台调用成功，发送短信 error")
+		//发送方
+		mailTo := []string{req.Email}
+		// 邮件主题
+		subject := "验证码"
+		// 邮件正文
+		body := fmt.Sprintf("您正在注册验证码为:%s,5分钟有效,请勿转发他人", code)
+		//TODO 测试暂时忽略错误
+		_ = email1.SendMail(mailTo, subject, body)
 		//redis存储	假设后续缓存可能存在mysql当中,也可以存在mongo当中,也可能存在memcache当中
 		//使用接口 达到低耦合高内聚
-		//5.存储验证码 redis 当中,过期时间15分钟
+		//5.存储验证码 redis 当中,过期时间5分钟
 		//redis.Set"REGISTER_"+mobile, code)
 		c, cancel := context.WithTimeout(context.Background(), 2*time.Second) //编写上下文 最多允许两秒超时
 		defer cancel()
-		err := ls.cache.Put(c, model.RegisterRedisKey+email, code, 15*time.Minute)
+		err := ls.cache.Put(c, model.RegisterRedisKey+email, code, 5*time.Minute)
 		if err != nil {
 			zap.L().Error("evn_user user_service GetCaptcha redis put err", zap.Error(err))
 
@@ -662,9 +666,18 @@ func (ls *UserService) SendEmailVerificationCodeByChangePassword(ctx context.Con
 	//4.调用短信平台(第三方 放入go func 协程 接口可以快速响应
 	//TODO 完善邮件发送服务
 	go func() {
+		//发送方
+		mailTo := []string{tmpUser.Email}
+		// 邮件主题 //TODO 测试临时打印验证码
+		subject := "验证码"
+		// 邮件正文
+		body := fmt.Sprintf("您正在找回密码您的验证码为:%s,5分钟有效,请勿转发他人", code)
+		//TODO 测试暂时忽略错误
+		_ = email1.SendMail(mailTo, subject, body)
+
 		c2, cancel := context.WithTimeout(context.Background(), 2*time.Second) //编写上下文 最多允许两秒超时
 		defer cancel()
-		err := ls.cache.Put(c2, model.ChangeRedisKey+tmpUser.Email, code, 15*time.Minute)
+		err := ls.cache.Put(c2, model.ChangeRedisKey+tmpUser.Email, code, 5*time.Minute)
 		if err != nil {
 			zap.L().Error("evn_user user_service SendEmailVerificationCodeByChangePassword redis put err", zap.Error(err))
 

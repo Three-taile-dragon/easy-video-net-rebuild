@@ -20,5 +20,9 @@ func main() {
 	stop := func() {
 		gc.Stop()
 	}
-	srv.Run(r, config.C.SC.Name, config.C.SC.Addr, stop)
+	if config.C.SC.IsHttps {
+		srv.RunWithTLS(r, config.C.SC.Name, config.C.SC.Addr, config.C.SC.Cert, config.C.SC.Key, stop)
+	} else {
+		srv.Run(r, config.C.SC.Name, config.C.SC.Addr, stop)
+	}
 }

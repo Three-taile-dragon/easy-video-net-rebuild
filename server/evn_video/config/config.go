@@ -100,7 +100,7 @@ func InitConfig() *Config {
 	workDir, _ := os.Getwd()
 	conf.viper.SetConfigName("config")
 	conf.viper.SetConfigType("yaml")
-	conf.viper.AddConfigPath("/opt/evn/evn_video/config")
+	conf.viper.AddConfigPath("/Initial/config")
 	conf.viper.AddConfigPath(workDir + "/config")
 	//读入配置
 	err := conf.viper.ReadInConfig()
@@ -119,6 +119,7 @@ func InitConfig() *Config {
 	conf.ReadHostConfig()
 	conf.ReadUploadConfig()
 	conf.ReadVodConfig()
+
 	return conf
 }
 

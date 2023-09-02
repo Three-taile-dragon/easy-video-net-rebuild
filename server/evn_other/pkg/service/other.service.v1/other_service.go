@@ -108,7 +108,7 @@ func (o *OtherService) GetLiveRoom(ctx context.Context, req *other.CommonIDReque
 	if ReqGetRoom.Status != 200 {
 		return nil, errs.GrpcError(model2.RequestError)
 	}
-	response := model.GetLiveRoomResponse("rtmp://"+config.C.Live.IP+":"+strconv.Itoa(config.C.Live.Rtmp)+"/live", ReqGetRoom.Data)
+	response := model.GetLiveRoomResponse("rtmp://"+config.C.Live.ClientIP+":"+strconv.Itoa(config.C.Live.Rtmp)+"/live", ReqGetRoom.Data)
 	return &other.GetLiveRoomResponse{
 		Address: response.(model.GetLiveRoomResponseStruct).Address,
 		Key:     response.(model.GetLiveRoomResponseStruct).Key,
@@ -122,7 +122,7 @@ func (o *OtherService) GetLiveRoomInfo(ctx context.Context, req *other.CommonIDA
 		zap.L().Error("evn_other other_service GetLiveRoomInfo FindLiveInfo DB_error", zap.Error(err))
 		return nil, errs.GrpcError(model2.DBError)
 	}
-	flv := config.C.Live.Agreement + "://" + config.C.Live.IP + ":" + strconv.Itoa(config.C.Live.Flv) + "/live/" + strconv.Itoa(int(req.ID)) + ".flv"
+	flv := config.C.Live.CliAgreement + "://" + config.C.Live.ClientIP + ":" + strconv.Itoa(config.C.Live.Flv) + "/live/" + strconv.Itoa(int(req.ID)) + ".flv"
 
 	if req.UID > 0 {
 		//添加历史记录

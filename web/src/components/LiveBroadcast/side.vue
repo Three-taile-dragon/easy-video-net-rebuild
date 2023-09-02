@@ -55,7 +55,7 @@
 import { sideData } from "./types/side";
 import { Check } from "@element-plus/icons-vue";
 import { ElNotification, TabsPaneContext } from "element-plus";
-import { ref, defineEmits, reactive, onMounted, onBeforeUpdate } from "vue";
+import { ref,reactive, onMounted, onBeforeUpdate } from "vue";
 import { encodeProtoFormat } from "@/utils/proto/proto";
 import { WebClientSendBarrageReq, encodeWebClientSendBarrageReq, EnterLiveRoom, WebClientHistoricalBarrageRes } from "@/proto/pb/live";
 import { WebClientSendBarrageRes } from "@/proto/pb/live";

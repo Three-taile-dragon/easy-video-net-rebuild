@@ -13,5 +13,10 @@ func main() {
 	//r.Use(logs.GinLogger(), logs.GinRecovery(true)) //接收gin框架默认日志
 	//注册路由
 	router.InitRouter(r)
-	srv.Run(r, config.C.SC.Name, config.C.SC.Addr, nil)
+	if config.C.SC.IsHttps {
+		srv.RunWithTLS(r, config.C.SC.Name, config.C.SC.Addr, config.C.SC.Cert, config.C.SC.Key, nil)
+	} else {
+		srv.Run(r, config.C.SC.Name, config.C.SC.Addr, nil)
+	}
+
 }
