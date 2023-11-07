@@ -18,5 +18,5 @@ func New() *[]Rotograph {
 }
 
 func (Rotograph) TableName() string {
-	return "lv_hone_rotograph"
+	return "lv_home_rotograph"
 }

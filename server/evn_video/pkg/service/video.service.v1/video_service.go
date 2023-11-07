@@ -254,25 +254,6 @@ func (vs *VideoService) CreateVideoContribution(ctx context.Context, req *video.
 		Src: req.Cover,
 		Tp:  req.CoverUploadType,
 	})
-	var width, height int
-	if req.VideoUploadType == "local" {
-		//如果是本地上传
-		var err1 error
-		width, height, err1 = calculate.GetVideoResolution(config.C.UP.LocalConfig.FileUrl + req.Video)
-		if err1 != nil {
-			zap.L().Error("evn_video video_service CreateVideoContribution GetVideoResolution local err", zap.Error(err1))
-			return &video.CommonDataResponse{Data: "获取视频分辨率失败"}, errs.GrpcError(model.SystemError)
-		}
-	} else {
-		//如果是 腾讯云 上传 读取本地缓存
-		var err1 error
-		width, height, err1 = calculate.GetVideoResolution(config.C.UP.TencentConfig.TmpFileUrl + req.Video)
-		if err1 != nil {
-			zap.L().Error("evn_video video_service CreateVideoContribution GetVideoResolution oss err", zap.Error(err1))
-			return &video.CommonDataResponse{Data: "获取视频分辨率失败"}, errs.GrpcError(model.SystemError)
-		}
-	}
-
 	videoContribution := &video2.VideosContribution{
 		Uid:           uint(req.Uid),
 		Title:         req.Title,
@@ -283,23 +264,92 @@ func (vs *VideoService) CreateVideoContribution(ctx context.Context, req *video.
 		Introduce:     req.Introduce,
 		Heat:          0,
 	}
-	// TODO 优化转码部分 更改分辨率辨认方法
-	resolutions := []int{1080, 720, 480, 360}
-	if height >= 1080 {
-		resolutions = resolutions[1:]
-		videoContribution.Video = videoSrc
-	} else if height >= 720 && height < 1080 {
-		resolutions = resolutions[2:]
-		videoContribution.Video720p = videoSrc
-	} else if height >= 480 && height < 720 {
-		resolutions = resolutions[3:]
-		videoContribution.Video480p = videoSrc
-	} else if height >= 360 && height < 480 {
-		resolutions = resolutions[4:]
-		videoContribution.Video360p = videoSrc
-	} else {
-		return &video.CommonDataResponse{Data: "上传视频分辨率过低"}, errs.GrpcError(model.RequestError)
+	var width, height int
+	if req.VideoUploadType == "local" {
+		//如果是本地上传
+		var err1 error
+		width, height, err1 = calculate.GetVideoResolution(config.C.UP.LocalConfig.FileUrl + req.Video)
+		if err1 != nil {
+			zap.L().Error("evn_video video_service CreateVideoContribution GetVideoResolution local err", zap.Error(err1))
+			return &video.CommonDataResponse{Data: "获取视频分辨率失败"}, errs.GrpcError(model.SystemError)
+		}
+		// TODO 优化转码部分 更改分辨率辨认方法
+		resolutions := []int{1080, 720, 480, 360}
+		if height >= 1080 {
+			resolutions = resolutions[1:]
+			videoContribution.Video = videoSrc
+		} else if height >= 720 && height < 1080 {
+			resolutions = resolutions[2:]
+			videoContribution.Video720p = videoSrc
+		} else if height >= 480 && height < 720 {
+			resolutions = resolutions[3:]
+			videoContribution.Video480p = videoSrc
+		} else if height >= 360 && height < 480 {
+			resolutions = resolutions[4:]
+			videoContribution.Video360p = videoSrc
+		} else {
+			return &video.CommonDataResponse{Data: "上传视频分辨率过低"}, errs.GrpcError(model.RequestError)
+		}
+		//进行视频转码
+		go func(width, height int, video *video2.VideosContribution) {
+			if req.VideoUploadType == "local" {
+				//本地ffmpeg 处理
+				inputFile := req.Video
+				sr := strings.Split(inputFile, ".")
+				for _, r := range resolutions {
+					// 计算转码后的宽和高需要取整
+					w := int(math.Ceil(float64(r) / float64(height) * float64(width)))
+					h := int(math.Ceil(float64(r)))
+					if h >= height {
+						continue
+					}
+					dst := sr[0] + fmt.Sprintf("_output_%dp."+sr[1], r)
+					cmd := exec.Command("ffmpeg",
+						"-i",
+						inputFile,
+						"-vf",
+						fmt.Sprintf("scale=%d:%d", w, h),
+						"-c:a",
+						"copy",
+						"-c:v",
+						"libx264",
+						"-preset",
+						"medium",
+						"-crf",
+						"23",
+						"-y",
+						dst)
+					err := cmd.Run()
+					if err != nil {
+						zap.L().Error(fmt.Sprintf("视频 :%s :转码%d*%d失败 cmd : %s ,err: ", inputFile, w, h, cmd), zap.Error(err))
+						continue
+					}
+					src, _ := json.Marshal(common.Img{
+						Src: dst,
+						Tp:  "local",
+					})
+					switch r {
+					case 1080:
+						videoContribution.Video = src
+					case 720:
+						videoContribution.Video720p = src
+					case 480:
+						videoContribution.Video480p = src
+					case 360:
+						videoContribution.Video360p = src
+					}
+					if is, err := vs.videoRepo.CreateVideo(c, videoContribution); !is || err != nil {
+						zap.L().Error("evn_video video_service CreateVideoContribution CreateVideo DB_error", zap.Error(err))
+						//return nil, errs.GrpcError(model.DBError)
+					}
+					zap.L().Info(fmt.Sprintf("视频 :%s : 转码%d*%d成功", inputFile, w, h))
+				}
+			}
+			//腾讯云 云点播 使用 转自适应码流 通过FileId进行播放
+
+		}(width, height, videoContribution)
 	}
+
 	if req.Media != "" {
 		videoContribution.MediaID = req.Media
 	}
@@ -324,6 +374,11 @@ func (vs *VideoService) CreateVideoContribution(ctx context.Context, req *video.
 			}
 			// 只有腾讯云 云点播的添加 FileId 播放时通过FileId 获取
 			videoContribution.MediaID = *vodRsp.Response.FileId
+			txSrc, _ := json.Marshal(common.Img{
+				Src: *vodRsp.Response.MediaUrl,
+				Tp:  "tencentOss",
+			})
+			videoContribution.Video = txSrc
 			// 更新数据库
 			if is, err := vs.videoRepo.UpdateVideo(c, videoContribution); !is || err != nil {
 				zap.L().Error("evn_video video_service CreateVideoContribution UpdateVideo DB_error", zap.Error(err))
@@ -340,64 +395,7 @@ func (vs *VideoService) CreateVideoContribution(ctx context.Context, req *video.
 		zap.L().Error("evn_video video_service CreateVideoContribution CreateVideo DB_error", zap.Error(err))
 		return nil, errs.GrpcError(model.DBError)
 	}
-	//进行视频转码
-	go func(width, height int, video *video2.VideosContribution) {
-		if req.VideoUploadType == "local" {
-			//本地ffmpeg 处理
-			inputFile := req.Video
-			sr := strings.Split(inputFile, ".")
-			for _, r := range resolutions {
-				// 计算转码后的宽和高需要取整
-				w := int(math.Ceil(float64(r) / float64(height) * float64(width)))
-				h := int(math.Ceil(float64(r)))
-				if h >= height {
-					continue
-				}
-				dst := sr[0] + fmt.Sprintf("_output_%dp."+sr[1], r)
-				cmd := exec.Command("ffmpeg",
-					"-i",
-					inputFile,
-					"-vf",
-					fmt.Sprintf("scale=%d:%d", w, h),
-					"-c:a",
-					"copy",
-					"-c:v",
-					"libx264",
-					"-preset",
-					"medium",
-					"-crf",
-					"23",
-					"-y",
-					dst)
-				err := cmd.Run()
-				if err != nil {
-					zap.L().Error(fmt.Sprintf("视频 :%s :转码%d*%d失败 cmd : %s ,err: ", inputFile, w, h, cmd), zap.Error(err))
-					continue
-				}
-				src, _ := json.Marshal(common.Img{
-					Src: dst,
-					Tp:  "local",
-				})
-				switch r {
-				case 1080:
-					videoContribution.Video = src
-				case 720:
-					videoContribution.Video720p = src
-				case 480:
-					videoContribution.Video480p = src
-				case 360:
-					videoContribution.Video360p = src
-				}
-				if is, err := vs.videoRepo.CreateVideo(c, videoContribution); !is || err != nil {
-					zap.L().Error("evn_video video_service CreateVideoContribution CreateVideo DB_error", zap.Error(err))
-					//return nil, errs.GrpcError(model.DBError)
-				}
-				zap.L().Info(fmt.Sprintf("视频 :%s : 转码%d*%d成功", inputFile, w, h))
-			}
-		}
-		//腾讯云 云点播 使用 转自适应码流 通过FileId进行播放
 
-	}(width, height, videoContribution)
 	return &video.CommonDataResponse{Data: "保存成功"}, nil
 }
 
