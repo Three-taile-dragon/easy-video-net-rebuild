@@ -263,7 +263,7 @@ func (ls *UserService) Forget(ctx context.Context, req *user2.ForgetRequest) (*u
 		return nil, errs.GrpcError(model.CaptchaError)
 	}
 	//校验业务逻辑
-	exist, err := ls.userRepo.IsExistByName(c, req.Email)
+	exist, err := ls.userRepo.IsExistByEmail(c, req.Email)
 	if err != nil {
 		zap.L().Error("evn_user user_service Forget GetUserByEmail DB_Error", zap.Error(err))
 		return nil, errs.GrpcError(model.DBError)
@@ -296,7 +296,7 @@ func (ls *UserService) Forget(ctx context.Context, req *user2.ForgetRequest) (*u
 		}
 		return nil
 	})
-	return &user2.CommonDataResponse{Data: "发送成功"}, nil
+	return &user2.CommonDataResponse{Data: "修改成功"}, nil
 }
 
 // TokenVerify token验证
