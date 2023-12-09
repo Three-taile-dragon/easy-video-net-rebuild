@@ -3,7 +3,8 @@ FROM alpine
 LABEL maintainer="dragon@dragonsss.cn"
 WORKDIR /Initial
 COPY ./target/evn_video .
-RUN apk --no-cache add ffmpeg
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
+RUN apk add ffmpeg
 RUN  mkdir config
 EXPOSE 3459 8884
 ENTRYPOINT ["./evn_video"]

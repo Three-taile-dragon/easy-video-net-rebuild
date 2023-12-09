@@ -159,7 +159,7 @@ type CreateVideoContributionReceiveStruct struct {
 	Reprinted       *bool    `json:"reprinted" binding:"required"`
 	Label           []string `json:"label"`
 	Introduce       string   `json:"introduce" binding:"required"`
-	VideoDuration   int64    `json:"videoDuration" binding:"required"`
+	VideoDuration   int64    `json:"videoDuration"`
 	Media           *string  `json:"media"`
 }
 

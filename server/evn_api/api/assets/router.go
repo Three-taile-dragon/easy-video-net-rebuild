@@ -2,6 +2,7 @@ package assets
 
 import (
 	"dragonsss.cn/evn_api/api/cors"
+	"dragonsss.cn/evn_api/config"
 	"dragonsss.cn/evn_api/router"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -26,7 +27,8 @@ func (*RouterAssets) Router(r *gin.Engine) {
 	PrivateGroup.Use()
 	{
 		//静态资源访问
-		r.Static("/assets", "/Initial/assets")
+		//r.Static("/assets", "/Initial/assets")
+		r.Static("/assets", config.C.UP.LocalConfig.FileUrl+"assets")
 	}
 
 }

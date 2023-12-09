@@ -241,14 +241,40 @@ export const tcPlayerInit = async (myRef: Ref, route: RouteLocationNormalizedLoa
         }
       })
     }else{
+      // 没有 file ID 即为本地资源
       tp = new TCPlayer(myRef.value, {
         autoplay: true,
         reportable: false,
         licenseUrl: videoInfo.videoInfo.licenseUrl,
-        sources: [{
-          src: bestQualityUrl(videoInfo),
-          type: 'video/mp4',
-        }],    
+        // sources: [{
+        //   src: bestQualityUrl(videoInfo),
+        //   type: 'video/mp4',
+        // }],
+        multiResolution:{
+          // 配置多个清晰度地址
+          sources:{
+            'LOW':[{
+              src: videoInfo.videoInfo.video_360p,
+            }],
+            'SD':[{
+              src: videoInfo.videoInfo.video_480p,
+            }],
+            'HD':[{
+              src: videoInfo.videoInfo.video_720p,
+            }],
+            'FHD':[{
+              src: bestQualityUrl(videoInfo),
+            }]
+          },
+          // 配置每个清晰度标签
+          labels:{
+            "LOW": '360P','SD':'480P','HD':'720P','FHD':'超清'
+          },
+          // 配置各清晰度在播放器组件上的顺序
+          showOrder:['FHD','HD','SD',"LOW"],
+          // 配置默认选中的清晰度
+          defaultRes: 'FHD',
+        },          
         plugins: {
           ProgressMarker: true,
           ContextMenu: {

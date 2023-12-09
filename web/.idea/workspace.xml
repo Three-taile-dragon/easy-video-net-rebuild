@@ -5,9 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bf8c0ecd-f9f3-419d-8f4f-71f97cc9642e" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/../server/docker-compose.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/go.work.sum" beforeDir="false" afterPath="$PROJECT_DIR$/../server/go.work.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/evn_api/api/assets/router.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/evn_api/api/assets/router.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/evn_api/pkg/service/upload.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/evn_api/pkg/service/upload.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/columnBroadcast/sideCard.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/columnBroadcast/sideCard.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/columnBroadcast/static/style/sideCard.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/columnBroadcast/static/style/sideCard.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/creation/contribute/contributePage/articleContribution.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/creation/contribute/contributePage/articleContribution.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/creation/contribute/contributePage/vdeoContribution.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/creation/contribute/contributePage/vdeoContribution.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/show/video/video.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/show/video/video.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,6 +20,19 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="GOROOT" url="file://$USER_HOME$/go/go1.20" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GithubProjectSettings">
+    <option name="branchProtectionPatterns">
+      <list>
+        <option value="master" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
   <component name="ProjectId" id="2TID9wutZa5TcICe0xYJTigTR17" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -28,10 +46,16 @@
     "RunOnceActivity.go.migrated.go.modules.settings": "true",
     "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
     "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "develop",
     "go.import.settings.migrated": "true",
     "go.sdk.automatically.set": "true",
     "last_opened_file_path": "F:/Vue3/easy-video-net-rebuild/web",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "yarn",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
     "ts.external.directory.path": "F:\\Vue3\\easy-video-net-rebuild\\web\\node_modules\\typescript\\lib",
     "vue.rearranger.settings.migration": "true"
   }
@@ -39,11 +63,15 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="默认任务">
+      <changelist id="bf8c0ecd-f9f3-419d-8f4f-71f97cc9642e" name="更改" comment="" />
       <created>1698487246447</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1698487246447</updated>
       <workItem from="1698487247915" duration="2753000" />
+      <workItem from="1701269830384" duration="195000" />
+      <workItem from="1701746681842" duration="41000" />
+      <workItem from="1701746740869" duration="3627000" />
     </task>
     <servers />
   </component>

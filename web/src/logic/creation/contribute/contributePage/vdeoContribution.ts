@@ -104,7 +104,7 @@ export const useHandleFileMethod = (uploadFileformation: uploadFileformation, fo
     const RedefineUploadFile = async (params: UploadRequestOptions) => {
         try {
             //大于30mb分片
-            let fragment = params.file.size > 30 * 1024 * 1024 ? true : false
+            let fragment = params.file.size > 30 * 1024 * 1024
             form.isShow = !form.isShow
             const response = await uploadFile(uploadFileformation, params.file, fragment)
             console.log(response)
@@ -167,9 +167,9 @@ export const useHandleCoverMethod = (uploadCoveration: uploadFileformation, form
     const beforeFileUpload: UploadProps['beforeUpload'] = async (rawFile: UploadRawFile) => {
         return await new Promise<boolean>((resolve, reject) => {
             //判断大小
-            if (rawFile.size / 1024 / 1024 > 2) {
+            if (rawFile.size / 1024 / 1024 > 10) {
                 Swal.fire({
-                    title: "封面大小不能大于2M",
+                    title: "封面大小不能大于10M",
                     heightAuto: false,
                     icon: "error",
 

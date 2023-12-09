@@ -54,7 +54,7 @@ func (*RouterProject) Router(r *gin.Engine) {
 	commonality.Use(midd.TokenVerify())
 	c := NewCommonality()
 	{
-		//本地上传
+		//上传
 		commonality.POST("/upload", c.upload)
 		commonality.POST("/UploadSlice", c.uploadSlice)
 		commonality.POST("/uploadCheck", c.uploadCheck)

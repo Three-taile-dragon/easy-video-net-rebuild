@@ -5,7 +5,7 @@ export /**
 * @param {number} pieceSizes 切片大小
 * @param {string} fileKey 文件唯一标识
 */
-    const getSliceFile = async (file: File, pieceSizes = 1, fileKey: string) => {
+    const getSliceFile = async (file: File, pieceSizes = 10, fileKey: string) => {
         const piece = 1024 * 1024 * pieceSizes;
         // 文件总大小
         const totalSize = file.size;

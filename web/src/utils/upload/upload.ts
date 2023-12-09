@@ -3,7 +3,6 @@ import { GetuploadingDirReq } from "@/types/commonality/commonality";
 import { FileUpload } from "@/types/idnex";
 import { compressFile, isImageFile } from "./fileManipulation";
 import { localUpload } from "./local";
-import { ossUpload } from "./oss";
 import { tencentOssUpload } from "./tencentOss";
 export const uploadFile = async (config: FileUpload, rawFile: File, fragment?: boolean): Promise<{ path: string }> => {
     let res
@@ -28,9 +27,6 @@ export const uploadFile = async (config: FileUpload, rawFile: File, fragment?: b
     }
     //TODO 不需要在前端上传任何文件了
     switch (config.uploadType) {
-        case "aliyunOss":
-            res = ossUpload(rawFile, config, dir, fragment)
-            break;
         case "tencentOss":
             res = tencentOssUpload(rawFile, config, dir, fragment)
             break;
