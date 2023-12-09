@@ -2,5 +2,9 @@
 !.gitsubmodules
 *.yaml
 *.ini
+*.pem
+*target
 assets
 server/evn_other/config/config.yaml
+server/opt
+server/logs
