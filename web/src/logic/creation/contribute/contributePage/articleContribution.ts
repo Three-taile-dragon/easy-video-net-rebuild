@@ -238,9 +238,9 @@ export const useHandleCoverMethod = (uploadCoveration: uploadFileformation) => {
     const beforeFileUpload: UploadProps['beforeUpload'] = async (rawFile: UploadRawFile) => {
         return await new Promise<boolean>((resolve, reject) => {
             //判断大小
-            if (rawFile.size / 1024 / 1024 > 2) {
+            if (rawFile.size / 1024 / 1024 > 10) {
                 Swal.fire({
-                    title: "封面大小不能大于2M",
+                    title: "封面大小不能大于10M",
                     heightAuto: false,
                     icon: "error",
 

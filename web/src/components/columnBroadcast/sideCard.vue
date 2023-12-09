@@ -14,7 +14,7 @@
                     <div class="info-num"><span>{{ totalInfo.classification_num }}</span></div>
                 </div>
             </div>
-            <a class="fo-github" @click="jumpGithub()">
+            <a class="fo-url" @click="jumpSpace()">
                 <SvgIcon name="github" class="icon" color="#fff" /> Follow Me
             </a>
         </div>
@@ -30,11 +30,14 @@
 import { getArticleTotalInfo } from '@/apis/contribution';
 import { getArticleTotalInfoRes } from '@/types/creation/contribute/contributePage/articleContribution';
 import { onMounted, reactive } from 'vue';
+import {useUserStore} from "@/store/main";
+import {useRouter} from "vue-router";
+const userInfo = useUserStore();
+const router = useRouter()
 
 const authorInfo = reactive({
-    avatar : "http://q1.qlogo.cn/g?b=qq&nk=2506152074&s=100",
-    username : "橡皮擦",
-    github : "https://github.com/suanju",
+  avatar: userInfo.userInfoData.photo,
+  username: userInfo.userInfoData.username,
 }) 
 const totalInfo = reactive(<getArticleTotalInfoRes>{})
 
@@ -51,8 +54,8 @@ const init = async () => {
     totalInfo.classification_num = articleTotalInfo.data?.classification_num
 }
 
-const jumpGithub = () =>{
-    window.open(authorInfo.github); 
+const jumpSpace = () => {
+  router.push({ name: "SpaceIndividual", params: { "id": userInfo.userInfoData.id } })
 }
 
 onMounted(() => {

@@ -1,0 +1,149 @@
+version: '3'
+services:
+  Mysql:
+    container_name: evn_mysql
+    image: mysql:${MYSQL_VERSION}
+    restart: always
+    ports:
+      - ${MYSQL_PORT}:3306
+    networks:
+      - "evn"
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: root
+    volumes:
+      - ${MYSQL_DIR}/data:/var/lib/mysql
+      - ${MYSQL_DIR}/conf:/etc/mysql/conf.d/
+      - ${MYSQL_DIR}/logs:/logs
+    command:
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+      --explicit_defaults_for_timestamp=true
+      --lower_case_table_names=1
+  Redis:
+    container_name: evn_redis
+    image: redis:${REDIS_VERSION}
+    restart: always
+    volumes:
+      - ${REDIS_DIR}/data:/data
+      - ${REDIS_DIR}/conf/redis.conf:/etc/redis/redis.conf
+    ports:
+      - ${REDIS_PORT}:6379
+    networks:
+      - "evn"
+    command: redis-server /etc/redis/redis.conf
+  Etcd:
+    container_name: evn_etcd
+    image: bitnami/etcd:${ETCD_VERSION}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+    privileged: true
+    volumes:
+      - ${ETCD_DIR}/data:/bitnami/etcd/data
+    ports:
+      - ${ETCD_PORT}:2379
+      - "22380:2380"
+    networks:
+      - "evn"
+  Lal:
+    container_name: evn_lal
+    image: q191201771/lal
+    ports:
+      - 1935:1935 #RTMP服务监听的端口，客户端向lalserver推拉流都是这个地址
+      - 4936:4935 #RTMPS服务监听的端口地址
+      - 8080:8080 #HTTP监听地址
+      - 4433:4433 #HTTPS监听地址
+      - 5544:5544 #rtsp监听地址
+      - 5322:5322 #RTSPS服务监听的端口地址
+      - 8083:8083 #API监听地址
+      - 8084:8084 #Go pprof web地址
+      - 30000-30100
+      - 30000-30100/udp
+    volumes:
+      - ${LAL_DIR}/conf:/lal/conf/
+    command:
+      - /lal/bin/lalserver -c /lal/conf/lalserver.conf.json
+    networks:
+      - "evn"
+  LiveGo:
+    container_name: evn_live_go
+    image: icceey/livego:latest
+    restart: always
+    ports:
+      - "1935:1935"
+      - "7001:7001"
+      - "7002:7002"
+      - "8090:8090"
+    networks:
+      - "evn"
+  Evn_api:
+    container_name: evn_api
+    image: evn_api:latest
+    ports:
+      - "8080:8080"
+      - "8886:8886"
+    networks:
+      - "evn"
+    volumes:
+      - ${API_DIR}/opt/evn_api/config:/Initial/config
+      - ${Assets_DIR}:/Initial/assets
+  Evn_article:
+    container_name: evn_article
+    image: evn_article:latest
+    ports:
+      - "3460:3460"
+      - "8885:8885"
+    networks:
+      - "evn"
+    volumes:
+      - ${ARTICLE_DIR}/opt/evn_article/config:/Initial/config
+  Evn_other:
+    container_name: evn_other
+    image: evn_other:latest
+    ports:
+      - "3458:3458"
+      - "8882:8882"
+    networks:
+      - "evn"
+    volumes:
+      - ${OTHER_DIR}/opt/evn_other/config:/Initial/config
+  Evn_user:
+    container_name: evn_user
+    image: evn_user:latest
+    ports:
+      - "3457:3457"
+      - "8881:8881"
+    networks:
+      - "evn"
+    volumes:
+      - ${USER_DIR}/opt/evn_user/config:/Initial/config
+  Evn_video:
+    container_name: evn_video
+    image: evn_video:latest
+    ports:
+      - "3459:3459"
+      - "8884:8884"
+    networks:
+      - "evn"
+    volumes:
+      - ${VIDEO_DIR}/opt/evn_video/config:/Initial/config
+      - ${Assets_DIR}:/Initial/assets
+  Evn_ws:
+    container_name: evn_ws
+    image: evn_ws:latest
+    ports:
+      - "8081:8081"
+      - "8883:8883"
+    networks:
+      - "evn"
+    volumes:
+      - ${WS_DIR}/opt/evn_ws/config:/Initial/config
+networks:
+  evn:
+    driver: bridge

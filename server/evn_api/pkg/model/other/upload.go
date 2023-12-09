@@ -3,6 +3,7 @@ package other
 type UploadSliceInfo struct {
 	Index int    `json:"index" `
 	Hash  string `json:"hash"`
+	Size  int64  `json:"size"`
 }
 type UploadSliceList []UploadSliceInfo
 

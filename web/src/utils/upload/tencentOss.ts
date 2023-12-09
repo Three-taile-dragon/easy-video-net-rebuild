@@ -6,8 +6,8 @@ import { uploadOssFile } from "@/apis/commonality"
 export const tencentOssUpload = async (file: File, uploadConfig: FileUpload, dir: string, fragment?: boolean): Promise<any> => {
     return new Promise(async (resolve, reject) => {
             //直接上传
-            // 计算文件Hash 避免多余的文件上传，这样做的目的是尽量少占用的空间
-            const name = await fileHash(file) + fileSuffix(file.name)
+            // const name = await fileHash(file) + fileSuffix(file.name)
+            const name = file.name
             const formData = new FormData()
             const key = `${name}`
             formData.append('interface', uploadConfig.interface)
