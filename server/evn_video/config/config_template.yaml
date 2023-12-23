@@ -1,0 +1,94 @@
+server:
+  name: "evn_video"
+  addr: "127.0.0.1:3459"
+zap:
+  # 日志文件路径
+  debugFileName: ""
+  infoFileName: ""
+  warnFileName: ""
+  # 日志文件大小
+  maxSize: 500,
+  # 日志文件保存时间
+  maxAge: 28,
+  # 日志文件最大备份数
+  MaxBackups: 3
+redis:
+  host: "localhost"
+  port: 6376
+  #  密码
+  password: ""
+  db: 0
+grpc:
+  addr: "127.0.0.1:8884"
+  name: "video"
+  version: "1.0.0"
+  weight: 2
+etcd:
+  addrs:
+    - "127.0.0.1:12379"
+mysql:
+  #  数据库用户名
+  username:
+  #  数据库密码
+  password:
+  # 数据库地址
+  host: 127.0.0.1
+  # 数据库端口
+  port: 3309
+  # 数据库名称
+  db: evn
+jwt:
+  #  过期时间 单位分钟
+  accessExp: 60
+  #  刷新时间 单位分钟
+  refreshExp:
+  #  加密密钥
+  accessSecret:
+  #   刷新密钥
+  refreshSecret:
+aes:
+  # 用于加密用户ID的aes key 24位
+  key: ""
+host:
+  tencentOss:
+    # 腾讯云oss地址
+    host: ""
+  local:
+    # 本地地址
+    host: "http://127.0.0.1:8080"
+upload:
+  tencentOss:
+    #地域  类似广州 ap-guangzhou
+    region: ""
+    #bucket 创建存储名称
+    bucket: ""
+    # 请填写您的SecretId
+    secretId: ""
+    # 请填写您的SecretKey
+    secretKey: ""
+    # 请填写您的存储桶的Appid
+    appid: ""
+    # host的格式为 https://eraser-go-live.oss-cn-hangzhou.aliyuncs.com 这中，请替换为您的真实信息。
+    host: ""
+    # Token有效期
+    durationSeconds: 3600
+    # 临时文件路径
+    tmpFileUrl: ""
+  local:
+    # 文件保存路径
+    fileUrl: ""
+    # 临时文件路径
+    tmpFileUrl: ""
+vod:
+  # 腾讯云 云点播 appid
+  appid:
+  # 腾讯云 云点播 key
+  key: ""
+  # 腾讯云 腾讯云视立方 SDK  播放器 License URL
+  licenseUrl: ""
+  # 腾讯云 云点播 播放的音视频类型 RawAdaptive: 未加密的 转自适应码流 输出 Original: 上传 的原始音视频
+  audioVideoType: ""
+  # 腾讯云 云点播 允许输出的未加密的自适应码流模板 ID
+  rawAdaptiveDefinition: 10
+  # 腾讯云 云点播 pSing key 过期时间 (秒)
+  psignExpire: 3600
