@@ -23,7 +23,7 @@ export /**
             const blob = file.slice(start, current);
             const hash = (await fileHash(blob)) as string;
 
-            // 特殊处理，对接阿里云大文件上传
+            // 特殊处理，大文件上传
             chunks.push({
                 file: blob,
                 size: totalSize,

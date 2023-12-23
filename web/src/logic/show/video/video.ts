@@ -46,44 +46,6 @@ export const useVideoProp = () => {
   }
 }
 
-export const useSendBarrage = async (text: Ref<string>, dpaler: DPlayer, userStore: any, videoInfo: UnwrapNestedRefs<VideoInfo>, socket: WebSocket) => {
-  const res = await sendVideoBarrage(<SendVideoBarrageReq>{
-    author: userStore.userInfoData.username,
-    color: 16777215,
-    id: videoInfo.videoInfo.id.toString(),
-    text: text.value,
-    time: dpaler.video.currentTime,
-    type: 0,
-    token: userStore.userInfoData.token,
-  })
-
-  console.log(userStore.userInfoData)
-  if (res.code != 0) {
-    Swal.fire({
-      title: "弹幕服务异常",
-      heightAuto: false,
-      confirmButtonColor: globalScss.colorButtonTheme,
-      icon: "error",
-    })
-    return
-  }
-  const danmaku = <DPlayerDanmakuItem>{
-    text: text.value,
-    color: '#fff',
-    type: 'right',
-  };
-
-  dpaler.danmaku.draw(danmaku);
-
-  text.value = ""
-
-  let data = JSON.stringify({
-    type: "sendBarrage",
-    data: ""
-  })
-  socket.send(data)
-
-}
 
 export const useLikeVideo = async (videoInfo: UnwrapNestedRefs<VideoInfo>) => {
   try {
@@ -319,7 +281,7 @@ export const tcSendBarrage = async (text: Ref<string>, tcplayer: any,tcplayerBar
     "size": 25,
     "color":'#ff0000',
   };
-  // 即时发送弹幕
+  // 调用播放器 即时发送弹幕
   tcplayerBarrage.send(barrage);
 
   text.value = ""
@@ -327,6 +289,7 @@ export const tcSendBarrage = async (text: Ref<string>, tcplayer: any,tcplayerBar
     type: "sendBarrage",
     data: ""
   })
+  // 使用ws协议发送
   socket.send(data)
 
 }

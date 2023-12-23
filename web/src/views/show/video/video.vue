@@ -43,8 +43,6 @@
                 </div>
                 <div class="video-box">
                 <!-- 播放器配置 -->
-                    <!-- <div ref="videoRef" :class="{ 'player': true, 'dplayer-comment-show': !userStore.userInfoData.token }"
-                        id="dplay" /> -->
                         <video ref="myRef" :class="{ 'player': true, 'dplayer-comment-show': !userStore.userInfoData.token }" id="player-container-id" playsinline webkit-playsinline>
     </video>
                     <div class="video-sending">
@@ -263,7 +261,7 @@ import videoIntroduce from "@/components/videoIntroduce/videoIntroduce.vue";
 import Card from "@/components/videoPageVideoCard/videoPageVideoCard.vue";
 import useAttention from "@/hooks/useAttention";
 import usePersonalLetter from "@/hooks/usePersonalLetter";
-import { useInit, useLikeVideo, useSendBarrage, useVideoProp, useWebSocket, tcPlayerInit, tcSendBarrage,barrageConvert } from "@/logic/show/video/video";
+import { useInit, useLikeVideo, useVideoProp, useWebSocket, tcPlayerInit, tcSendBarrage,barrageConvert } from "@/logic/show/video/video";
 import { GetVideoCommentRes } from '@/types/show/video/video';
 import { formattingSecondTime, rFC3339ToTime } from "@/utils/conversion/timeConversion";
 import { vRemoveFocus } from "@/utils/customInstruction/focus";
@@ -299,7 +297,6 @@ var socket: WebSocket //socket
 const { videoRef, route, router, userStore, videoID, videoInfo, barrageInput, barrageListShow, liveNumber, replyCommentsDialog, videoBarrage, global } = useVideoProp()
 
 const sendBarrageEvent = () => {
-    // useSendBarrage(barrageInput, dp.value, userStore, videoInfo, socket)
     tcSendBarrage(barrageInput, player, tcplayerBarrage,userStore, videoInfo, socket)
 }
 
