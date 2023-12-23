@@ -269,7 +269,6 @@ func (vs *VideoService) CreateVideoContribution(ctx context.Context, req *video.
 	// 添加视频时长获取
 	if videoContribution.VideoDuration != 0 {
 		filePath := ""
-		// 假设videoPath是你的视频文件路径
 		if req.VideoUploadType == "local" {
 			//如果是本地上传
 			filePath = config.C.UP.LocalConfig.FileUrl + req.Video
@@ -340,16 +339,16 @@ func (vs *VideoService) CreateVideoContribution(ctx context.Context, req *video.
 				extraSuffix := fmt.Sprintf("_output_%dp."+sr[1], r)
 				dst := sr[0] + extraSuffix
 				cmd := exec.Command("ffmpeg",
+					"-hwaccel",
+					"cuda",
+					"-hwaccel_output_format",
+					"cuda",
 					"-i",
 					inputFile,
 					"-vf",
-					fmt.Sprintf("scale=%d:%d", w, h),
-					"-c:a",
-					"copy",
+					fmt.Sprintf("scale_cuda=%d:%d", w, h),
 					"-c:v",
-					"libx264",
-					"-vf",
-					"pad=ceil(iw/2)*2:ceil(ih/2)*2",
+					"h264_nvenc",
 					"-preset",
 					"medium",
 					"-crf",

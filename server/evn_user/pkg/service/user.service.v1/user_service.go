@@ -66,7 +66,7 @@ func (ls *UserService) GetCaptcha(ctx context.Context, req *user2.CaptchaRequest
 	//3.生成验证码(随机四位1000-9999或者六位100000-999999)
 	code := util.CreateCaptcha(6) //生成随机六位数字验证码
 	fmt.Printf("%v验证码为：%v", email, code)
-	//4.调用短信平台(第三方 放入go func 协程 接口可以快速响应
+	//4.调用邮件发送(放入go func 协程 接口可以快速响应
 	//TODO 完善邮件发送服务
 	go func() {
 		//发送方
@@ -74,11 +74,9 @@ func (ls *UserService) GetCaptcha(ctx context.Context, req *user2.CaptchaRequest
 		// 邮件主题
 		subject := "验证码"
 		// 邮件正文
-		body := fmt.Sprintf("您正在注册验证码为:%s,5分钟有效,请勿转发他人", code)
+		body := fmt.Sprintf("您的验证码为:%s,5分钟有效,请勿转发他人", code)
 		//TODO 测试暂时忽略错误
 		_ = email1.SendMail(mailTo, subject, body)
-		//redis存储	假设后续缓存可能存在mysql当中,也可以存在mongo当中,也可能存在memcache当中
-		//使用接口 达到低耦合高内聚
 		//5.存储验证码 redis 当中,过期时间5分钟
 		//redis.Set"REGISTER_"+mobile, code)
 		c, cancel := context.WithTimeout(context.Background(), 2*time.Second) //编写上下文 最多允许两秒超时
@@ -90,8 +88,6 @@ func (ls *UserService) GetCaptcha(ctx context.Context, req *user2.CaptchaRequest
 		}
 		//zap.L().Debug("将手机号和验证码存入redis成功：REGISTER_" + email + " : " + code + "\n")
 	}()
-	//注意code一般不发送
-	//这里是做了简化处理 由于短信平台目前对于个人不好使用
 	return &user2.CommonDataResponse{Data: "发送成功"}, nil
 }
 
@@ -128,21 +124,6 @@ func (ls *UserService) Register(ctx context.Context, req *user2.RegisterRequest)
 	if exist {
 		return nil, errs.GrpcError(model.AccountExist)
 	}
-	////检验手机号
-	//exist, err = ls.userRepo.GetUserByMobile(c, req.Mobile)
-	//if err != nil {
-	//	zap.L().Error("数据库出错", zap.Error(err))
-	//	return nil, errs.GrpcError(model.DBError)
-	//}
-	//if exist {
-	//	return nil, errs.GrpcError(model.MobileExist)
-	//}
-	//执行业务逻辑
-	//pwd := encrypts.Md5(req.Password) //加密部分
-	//随机生成用户ID
-	//使用薄雾算法生成user id
-	//mist := common.NewMist()
-	//userIdSequence := mist.Generate()
 
 	//bcrypt 密码加密
 	pwHashBytes, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -199,24 +180,16 @@ func (ls *UserService) Login(ctx context.Context, req *user2.LoginRequest) (*use
 		return nil, errs.GrpcError(model.AccountNoExist)
 	}
 	//查询账号密码是否正确
-
 	mem, err := ls.userRepo.CheckPassword(c, req.Username)
 	//若err不为空说明密码不匹配
 	err = bcrypt.CompareHashAndPassword([]byte(mem.Password), []byte(req.Password))
 	if err != nil {
-		//zap.L().Error("登陆模块member数据库查询出错", zap.Error(err))
 		return nil, errs.GrpcError(model.AccountAndPwdError)
 	}
 
 	//使用jwt生成token
 	memIdStr := strconv.FormatInt(int64(mem.ID), 10)
 	token := jwts.CreateToken(memIdStr, config.C.JC.AccessExp, config.C.JC.AccessSecret, config.C.JC.RefreshSecret, config.C.JC.RefreshExp)
-	//tokenList := &user2.TokenResponse{
-	//	AccessToken:    token.AccessToken,
-	//	RefreshToken:   token.RefreshToken,
-	//	TokenType:      "bearer",
-	//	AccessTokenExp: token.AccessExp,
-	//}
 	//将存入部分使用事务包裹 使得可以回滚数据库操作
 	err = ls.transaction.Action(func(conn database.DbConn) error {
 		err = ls.userRepo.UpdateLoginTime(conn, c, mem.Username)
@@ -226,18 +199,7 @@ func (ls *UserService) Login(ctx context.Context, req *user2.LoginRequest) (*use
 		}
 		return nil
 	})
-	//err = ls.memberRepo.UpdateLoginTime(c, int64(mem.ID))
-	//if err != nil {
-	//	zap.L().Error("登陆模块user数据库登陆时间存入出错", zap.Error(err))
-	//	return &user2.LoginResponse{}, errs.GrpcError(model.DBError)
-	//}
 	userInfo := response.UserInfoResponse(mem, token.AccessToken, config.C.Host.LocalHost, config.C.Host.TencentOssHost)
-	//rsp := &user2.LoginResponse{}
-	//err = copier.Copy(&rsp, userInfo)
-	//if err != nil {
-	//	zap.L().Error("evn_user user_service Login copier.Copy Copy_Error", zap.Error(err))
-	//	return &user2.LoginResponse{}, errs.GrpcError(model.CopyError)
-	//}
 	return &user2.UserInfoResponse{
 		Id:        int64(userInfo.ID),
 		Username:  userInfo.UserName,
@@ -272,12 +234,6 @@ func (ls *UserService) Forget(ctx context.Context, req *user2.ForgetRequest) (*u
 		return nil, errs.GrpcError(model.AccountNoExist)
 	}
 	//执行业务逻辑
-	//pwd := encrypts.Md5(req.Password) //加密部分
-	//随机生成用户ID
-	//使用薄雾算法生成user id
-	//mist := common.NewMist()
-	//userIdSequence := mist.Generate()
-
 	//bcrypt 密码加密
 	pwHashBytes, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	//转换成字符串
