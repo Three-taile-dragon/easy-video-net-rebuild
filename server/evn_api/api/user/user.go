@@ -80,13 +80,6 @@ func (h *HandleUser) login(c *gin.Context) {
 		c.JSON(http.StatusOK, result.Fail(code, msg))
 		return
 	}
-	//返回结果
-	//rsp := &modelUser.LoginRsp{}
-	//err = copier.Copy(rsp, loginRsp)
-	//if err != nil {
-	//	zap.L().Error("登陆模块返回赋值错误", zap.Error(err))
-	//	c.JSON(http.StatusOK, result.Fail(errs.ParseGrpcError(errs.GrpcError(model.SystemError))))
-	//}
 	c.JSON(http.StatusOK, result.Success(loginRsp))
 }
 

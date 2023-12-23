@@ -1,4 +1,4 @@
-//grpc 登陆服务配置文件
+//grpc 视频服务配置文件
 
 syntax = "proto3";
 package video.service.v1;

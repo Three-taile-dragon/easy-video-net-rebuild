@@ -181,6 +181,7 @@ func Upload(file *multipart.FileHeader, ctx *gin.Context) (results interface{}, 
 	}
 	tmpDst := filepath.ToSlash(Temporary + "/" + fileName)
 	err = ctx.SaveUploadedFile(file, tmpDst)
+  
 	if err != nil {
 		zap.L().Error("临时文件保存失败-保存路径为："+tmpDst+"错误原因 : ", zap.Error(err))
 		return nil, fmt.Errorf("上传失败")
@@ -198,22 +199,6 @@ func Upload(file *multipart.FileHeader, ctx *gin.Context) (results interface{}, 
 	} else {
 		return rsp.Path + "/" + hash + suffix, nil
 	}
-	////检测文件夹是否创建
-	//if !location.IsDir(method.Path) {
-	//	if err = os.MkdirAll(method.Path, 0775); err != nil {
-	//		zap.L().Error("文件夹创建失败 创建路径为："+method.Path, zap.Error(err))
-	//		return nil, fmt.Errorf("文件夹创建失败")
-	//	}
-	//}
-	//dst := filepath.ToSlash(method.Path + "/" + fileName)
-	//err = ctx.SaveUploadedFile(file, dst)
-	//if err != nil {
-	//	zap.L().Error("文件保存失败-保存路径为："+dst+"错误原因 : ", zap.Error(err))
-	//	return nil, fmt.Errorf("上传失败")
-	//} else {
-	//	return rsp.Path + "/" + fileName, nil
-	//}
-
 }
 
 func UploadSlice(file *multipart.FileHeader, ctx *gin.Context) (results interface{}, err error) {

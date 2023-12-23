@@ -2,10 +2,6 @@ import { GetFullPathOfImageRrq, GetuploadingDirReq, GetuploadingDirRes, GetUploa
 import { FileSliceUpload, FileUpload } from "@/types/idnex";
 import httpRequest from "@/utils/requst";
 
-//aliyun 获取oss sts 信息
-export const gteossSTS = () => {
-    return httpRequest.post<GteossStsres>('/commonality/ossSTS');
-}
 
 //获取上传方法
 export function getuploadingMethod(params: GetUploadingMethodReq) {
@@ -46,11 +42,6 @@ export const uploadCheck = (params: UploadCheckReq) => {
 export const uploadMerge = (params: UploadMergeReq) => {
     return httpRequest.post<UploadMergeRes>('/api/commonality/uploadMerge', params);
 }
-
-// //注册媒体资源
-// export const registerMedia = (params: RegisterMediaReq) => {
-//     return httpRequest.post<RegisterMediaRes>('/commonality/registerMedia', params);
-// }
 
 //上传文件
 export const uploadOssFile = (params: any, uploadConfig: FileUpload) => {

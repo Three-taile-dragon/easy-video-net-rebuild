@@ -62,12 +62,12 @@ export const getVideoContributionByID = (params: GetVideoContributionByIDReq) =>
 
 export const danmakuApi = import.meta.env.VITE_BASE_URL + '/api/contribution/video/barrage/'
 
-//获取视弹幕列表
+//获取视频弹幕列表
 export const getVideoBarrageList = (params: GetVideoBarrageListReq) => {
     return httpRequest.get<GetVideoBarrageListRes[]>('/api/contribution/getVideoBarrageList', params);
 }
 
-//发送视弹幕
+//发送视频弹幕
 export const sendVideoBarrage = (params: SendVideoBarrageReq) => {
     return httpRequest.post('/api/contribution/video/barrage/v3/', params);
 }

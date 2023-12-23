@@ -25,7 +25,6 @@ export const uploadFile = async (config: FileUpload, rawFile: File, fragment?: b
             console.log('压缩失败！', err);
         }
     }
-    //TODO 不需要在前端上传任何文件了
     switch (config.uploadType) {
         case "tencentOss":
             res = tencentOssUpload(rawFile, config, dir, fragment)
