@@ -181,6 +181,7 @@ func Upload(file *multipart.FileHeader, ctx *gin.Context) (results interface{}, 
 	}
 	tmpDst := filepath.ToSlash(Temporary + "/" + fileName)
 	err = ctx.SaveUploadedFile(file, tmpDst)
+  
 	if err != nil {
 		zap.L().Error("临时文件保存失败-保存路径为："+tmpDst+"错误原因 : ", zap.Error(err))
 		return nil, fmt.Errorf("上传失败")

@@ -269,6 +269,7 @@ func (vs *VideoService) CreateVideoContribution(ctx context.Context, req *video.
 	// 添加视频时长获取
 	if videoContribution.VideoDuration != 0 {
 		filePath := ""
+		// 假设videoPath是你的视频文件路径
 		if req.VideoUploadType == "local" {
 			//如果是本地上传
 			filePath = config.C.UP.LocalConfig.FileUrl + req.Video
