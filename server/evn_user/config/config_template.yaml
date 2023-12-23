@@ -1,0 +1,69 @@
+server:
+  name: "evn_user"
+  addr: "127.0.0.1:3457"
+zap:
+  # 日志文件路径
+  debugFileName: ""
+  infoFileName: ""
+  warnFileName: ""
+  # 日志文件大小
+  maxSize: 500,
+  # 日志文件保存时间
+  maxAge: 28,
+  # 日志文件最大备份数
+  MaxBackups: 3
+redis:
+  host: "localhost"
+  port: 6376
+  #  密码
+  password: ""
+  db: 0
+grpc:
+  addr: "127.0.0.1:8881"
+  name: "user"
+  version: "1.0.0"
+  weight: 2
+etcd:
+  addrs:
+    - "127.0.0.1:12379"
+mysql:
+  #  数据库用户名
+  username:
+  #  数据库密码
+  password:
+  # 数据库地址
+  host: 127.0.0.1
+  # 数据库端口
+  port: 3309
+  # 数据库名称
+  db: evn
+jwt:
+  #  过期时间 单位分钟
+  accessExp: 60
+  #  刷新时间 单位分钟
+  refreshExp:
+  #  加密密钥
+  accessSecret:
+  #   刷新密钥
+  refreshSecret:
+aes:
+  # 用于加密用户ID的aes key 24位
+  key: ""
+
+host:
+  tencentOss:
+    # 腾讯云oss地址
+    host: ""
+  local:
+    # 本地地址
+    host: "http://127.0.0.1:8080"
+email:
+  # 使用了STMP协议的邮箱
+  # 邮箱地址
+  user: ""
+  # 邮箱密码
+  pass: ""
+  # 邮箱服务器
+  host: ""
+  # 邮箱端口
+  port: ""
